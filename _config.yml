@@ -1,16 +1,16 @@
 title:              SONG2DU
 email:              song6341@gachon.ac.kr
 description:        Hi, I'm yidu song
-author:             Start Bootstrap
-baseurl:            "/startbootstrap-clean-blog-jekyll"
-url:                "https://startbootstrap.github.io"
+author:             yidu song
+baseurl:            ""
+url:                "https://song2du.github.io"
 
 # Social Profiles
-twitter_username:   SBootstrap
-github_username:    StartBootstrap
-facebook_username:  StartBootstrap
-instagram_username:  
-linkedin_username:
+twitter_username:   
+github_username:    song2du
+facebook_username:  
+instagram_username:  song2du
+linkedin_username:  yidu-song-552374346
 
 # Add your google-analytics ID here to activate google analytics
 google_analytics:   UA-XXXXXXXXX-X # out your google-analytics code
