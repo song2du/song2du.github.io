@@ -4,9 +4,21 @@ title: Posts
 background: '/img/bg-post.jpg'
 ---
 
+<!-- Category Filter -->
+<div class="category-filter mb-4">
+  <button class="btn btn-outline-primary active" data-category="all">All</button>
+  {% assign categories = site.posts | map: 'category' | uniq | sort %}
+  {% for category in categories %}
+    {% if category %}
+    <button class="btn btn-outline-primary" data-category="{{ category | downcase }}">{{ category }}</button>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<div id="posts-container">
 {% for post in paginator.posts %}
 
-<article class="post-preview">
+<article class="post-preview" data-category="{{ post.category | downcase }}">
   <a href="{{ post.url | prepend: site.baseurl | replace: '//', '/' }}">
     <h2 class="post-title">{{ post.title }}</h2>
     {% if post.subtitle %}
@@ -15,7 +27,11 @@ background: '/img/bg-post.jpg'
     <h3 class="post-subtitle">{{ post.excerpt | strip_html | truncatewords: 15 }}</h3>
     {% endif %}
   </a>
-  <p class="post-meta">Posted by
+  <p class="post-meta">
+    {% if post.category %}
+    <span class="badge badge-primary">{{ post.category }}</span>
+    {% endif %}
+    Posted by
     {% if post.author %}
     {{ post.author }}
     {% else %}
@@ -28,6 +44,7 @@ background: '/img/bg-post.jpg'
 <hr>
 
 {% endfor %}
+</div>
 
 <!-- Pager -->
 {% if paginator.total_pages > 1 %}
@@ -46,3 +63,25 @@ background: '/img/bg-post.jpg'
 </div>
 
 {% endif %}
+
+<script>
+document.querySelectorAll('.category-filter button').forEach(button => {
+  button.addEventListener('click', function() {
+    const selectedCategory = this.getAttribute('data-category');
+    
+    // Update active button
+    document.querySelectorAll('.category-filter button').forEach(btn => btn.classList.remove('active'));
+    this.classList.add('active');
+    
+    // Filter posts
+    document.querySelectorAll('.post-preview').forEach(post => {
+      const postCategory = post.getAttribute('data-category');
+      if (selectedCategory === 'all' || postCategory === selectedCategory) {
+        post.style.display = 'block';
+      } else {
+        post.style.display = 'none';
+      }
+    });
+  });
+});
+</script>
