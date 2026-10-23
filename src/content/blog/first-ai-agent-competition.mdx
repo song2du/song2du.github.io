@@ -1,6 +1,6 @@
 ---
-title: "Lessons from My First AI Agent Competition"
-description: "Reflections on building, leading, and Learning through Friction"
+title: "Looking Back on My First AI Agent Competition"
+description: "What happened at my first AI agent competition and what I learned"
 date: 2026-01-30
 category: reflections
 tags: [ai-agents, negotiation, competition, leadership]
@@ -8,82 +8,88 @@ tags: [ai-agents, negotiation, competition, leadership]
 
 ## Introduction
 
-Last December, I participated in the AI Agent Competition hosted by Kakao and KSC 2025 (Korea Software Congress 2025). As this was my first major AI competition, my initial goal was humble: I just wanted to experience the process of drafting and submitting a formal proposal.
+Last December, I entered an AI agent competition that Kakao and KIISE held at KSC 2025.
+At first I just wanted the experience of writing a proposal and getting it submitted.
+Then, without really expecting it, we made the finals and won an Encouragement Award.
 
-To my surprise, the project didn't just end with a submission. We advanced to the finals and were honored with an Encouragement Award. While the recognition was rewarding, the real value of the journey lay in the "friction" we encountered along the way.
+This post is a record of what happened along the way and what I took from it.
 
-This post isn't a celebration of a trophy, but rather a post-mortem of the process—a reflection on the technical gaps, the leadership challenges, and the hard-earned lessons that transformed my perspective on building AI agents.
+<Figure
+  src="/images/first-ai-agent-competition/venue.jpg"
+  alt="The finals venue of the AI agent competition. Past rows of empty desks, a large screen shows the event's slogan in Korean"
+  caption="The finals venue at KSC 2025"
+/>
 
-## Problem Definition: Chipping Away the Noise
+## Picking a Topic
 
-The theme of the competition was "Agents that Innovate Daily Life." Because the scope was so broad, I realized that maybe I could fall into the trap of spending too much time searching for the perfect idea from the start.
+The theme was agents that change everyday life.
+Everyday life covers so much that we could easily have spent all our time just picking a topic.
 
-So, I took an iterative refinement approach—what I call the 'Sculpting Method'. Instead of waiting for a single brilliant spark, I started with a broad domain I was passionate about—Negotiation Agents—and began chipping away at the details. We narrowed it down to Second-hand Market Agents, and finally to Agents that bridge information asymmetry in peer-to-peer trading.
+So I started with a broad area and kept narrowing it down.
+I went from negotiation agents, which I was already interested in, to agents for secondhand trading, and then to agents that close the information gap between buyers and sellers in secondhand trading.
 
-The lesson here was clear: Don't wait for the right answer; iterate toward it. I also realized that having a curious mind in fields outside of AI—such as economics and the humanities—makes this process significantly easier. It allows you to see pain points that a purely technical lens might miss.
+Looking back it's an obvious approach, but if I had tried to find the perfect answer from the start, I think I would have just wasted time.
+Carving the idea out of a big block worked much better than trying to plan everything up front.
+It also made me think this kind of process gets a lot easier when you've spent time poking around fields outside AI, like economics or the humanities.
 
-## The Proposal: Building a Data-Driven Rationale
+## Writing the Proposal
 
-If the implementation is the engine, the proposal is the roadmap. Our team received highly positive feedback on our proposal, and I believe the secret was focusing on the narrative arc rather than just technical specifications.
+The preliminary round judged proposals, and the finals were about actually building the system.
+Our team got very positive feedback in the preliminary round.
 
-A winning proposal is essentially an essay backed by data. We followed a rigorous storytelling structure:
+What I cared about most in the proposal was the story.
+We defined a pain point that society or a specific industry has, pointed out the structural limits of existing approaches, laid out what we were proposing, and described the quantitative and qualitative effects we expected, all as one flow.
 
-1. Defining the Pain Point: What is the actual problem in society?
+For the problem definition at the start, I put a lot of work into using objective data to show the problem was real and worth solving.
+Instead of just listing statistics, I wrote it like an essay and built a story around the numbers.
+The whole time, I kept asking myself whether I would buy this argument if I were a judge.
 
-2. Structural Limitations: Why haven't existing solutions fixed this yet?
+## Building It
 
-3. The Proposition: How does our agent bridge this gap?
+Building the system was the most painful part of the competition, and also where I learned the most.
 
-4. Expected Impact: What are the quantitative and qualitative results?
+We built two LLM agents on top of NegotiationArena and added a rule-based checker, with the idea that it would keep the negotiation safe.
+But when I saw the other teams at the finals, the bar was much higher. Some had added Graph RAG, and some brought services that actually worked.
 
-The key is to provide contextual depth to the data. I constantly asked myself: "If I were the judge, would I be persuaded by this logic?" Approaching a technical document with the mindset of a storyteller made all the difference.
+We were the only team made up entirely of undergrads, and we were up against teams of mostly grad students, but competitions don't grade on that.
+In the end, our lack of technical depth was our biggest mistake.
+If I did it again, I wouldn't stop at a working prototype. I'd add more depth, like using negotiation models from recent papers or connecting to a real chat service to measure user satisfaction.
 
-## Implementation: Confronting the Technical Gap
+## The Finals
 
-The implementation phase was the most humbling part of the journey. Our system was built by adapting and modifying NegotiationArena, a framework designed for evaluating negotiation agents. We structured the architecture with two standalone LLM agents, coupled with a rule-based validator to ensure the safety and reliability of the process. At the time, we believed this logic was sound enough for a solid prototype.
+The finals were held at the Yeosu Expo Convention Center, where we presented in front of people from Kakao and the other teams.
+We presented second, so we finished early and could watch the other teams in a fairly relaxed mood.
+Watching them, I realized how much the overall preparation and the quality of the slides and demo videos affected the results.
 
-However, the finals provided a stark reality check. Other teams showcased sophisticated systems involving Graph RAG or fully-integrated, production-ready services. While our team was the only one composed entirely of undergraduates—competing against graduate-level researchers—the competition didn’t grade on a curve. The gap in technical depth was a stark reminder of the distance between a functional prototype and a production-grade system.
+Honestly, I didn't manage our schedule well.
+The slides took much longer than expected, so I was working on them right up to the deadline and had no time left to polish a script or practice.
+I stayed up until dawn getting ready, but once I was on stage my mind went blank.
+I ended up reading the script word for word, and I really regretted that.
 
-Looking back, I realized that "it works" is not enough. If I could do it over, I would bridge the gap by:
+The top teams put as much effort into persuading the audience as into the technical side.
+Their slides were clean, and they did things like adding narration to their demo videos or pausing the video to explain. You could tell they had thought hard about how to get their point across.
 
-1. Integrating State-of-the-Art models directly from recent negotiation research.
+That's when I realized that no matter how good my argument is, it doesn't count for much if it doesn't reach the audience.
+Next time I'll set my own deadline at least two days early and keep time aside for practice.
+It also made me want to volunteer to present more often in team projects at school.
 
-2. Conducting User Acceptance Testing to quantify satisfaction rather than just showing a demo.
+## Leading the Team
 
-This experience taught me that in field of AI, there is a massive gap between a working demo and a deep technical approach.
+While we were preparing, unexpected things kept coming up, like gaps in skill between teammates, schedule conflicts, and simply not having enough time.
+Through that, I realized a team lead's job isn't to blame teammates. It's to set up rules and systems so the project keeps moving no matter what.
 
-## The Stage: Presentation and the Impact of Coordination Delays
+It was my first time leading a project team, and I was pretty inexperienced.
+At first I split up the roles, set rules for git branches and commit messages, and vaguely trusted that everyone would take it from there.
+But setting rules and never following up was pretty close to leaving people on their own.
 
-The finals were held at the Yeosu Expo Convention Center, where we had to present in front of Kakao officials and fellow competitors. Being the second presenter, I thought I could get it over with quickly and relax. However, the reality was far from relaxed.
+What mattered most was checking in regularly and giving concrete milestones.
+I needed to keep track of where each person was stuck and spell out the intermediate goals so the overall schedule didn't slip.
+In the end, leading the team wasn't just about dividing up work. It was about building a feedback loop so one person's setback didn't turn into a risk for the whole project.
 
-I’ll be honest: we encountered critical bottlenecks in the final stages of the project. Due to delays in internal coordination and asset preparation, the time reserved for rehearsal was severely compromised. When I finally stood on that stage, my mind went blank. I ended up reading word-for-word from my script—a moment I deeply regret.
+Next time I lead a team, I'll respect people's independence but first make sure the work is being tracked clearly.
 
-Observing the top-tier teams was another eye-opener. Their technical depth was matched by the polish of their delivery. They didn't just show a demo; they narrated it, paused for emphasis, and used clean visual designs to guide the audience's attention.
+## Wrapping Up
 
-I learned the hard way that if your logic doesn't reach the audience, it might as well not exist. 
-
-My advice to anyone (and my future self) is this:
-
-- Front-load your deadlines by at least two days.
-
-- Buffer for the Blank Out: Only thorough practice can save you when your brain decides to short-circuit.
-
-## Leadership: From Passive Trust to System Design
-
-Leading a project team for the first time was a steep learning curve. In the beginning, I thought that setting ground rules for Git branches and commit messages would be enough. I trusted my team to handle the rest.
-
-But I soon realized that trust without a feedback loop lacks accountability. When unexpected variables—like skill gaps or schedule conflicts—arose, I learned that a leader’s job isn't to blame the individuals, but to design a system where the project keeps moving regardless of those variables. The key wasn't just delegation; it was:
-
-- Active Status Checks: Identifying where team members were stuck in real-time.
-
-- Granular Milestones: Breaking down the big goal into smaller, manageable wins to maintain momentum.
-
-Leadership, I’ve found, is about building a fail-safe system that prevents individual setbacks from becoming project-wide risks.
-
-## Closing
-
-This post turned out longer than I expected. Paradoxically, I believe the failures I encountered during the finals provided far more nourishment for my growth than the Encouragement Award itself.
-
-There is a Korean proverb that says, "You cannot be full on the first spoonful." It means that greatness takes time and repeated effort. This competition was my first spoonful—a mix of a small success and several meaningful setbacks. I intend to use every bit of this experience as fuel to take much larger strides in my next challenge.
-
-Ultimately, I hope this reflection serves as a practical guidebook for those in a similar position. If my trial-and-error can help you navigate your first competition more effectively and save even a fraction of your time, this post will have fulfilled its purpose.
+At first I only wanted to submit a proposal, and somehow we made it to the finals.
+The result was nice, but learning where I fell short meant more to me.
+Next time I want to use what I learned here and do even better.
