@@ -1,0 +1,67 @@
+---
+title: "ChoiceMates: Supporting Unfamiliar Online Decision-Making with Multi-Agent Conversational Interactions"
+description: "When I don't even know what I want"
+date: 2026-02-20
+category: paper-review
+tags: [hci, llm-agents, decision-making]
+paper:
+  title: "ChoiceMates: Supporting Unfamiliar Online Decision-Making with Multi-Agent Conversational Interactions"
+  authors: "Jeongeon Park et al."
+  venue: "IUI 2026"
+  url: "https://arxiv.org/abs/2310.01331"
+---
+
+<Callout title="In short">
+A system where agents with different personas debate in front of the user, helping people build their own preferences in a field they don't know well.
+</Callout>
+
+## Problem
+
+Picking something in a field you don't know well, like finding your first place to live on your own or buying an unfamiliar gadget, can feel overwhelming.
+This paper shows how LLMs can help people make decisions in unfamiliar situations like these.
+
+## Method
+
+In ChoiceMates, agents with different personas debate each other in front of the user.
+Watching that debate, the user gradually builds their own preferences.
+
+<Figure
+  src="/images/choicemates/figure1.jpg"
+  alt="Overview of ChoiceMates. On the left, agents named Alex, Taylor, and Jamie, each with a different camera pick, talk with the user in the conversation space. In the middle, the conversation history collects the options and criteria mentioned. On the right, the preference space holds the items the user pinned, leading to a final decision of Sony Alpha a6000"
+  caption="Overview of ChoiceMates (Park et al., IUI 2026, Figure 1, CC BY 4.0)"
+/>
+
+One part of the implementation stood out to me.
+Chat systems usually stack up the full conversation history turn after turn. ChoiceMates instead injects a pre-prompt that summarizes the current state every time.
+It also has a single LLM play all the personas at once, which keeps the conversation consistent and avoids losing context.
+
+## Results
+
+In a user study with 12 participants, ChoiceMates reduced cognitive load by about 28% compared to web search.
+Compared to a generic multi-agent setup, decision satisfaction was about 9% higher.
+
+## My Take
+
+Earlier systems mostly stopped at pulling out preferences I already had.
+What I liked about this paper is that it helps build preferences that weren't there yet, through conversation.
+
+The qualitative analysis taught me something too.
+When people make decisions in an unfamiliar setting, they want confirmation that they aren't wrong. And to leave them satisfied, you have to make them feel sure they haven't missed a better option.
+
+## What Could Be Better
+
+ChoiceMates relies on information scraped from Google search.
+That leaves the system open to being swayed by ads and content that is simply good at SEO.
+
+I also wonder whether an agent with no real experience pretending to have it is a form of hallucination at its core.
+Wrapping that in convincing answers still seems risky for a real product.
+
+Right now ChoiceMates reads the user's intent purely through LLM reasoning, without any separate algorithm.
+I think that needs work before it can move into areas where subtle context matters, like negotiation or mental health.
+
+## Other Thoughts
+
+The first version of this work came out in 2023, and it was only published in 2026.
+Building technology that affects real people means there is a lot to get right, and I learned that the research process can be really long. That's a little scary.
+
+The first author did everything from building the system to running the studies. That's the kind of research I want to be doing.

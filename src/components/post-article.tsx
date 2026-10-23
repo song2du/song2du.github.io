@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Fragment } from "react";
 import { DraftBadge } from "@/components/ui";
 import { categoryLabel } from "@/lib/categories";
 import { postVersions, type Post, type PostVersion } from "@/lib/content";
@@ -19,6 +20,8 @@ export function PostArticle({
   newer?: Post;
   older?: Post;
 }) {
+  // When a review is titled after the paper, a one-line byline replaces the card that would repeat the title.
+  const paperIsTitle = post.paper?.title === version.title;
   return (
     <article lang={version.lang}>
       <header className="mb-12">
@@ -36,6 +39,7 @@ export function PostArticle({
           {post.draft && <DraftBadge />}
         </h1>
         {version.description && <p className="mt-4 text-lg leading-7 text-muted">{version.description}</p>}
+        {post.paper && paperIsTitle && <PaperByline paper={post.paper} />}
         <LanguageSwitch post={post} current={version.lang} />
         {post.tags.length > 0 && (
           <div className="mt-5 flex flex-wrap gap-1.5">
@@ -52,7 +56,7 @@ export function PostArticle({
         )}
       </header>
 
-      {post.paper && <PaperCard paper={post.paper} />}
+      {post.paper && !paperIsTitle && <PaperCard paper={post.paper} />}
 
       <Mdx source={version.body} />
 
@@ -106,6 +110,29 @@ function LanguageSwitch({ post, current }: { post: Post; current: Lang }) {
         </Link>
       ))}
     </nav>
+  );
+}
+
+// Jeongeon Park et al. · IUI 2026 · Paper ↗
+function PaperByline({ paper }: { paper: NonNullable<Post["paper"]> }) {
+  const parts = [
+    paper.authors,
+    paper.venue,
+    paper.url && (
+      <a href={paper.url} target="_blank" rel="noreferrer" className="hover:text-accent">
+        Paper ↗
+      </a>
+    ),
+  ].filter(Boolean);
+  return (
+    <p className="mt-3 text-sm text-muted">
+      {parts.map((part, i) => (
+        <Fragment key={i}>
+          {i > 0 && <span className="mx-1.5">·</span>}
+          {part}
+        </Fragment>
+      ))}
+    </p>
   );
 }
 
