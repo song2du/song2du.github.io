@@ -1,0 +1,71 @@
+---
+title: "ASTRA: A Negotiation Agent with Adaptive and Strategic Reasoning via Tool-integrated Action for Dynamic Offer Optimization"
+description: "A negotiation agent that makes offers using partner modeling and numerical optimization"
+date: 2026-04-08
+category: paper-review
+tags: [negotiation, llm-agents]
+paper:
+  title: "ASTRA: A Negotiation Agent with Adaptive and Strategic Reasoning via Tool-integrated Action for Dynamic Offer Optimization"
+  authors: "Deuksin Kwon et al."
+  venue: "EMNLP 2025"
+  url: "https://arxiv.org/abs/2503.07129"
+---
+
+<Callout title="In short">
+An LLM-based negotiation agent that reads its partner's state in real time and works out the best offer using a tit-for-tat strategy.
+</Callout>
+
+## Problem
+
+Negotiation agents based on reinforcement learning are locked into fixed reward structures, so they can't adapt well when the other side changes its behavior mid-conversation.
+There has been a lot of recent work on LLM-based negotiation agents, but most of it sticks to simple single-issue negotiations.
+Put those agents into complex multi-issue negotiations and they tend to make irrational or losing offers.
+
+ASTRA doesn't stop at generating text.
+On every turn, it uses a math tool called an LP solver like a dynamic reward function to optimize its offers.
+
+## Method
+
+Here is how ASTRA builds an offer.
+
+1. It reads the partner's message and judges their fairness and stance.
+2. It uses an LP solver to pick a set of strong offer candidates.
+3. It uses a simulated partner agent to estimate how likely each candidate is to be accepted (PAP).
+4. It checks whether each candidate fits a good strategy for the current situation (SA).
+5. It adds up PAP and SA to choose the final offer.
+
+<Figure
+  src="/images/astra/figure2.jpg"
+  alt="How ASTRA negotiates. On the left is a negotiation dialogue about splitting food, water, and firewood. On the right is a three-step pipeline that assesses the partner's fairness and stance, generates offer candidates with an LP solver, and picks the final offer using PAP and SA scores"
+  caption="How ASTRA negotiates (Kwon et al., EMNLP 2025, Figure 2, CC BY 4.0)"
+/>
+
+What makes it different is that it isn't just an agent that talks well. It's an agent with a calculator.
+It works out favorable terms close to Pareto optimal, meaning a point where neither side can gain more without the other side losing something.
+
+## Results
+
+With ASTRA, the agent averaged 24.34 points when a deal was reached.
+That's about 3.6 points higher than the same agent without ASTRA, which scored 20.75.
+The experiment splits three kinds of items with high, medium, and low priority, so the gap is roughly one more medium-priority item.
+
+When negotiation experts rated how effective the strategies were, ASTRA also scored 0.93 points higher on average than the agent it was compared against.
+It also came up with new, favorable offers the experts hadn't thought of about 28% of the time.
+
+## My Take
+
+When people imagine an agent negotiating, they usually picture a mechanical exchange of numbers, like offering 3 chairs and 1 air freshener.
+So it was interesting that this one negotiates in casual conversation, based on real human dialogue data, and still gets meaningful results.
+
+The authors say ASTRA has more potential as a negotiation coach or decision support tool than as a replacement for people.
+I also think AI should grow toward strengthening what people can do rather than replacing them, so I liked that direction.
+
+## What Could Be Better
+
+In the expert evaluation, experts were asked which offer was newer and better, theirs or ASTRA's.
+But the question was phrased in a leading way, asking how much better ASTRA's offer was than theirs.
+The answer options also lumped every case where the expert's own offer was better into a single Same or Worse choice, so the results may be somewhat biased.
+I'd be curious to see what a fairer evaluation would show.
+
+Also, in real negotiations, emotional satisfaction matters as much as numerical gains.
+I'm not sure how far ASTRA's numerical optimization can go in meeting that.
