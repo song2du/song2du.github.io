@@ -1,0 +1,41 @@
+---
+# TEMPLATE: copy this file to start a publication page, then delete it.
+# Drafts only show up in `npm run dev`.
+title: "Sample Paper Title"
+authors: ["Yidu Song", "Coauthor Name"]
+venue: "Venue 2026"
+status: "To appear"   # accepted but not yet published; remove once it is out
+date: 2026-09-01
+summary: "One sentence on what the paper shows. It appears in the publication list."
+selected: true
+draft: true
+links:
+  paper: "https://arxiv.org/"
+  code: "https://github.com/song2du"
+  demo: "#demo"
+bibtex: |
+  @inproceedings{song2026sample,
+    title     = {Sample Paper Title},
+    author    = {Song, Yidu and Name, Coauthor},
+    booktitle = {Venue},
+    year      = {2026}
+  }
+---
+
+## Abstract
+
+Paste the abstract here.
+
+## Demo
+
+Embed any demo from `src/content/demos/` by its file name:
+
+<AgentDemo id="sample-negotiation" />
+
+## Key Results
+
+Figures go in `public/images/` and are embedded like this:
+
+{/* <Figure src="/images/publications/sample/result.png" alt="..." caption="..." /> */}
+
+Math works too: the agent's utility is $U(p) = v - p$ for a final price $p$.

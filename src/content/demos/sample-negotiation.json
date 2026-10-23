@@ -1,0 +1,64 @@
+{
+  "title": "Second-hand marketplace negotiation",
+  "description": "A buyer's agent negotiates a used iPad Air with a seller, grounding its offers in market data.",
+  "source": "Sample log for illustration. Replace it with a real log from your experiments.",
+  "participants": [
+    { "id": "buyer", "name": "Buyer Agent", "role": "AI agent" },
+    { "id": "seller", "name": "Seller", "role": "Listed at ₩520,000" }
+  ],
+  "replay": [
+    {
+      "speaker": "buyer",
+      "text": "Hi! I'm interested in your iPad Air. Is it still available?",
+      "thought": "Open neutrally and gather condition details before anchoring on price."
+    },
+    {
+      "speaker": "seller",
+      "text": "Yes, it's available! Barely used, and it comes with the original box and charger."
+    },
+    {
+      "speaker": "buyer",
+      "text": "Great. Could you tell me the battery health, and whether there are any scratches?",
+      "thought": "Condition details reduce the information gap and justify a counteroffer."
+    },
+    {
+      "speaker": "seller",
+      "text": "Battery is at 89%. There's one small scratch on the back, nothing on the screen."
+    },
+    {
+      "speaker": "buyer",
+      "text": "Thanks for the details. Comparable models have sold for around ₩470,000 recently, and 89% battery is a little below average. Would you take ₩450,000?",
+      "thought": "Anchor below the market average, leaving room to move up to ₩470,000.",
+      "annotations": { "Offer": "₩450,000" }
+    },
+    {
+      "speaker": "seller",
+      "text": "That's too low for me. I could do ₩500,000.",
+      "annotations": { "Counter": "₩500,000" }
+    },
+    {
+      "speaker": "buyer",
+      "text": "I understand. How about meeting in the middle at ₩470,000? I can pick it up today.",
+      "thought": "Concede once, and add a non-price benefit (a quick pickup) to make the offer more attractive.",
+      "annotations": { "Offer": "₩470,000" }
+    },
+    {
+      "speaker": "seller",
+      "text": "If you can come today, ₩475,000 and it's yours.",
+      "annotations": { "Counter": "₩475,000" }
+    },
+    {
+      "speaker": "buyer",
+      "text": "Deal at ₩475,000. Where would be convenient to meet?",
+      "thought": "₩475,000 is within budget and close to the market price. Accept.",
+      "annotations": { "Agreed": "₩475,000" }
+    }
+  ],
+  "live": {
+    "agent": "buyer",
+    "human": "seller",
+    "humanBrief": "You're selling a used iPad Air (5th gen, 64GB) listed at ₩520,000. Battery health is 89% and there's a small scratch on the back. Get the best price you can.",
+    "opening": "Hi! I'm interested in your iPad Air. Is it still available?",
+    "systemPrompt": "You are a negotiation agent acting for a buyer in a second-hand marketplace chat. Your client wants a used iPad Air (5th generation, 64GB, Wi-Fi) that the seller has listed at ₩520,000. Comparable listings have recently sold for about ₩470,000. Your client's maximum is ₩480,000; never reveal it.\n\nWrite like a real marketplace chat: one to three short sentences per message, polite and direct. Ask about condition (battery health, scratches, accessories) when it matters, and ground counteroffers in the market data. Once a price at or below the maximum is agreed, confirm the deal and suggest arranging a meetup. If the seller won't go below the maximum after a few rounds, politely walk away.\n\nIf the seller asks whether they're talking to an AI, say yes: you're an agent negotiating on the buyer's behalf."
+  }
+}

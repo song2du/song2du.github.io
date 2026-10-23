@@ -1,0 +1,190 @@
+---
+title: "Looking Back on My Time as Club President"
+description: "Ten months as president of a student AI club"
+date: 2026-07-17
+category: reflections
+tags: [leadership, retrospective]
+---
+
+## Introduction
+
+From September 2025 to June 2026, I was president of A.ing, an AI academic club at Gachon University.
+This post is my look back on those ten months.
+
+## How I Became President
+
+ChatGPT and DALL·E came out right before I enlisted in the army.
+I tried DALL·E through early access and was amazed.
+I'm really bad at drawing, but all I had to do was type a few words and it gave me a pretty convincing picture.
+
+<Figure
+  src="/images/club-president-retrospective/dalle.jpg"
+  alt="An oil painting style image of a woman in hanbok standing in front of a hanok wall"
+  caption="A picture I made with DALL·E back then"
+  width={400}
+/>
+
+I first used ChatGPT in the army, for assignments in an online college course I was taking for credit.
+It was GPT-3.5, which looks pretty weak by today's standards, but it was exciting to see AI fill in the parts I was bad at.
+That's when I started wanting to work in AI.
+
+After I was discharged, I had about seven months before going back to school.
+Once I was out, I felt like I had fallen behind everyone my age, so I started studying on my own, relearning the Python I'd forgotten and working through the basics of ML and DL.
+
+About four months in, I got frustrated.
+I could follow along with the books, but I couldn't actually build anything myself.
+I also had no idea where I stood compared to people my age who were already in school.
+So I joined the club to study with other people.
+
+I was pretty active, got close with the president and the officers, and agreed to become an officer the next semester.
+Then the president, who was about to start their last semester, needed to hand over the role.
+Running a student club is a lot of work with nothing in return, so nobody wanted it.
+In the end, three days before the semester started, the president picked two people, told us one of us should take over, and left. I was one of the two.
+I figured I'd rather do it myself than leave it to someone else, and that's how I kind of stumbled into being president.
+
+## First Semester
+
+We started the first semester with about 30 members.
+I became president right before the semester started, so it went by in a blur of recruiting members and figuring out the job.
+
+There was no time to build a new curriculum, but using a guide the previous president left behind, we split the tracks more finely than the semester before.
+Juniors, who were beginners, picked either ML or DL. Seniors picked either foundational papers or their own papers.
+
+- In **Junior ML**, members watched ML lectures on YouTube and took quizzes we made.
+- In **Junior DL**, our vice president taught from the book *Deep Learning from Scratch*.
+- In **Senior foundational papers**, teams read the key papers in each field.
+- In **Senior individual papers**, members read papers they were interested in and presented them at a monthly seminar.
+
+Still, from my time as a member and my first semester as president, I saw two problems.
+
+First, there was no real reason to get together just to solve ML quizzes. So partway through the semester, I added a team league.
+Teams used what they had learned to tackle classic problems like House Prices and competed on model performance.
+The team with the most points got Starbucks gift cards at the end of the semester.
+Members told me the league was the most fun part of the club, and attendance was highest on league days.
+
+<Figure
+  src="/images/club-president-retrospective/leaderboard.png"
+  alt="A.ing ML Programming league, round 2 leaderboard. ML team 3 placed first with an F1 score of 0.8 and 6 points, team 2 second with 0.78 and 3 points, and team 4 third with 0 and 2 points"
+  caption="Round 2 leaderboard of the league (Wine Quality)"
+  width={400}
+/>
+
+Second, juniors often sat through seminar talks without understanding much and just zoned out.
+The gap between the presenters and the juniors was big, and even seniors often couldn't follow a talk outside their own area.
+On top of that, it was really hard to raise your hand and ask a question or start a discussion in a room of almost 30 people.
+
+I set up an anonymous question board and asked lots of questions myself to get things going, but it wasn't enough.
+Even on the anonymous board, the only people who posted questions were officers.
+The format itself had to change, but the officers were too busy during the semester to take that on.
+
+So I ran a survey at the end of the semester. Thirty members (25 juniors and 5 seniors) responded.
+
+What stood out most was coding.
+When asked whether they could write at least the skeleton of a model they had learned, from scratch and without any references, not a single person rated themselves 4 or higher out of 5. That included the seniors.
+The top reason for copying AI-generated code was that they understood the theory but didn't know how to start writing the code.
+It was the same frustration I had felt studying alone after the army.
+
+When they got stuck, 26 people worked it out alone with Google or ChatGPT. Nobody asked an officer or a senior member.
+One member wrote that the way the club was set up made it feel cold.
+We had come together to study, but in reality everyone was studying alone.
+
+So the officers and I agreed to completely overhaul the curriculum for the second semester.
+
+## Second Semester
+
+The motto for the second semester was to grow through intentional discomfort.
+When I think about the times I grew the most, it wasn't when AI or someone else did the work for me. It was when I struggled through it myself.
+What I learned that way also stuck with me much longer. In learning psychology, this is called desirable difficulty.
+I hoped members would get through that discomfort together as teams, get closer, and get better along the way.
+
+- **Juniors** spent four weeks each on the ResNet and Transformer papers, going from team study to implementing the core logic, then hyperparameter tuning, and finally a league.
+- **Seniors** worked in teams on a CV, NLP, or RL project, reproducing open source code and adapting it to their own data.
+
+<Toggle title="See the curriculum repos">
+  <Bookmark
+    href="https://github.com/aing-gachon/26-Spring-ResNet-Study"
+    title="Junior ResNet study"
+    description="A four-week course on reading the ResNet paper, implementing its core logic, and tuning it in a league"
+  />
+
+  <Bookmark
+    href="https://github.com/aing-gachon/26-Spring-Transformer-Study"
+    title="Junior Transformer study"
+    description="A four-week course on reading the Transformer paper, implementing its core logic, and tuning it in a league"
+  />
+
+  <Bookmark
+    href="https://github.com/aing-gachon/26-Spring-Senior-Session"
+    title="Senior project track"
+    description="A project guide for reproducing open source CV, NLP, and RL code and adapting it to your own data"
+  />
+</Toggle>
+
+I built the discomfort into the materials on purpose.
+The fill-in-the-blank notebooks left the core logic empty for members to write themselves, and the cookbook we made for when they got stuck only explained how to use PyTorch, with no answer code.
+To keep people from getting lost, every piece of material pointed to the part of the paper it was based on.
+We kept the league because it had been the most popular activity in the first semester.
+
+For seniors, I replaced the seminar, where they mostly just listened, with projects they actually built.
+The focus was less on a polished result and more on documenting how they reproduced and changed the code.
+
+We checked how it went with three surveys, at the start, middle, and end of the semester.
+For the 15 members who answered at both the start and the end, the average self-rating of their skills went from 2.55 to 3.45 out of 5, and 13 of the 15 improved.
+These are self-ratings, so I can't give the curriculum all the credit, but the direction was clear.
+
+Something else stood out more than the numbers.
+In the midterm survey, the hardest parts were reading papers and filling in the blanks. At the end of the semester, those same two things were what members named as the moments they improved the most.
+One member said they finally understood skip connections from ResNet when they ran into them again in Transformer.
+The discomfort we built in on purpose turned into real growth.
+
+Still, coding without reference code or AI never got past the 2s.
+It was the only one of the five skills that didn't even reach neutral.
+
+<LineChart
+  x={["Start", "Middle", "End"]}
+  yDomain={[1, 5]}
+  reference={{ value: 3, label: "Neutral" }}
+  series={[
+    { name: "Explaining theory", values: [2.17, 3.58, 3.75] },
+    { name: "Solo coding", values: [1.5, 2.5, 2.25], highlight: true },
+    { name: "Debugging", values: [2.67, 3.92, 3.83] },
+    { name: "Documenting and sharing", values: [3.17, 3.5, 3.67] },
+    { name: "Self-efficacy", values: [3.67, 3.75, 4.0] },
+  ]}
+  caption="Average self-ratings of the 12 members who answered all three surveys, on a 5-point scale"
+/>
+
+## What I Learned
+
+Being president meant I got to take ideas that only existed in my head, actually build them, and try them out on a whole group of people. That meant a lot to me.
+It also came with plenty of challenges.
+
+First, I designed the curriculum assuming everyone would show up all semester, but more and more people dropped off toward the end.
+Some had schedule conflicts, some ran out of energy, and some just lost the excitement they started with.
+I had set a rule that one unexcused absence meant you couldn't keep participating, but it wasn't enforced well.
+A rule alone wasn't enough. Next time I'd start with an attendance system or an officer whose whole job is tracking attendance.
+
+Second, working through difficulty on your own takes more energy than I expected.
+In the survey, members felt pretty confident they could handle unfamiliar tasks. But in practice, getting well-organized knowledge handed to them felt more worthwhile than figuring things out the hard way.
+Next time I'd break things into smaller steps so people can get small wins more often.
+
+Third, the senior track I ran on my own was pretty much hands-off.
+There were two reasons. One was on purpose. I thought reproducing and changing open source code would lose its point if someone walked you through it.
+The other was my own limits. My field is LLM agents and HCI, but every senior team picked a reinforcement learning project. When they got stuck, there wasn't much I could do to help.
+That's when I learned that letting people work on their own and leaving them alone are two different things.
+Next time I'd bring in a professor or an outside mentor so people have someone to turn to when they get stuck.
+
+Fourth, the officers didn't agree on where the club should go.
+I wanted to focus on building up the club's academic side, while other officers wanted to put more into partnerships with outside groups.
+Outside partnerships matter for a club too. But since we never settled on priorities, our meetings went in circles, with ideas proposed and turned down over and over. That took a lot of energy.
+Next time I'd want the officers to agree on what the club is focusing on before the semester starts.
+
+## Wrapping Up
+
+Leading the club for two semesters was a big personal challenge.
+It was hard and pretty draining, and I've since left the club.
+Still, leading a group of about 30 people, listening to members through surveys, and actually changing the curriculum based on what they said taught me things I couldn't have learned any other way.
+
+From here, I plan to focus more on research at my lab.
+
+Lastly, I want to thank the officers who went through all of this with me and the members who stuck with it to the end.

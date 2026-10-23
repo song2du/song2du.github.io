@@ -1,0 +1,49 @@
+---
+# TEMPLATE: copy this file for each paper review. Drafts only show up in `npm run dev`.
+title: "Paper Review Template"
+description: "A starting structure for paper reviews."
+date: 2026-10-23
+category: paper-review
+tags: [template]
+draft: true
+paper:
+  title: "Attention Is All You Need"
+  authors: "Vaswani et al."
+  venue: "NeurIPS 2017"
+  url: "https://arxiv.org/abs/1706.03762"
+---
+
+<Callout title="TL;DR">
+One or two sentences: what the paper does and why it matters.
+</Callout>
+
+## Problem
+
+What gap does the paper address, and why do existing approaches fall short?
+
+## Method
+
+Inline math like $d_k$ and display math both render with KaTeX:
+
+$$
+\mathrm{Attention}(Q, K, V) = \mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
+$$
+
+Code blocks are highlighted:
+
+```python
+scores = q @ k.transpose(-2, -1) / math.sqrt(d_k)
+weights = scores.softmax(dim=-1)
+```
+
+## Results
+
+Key numbers and what they show.
+
+## My Take
+
+Strengths, weaknesses, and how it connects to my own research.
+
+## Open Questions
+
+- What would I test next?

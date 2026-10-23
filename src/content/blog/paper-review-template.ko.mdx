@@ -1,0 +1,40 @@
+---
+# 한국어판: 제목과 요약만 쓰면 돼요. 날짜, 카테고리, 태그, draft는 영어 원본을 따라가요.
+title: "논문 리뷰 템플릿"
+description: "논문 리뷰를 시작할 때 쓰는 기본 구조예요."
+---
+
+<Callout title="한 줄 요약">
+이 논문이 무엇을 했고 왜 중요한지 한두 문장으로 써요.
+</Callout>
+
+## 문제
+
+논문이 다루는 빈틈은 무엇이고, 기존 방법은 왜 부족했나요?
+
+## 방법
+
+인라인 수식 $d_k$와 블록 수식 모두 KaTeX로 렌더링돼요.
+
+$$
+\mathrm{Attention}(Q, K, V) = \mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
+$$
+
+코드 블록은 하이라이트돼요.
+
+```python
+scores = q @ k.transpose(-2, -1) / math.sqrt(d_k)
+weights = scores.softmax(dim=-1)
+```
+
+## 결과
+
+핵심 수치와 그것이 보여 주는 것.
+
+## 내 생각
+
+강점, 약점, 그리고 내 연구와 어떻게 연결되는지.
+
+## 남은 질문
+
+- 다음에 무엇을 실험해 볼까?
