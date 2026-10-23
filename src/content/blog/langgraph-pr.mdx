@@ -1,0 +1,69 @@
+---
+title: "My Rejected LangGraph PR"
+description: "I tried to fix broken examples in the LangGraph repo, and the PR got turned down"
+date: 2026-01-24
+category: reflections
+tags: [open-source, langgraph]
+---
+
+## Introduction
+
+LangGraph, an AI agent framework, was getting a lot of attention and overlapped with what I'm interested in, so I started studying it.
+But when I tried to follow the official examples on GitHub, the links were broken and I kept getting 404 errors.
+The issues tab showed someone had already reported it, but it had been sitting there unresolved for a week.
+
+It looked like something I could fix without much coding skill, as long as I was willing to put up with some tedious work, so I decided to fix it myself.
+
+## What Was Wrong and How I Fixed It
+
+At the time, the example notebooks didn't have any real content. They only had hyperlinks pointing to old addresses.
+Those links never got updated, so the pages existed but there was nothing behind them, just 404s.
+
+At first I figured I could just roll back to an older commit.
+But once I looked through the history, it was messier than that.
+The original files had been deleted, and the new files that replaced them still pointed to dead links.
+
+In the end I went through the whole repo history, found the commit right before the files were deleted, and restored each one to match the current file paths.
+When I was done, I had restored 63 files.
+
+## Feedback on the PR
+
+I opened the PR late at night and went to bed. When I woke up, there was an email waiting.
+The comment came from Eugene Yurtsev, one of LangChain's core maintainers.
+
+The comment made two points.
+Large PRs should be discussed first, in an issue or somewhere similar. And since they planned to move the docs to docs.langchain.com, they probably wouldn't merge my changes.
+In fact, the comment said those docs were more likely to be deleted.
+It was a short comment, but I think the sheer size of the change is what drew attention.
+
+<Figure
+  src="/images/langgraph-pr/pr-comment.png"
+  alt="A GitHub PR thread. eyurtsev asks to check in before large PRs and says the changes likely won't be merged and the docs are more likely to be deleted. Below is my reply saying I didn't know about the consolidation plan and will close the PR, followed by the PR being closed"
+  caption="The comment on my PR and my reply"
+/>
+
+I replied that I hadn't known about the consolidation plan and closed the PR myself.
+
+## What I Learned
+
+I assumed core maintainers would be too busy with internal reviews to comment on PRs from outsiders, so it was really surprising to get feedback on my work.
+
+A few things stuck with me.
+
+First, even big projects fall behind on docs and issues.
+Seeing broken official examples and issues left open at a well-known startup made me feel there's no reason to be intimidated. They're people like anyone else.
+
+Second, good PRs get closed all the time.
+Looking through the PR history, I saw that even PRs from people inside LangChain sometimes got good reviews and were still closed.
+That gave me a better sense of how open source actually works.
+
+Third, and most important, large PRs should be discussed first.
+I realized that understanding where the project is headed matters a lot more than getting every line of code right.
+
+Since it was mostly restoration work, I went back and forth on whether to share the PR. But I'm leaving the link here in case it helps anyone interested in contributing to open source.
+
+<Bookmark
+  href="https://github.com/langchain-ai/langgraph/pull/6717"
+  title="fix(docs): restore content for 63 broken example notebooks"
+  description="LangGraph PR #6717 that restored 63 broken example notebooks"
+/>
