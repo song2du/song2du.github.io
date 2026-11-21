@@ -125,6 +125,27 @@
 
   .stats { display: grid; grid-template-columns: var(--head-w) 1fr; border-top: 1px solid var(--line); }
   .stats[hidden] { display: none; }
+  .coach { display: grid; grid-template-columns: var(--head-w) 1fr; border-top: 1px solid var(--line); }
+  .coach[hidden] { display: none; }
+  .coach .rows { padding: 14px 16px 16px; display: grid; gap: 12px; min-width: 0; }
+  .notice { color: #F7A7A4; background: rgba(239, 95, 91, 0.1); border-radius: var(--radius-s); padding: 8px 12px; font-size: 13.5px; }
+  .tips { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .tip {
+    display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center;
+    padding: 10px 12px; background: var(--panel-2); border-radius: 8px; border-left: 3px solid var(--line);
+  }
+  .tip.first { border-left-color: var(--mine); }
+  .tip .tag { font-size: 12px; color: var(--mine); font-weight: 600; margin-bottom: 2px; }
+  .tip-h { font-weight: 600; font-size: 14.5px; }
+  .tip-why { color: var(--muted); font-size: 13px; margin-top: 2px; max-width: 78ch; }
+  .tip button { white-space: nowrap; }
+  .coach details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .good { color: #9FD8B0; font-size: 13.5px; }
+  .spots { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13px; }
+  .spots > span { color: var(--muted); margin-right: 2px; }
+  .spots button { font-size: 12.5px; padding: 4px 9px; }
+  .spots .tip-why { flex-basis: 100%; margin: 0; }
+  .progress { font-size: 13.5px; }
   .stats .thead { font-size: 13px; color: var(--muted); }
   .stats .rows { padding: 12px 16px; display: grid; gap: 6px; font-size: 13.5px; }
   .stats .rows b { font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -136,7 +157,8 @@
 
   @media (max-width: 760px) {
     .wrap { padding: 16px 14px 40px; }
-    .track, .stats { grid-template-columns: 1fr; }
+    .track, .stats, .coach { grid-template-columns: 1fr; }
+    .tip { grid-template-columns: 1fr; }
     .thead { border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; align-items: center; }
     .meter { width: 80px; }
   }
@@ -257,6 +279,7 @@
           <option value="plain">바로 녹음</option>
         </select>
         <label class="check"><input type="checkbox" id="autoStop" checked> 말 끝나면 자동 정지</label>
+        <label class="check" title="주변 소음을 줄여서 녹음해요. 조용한 방이면 꺼도 돼요."><input type="checkbox" id="noiseSup" checked> 잡음 줄이기</label>
         <div class="meter" aria-hidden="true"><span id="meterBar"></span></div>
         <div class="takes" id="takes" aria-label="녹음 목록"></div>
         <div class="tbtns">
@@ -276,7 +299,7 @@
     <div class="track" id="track-into">
       <div class="thead">
         <div class="tname">억양 겹쳐보기</div>
-        <div class="tmeta">각자 평균 음높이를 0으로 맞춘 반음 단위라서 목소리 높이가 달라도 모양만 비교돼요.</div>
+        <div class="tmeta" id="intoMeta">각자 평균 음높이를 0으로 맞춘 반음 단위라서 목소리 높이가 달라도 모양만 비교돼요.</div>
         <div class="legend"><span><i style="background:var(--ref)"></i>원본</span><span><i style="background:var(--mine)"></i>내 녹음</span></div>
       </div>
       <div class="tbody">
@@ -289,9 +312,14 @@
       <div class="thead">비교</div>
       <div class="rows" id="statRows"></div>
     </div>
+
+    <div class="coach" id="coach" hidden>
+      <div class="thead"><div class="tname">이렇게 고쳐보세요</div><div class="tmeta" id="coachMeta"></div></div>
+      <div class="rows" id="coachRows" aria-live="polite"></div>
+    </div>
   </section>
 
-  <p class="note">스펙트로그램의 진한 가로 띠(포먼트) 높이가 모음 소리를 결정해요. 원본과 띠의 높이나 모양이 다르면 모음이 다르게 난 거예요. 위아래 색 선은 음높이(억양)이고 오른쪽 색 눈금으로 읽어요. 트랙을 드래그하면 같은 부분이 다른 트랙에도 표시되고, 그 구간만 재생돼요.</p>
+  <p class="note">녹음하면 아래 "이렇게 고쳐보세요"에 먼저 고칠 점이 나오고, 버튼을 누르면 그 부분을 원본과 내 녹음 순서로 들려줘요. 스펙트로그램의 진한 가로 띠(포먼트) 높이가 모음 소리를 결정해요. 원본과 띠의 높이나 모양이 다르면 모음이 다르게 난 거예요. 위아래 색 선은 음높이(억양)이고 오른쪽 색 눈금으로 읽어요. 트랙을 드래그하면 같은 부분이 다른 트랙에도 표시되고, 그 구간만 재생돼요.</p>
 </div>
 
 <script type="module">
@@ -379,6 +407,7 @@ async function analyze(t) {
     for (let j = a; j < b; j++) s += x[j] * x[j];
     rms[i] = Math.sqrt(s / Math.max(1, b - a)); if (rms[i] > mx) mx = rms[i];
   }
+  t.rms = rms;
   const floor = quantile(rms, 0.1);
   const thr = Math.max(mx * 0.035, floor * 3, 1e-5);
   let first = -1, last = -1;
@@ -452,9 +481,10 @@ function cleanPitch(f) {
   }
 }
 
+let trackSeq = 0;
 async function makeTrack(play, kind, meta = {}) {
   const ana = await resample(play, PLAY_SR, ANA_SR);
-  const t = { kind, play, ana, ...meta };
+  const t = { kind, play, ana, ...meta, id: ++trackSeq };
   await analyze(t);
   t.url = URL.createObjectURL(wavBlob(play, PLAY_SR));
   t.el = new Audio(t.url);
@@ -477,8 +507,11 @@ function selFor(kind) {
   const src = trackOf(S.sel.src), dst = trackOf(kind);
   if (!src || !dst) return null;
   if (kind === S.sel.src) return [S.sel.t0, S.sel.t1];
+  if (kind === 'mine' && S.sel.mine) return S.sel.mine;
   const [sa, sb] = viewOf(src), [da, db] = viewOf(dst);
-  const m = S.view === 'fit' ? (tt) => da + (tt - sa) / (sb - sa) * (db - da) : (tt) => da + (tt - sa);
+  const al = alignFor(mine());
+  const m = al ? (S.sel.src === 'ref' ? (tt) => r2m(al, tt) : (tt) => m2r(al, tt))
+    : S.view === 'fit' ? (tt) => da + (tt - sa) / (sb - sa) * (db - da) : (tt) => da + (tt - sa);
   const a = Math.max(da, Math.min(db, m(S.sel.t0))), b = Math.max(da, Math.min(db, m(S.sel.t1)));
   return b - a < 0.02 ? null : [a, b];
 }
@@ -523,6 +556,317 @@ const LUT = (() => {
   return lut;
 })();
 
+// ---------- alignment: MFCC + DTW, so each moment of the original maps to the same moment of a take ----------
+const MELB = (() => {
+  const N = 512, nb = N / 2 + 1, nf = 26, fmin = 80, fmax = 7600;
+  const mel = (f) => 2595 * Math.log10(1 + f / 700), inv = (m) => 700 * (10 ** (m / 2595) - 1);
+  const bins = [];
+  for (let i = 0; i < nf + 2; i++) bins.push(inv(mel(fmin) + (mel(fmax) - mel(fmin)) * i / (nf + 1)) / (ANA_SR / N));
+  const fb = [];
+  for (let k = 1; k <= nf; k++) {
+    const l = bins[k - 1], c = bins[k], r = bins[k + 1], w = new Float32Array(nb);
+    for (let b = 0; b < nb; b++) { if (b > l && b <= c) w[b] = (b - l) / (c - l); else if (b > c && b < r) w[b] = (r - b) / (r - c); }
+    fb.push(w);
+  }
+  const dct = [];
+  for (let c = 1; c <= 12; c++) { const row = new Float32Array(nf); for (let k = 0; k < nf; k++) row[k] = Math.cos(Math.PI * c * (k + 0.5) / nf); dct.push(row); }
+  return { N, nb, nf, fb, dct };
+})();
+const FEAT_T0 = 200 / ANA_SR;   // centre of feature frame 0 (25 ms window)
+function featsOf(t) {
+  if (t.mfcc) return t.mfcc;
+  const { N, nb, nf, fb, dct } = MELB, F = getFFT(N), L = 400, win = hann(L), x = t.ana;
+  const n = Math.max(0, Math.floor((x.length - L) / HOP) + 1);
+  const out = new Float32Array(n * 12), re = new Float32Array(N), im = new Float32Array(N), pw = new Float32Array(nb), lm = new Float32Array(nf);
+  for (let i = 0; i < n; i++) {
+    re.fill(0); im.fill(0);
+    const off = i * HOP;
+    for (let k = 0; k < L; k++) re[k] = (x[off + k] - 0.97 * (off + k > 0 ? x[off + k - 1] : 0)) * win[k];
+    fft(re, im, F);
+    for (let b = 0; b < nb; b++) pw[b] = re[b] * re[b] + im[b] * im[b];
+    for (let f = 0; f < nf; f++) { let s = 0; const w = fb[f]; for (let b = 0; b < nb; b++) s += w[b] * pw[b]; lm[f] = Math.log(s + 1e-10); }
+    for (let c = 0; c < 12; c++) { let s = 0; const row = dct[c]; for (let k = 0; k < nf; k++) s += row[k] * lm[k]; out[i * 12 + c] = s; }
+  }
+  t.mfcc = { F: out, n };
+  return t.mfcc;
+}
+function cmvn(F, start, step, n) {
+  const X = new Float32Array(n * 12), mu = new Float32Array(12), sd = new Float32Array(12);
+  for (let i = 0; i < n; i++) for (let c = 0; c < 12; c++) mu[c] += F[(start + i * step) * 12 + c] / n;
+  for (let i = 0; i < n; i++) for (let c = 0; c < 12; c++) { const v = F[(start + i * step) * 12 + c] - mu[c]; sd[c] += v * v / n; }
+  for (let c = 0; c < 12; c++) sd[c] = Math.sqrt(sd[c]) || 1;
+  for (let i = 0; i < n; i++) for (let c = 0; c < 12; c++) X[i * 12 + c] = (F[(start + i * step) * 12 + c] - mu[c]) / sd[c];
+  return X;
+}
+function computeAlign(r, m) {
+  const A = featsOf(r), B = featsOf(m);
+  const fi = (t, nmax) => Math.max(0, Math.min(nmax - 1, Math.round((t - FEAT_T0) / (HOP / ANA_SR))));
+  const ra = fi(r.on, A.n), rb = fi(r.off, A.n), ma = fi(m.on, B.n), mb = fi(m.off, B.n);
+  const step = Math.max(1, Math.ceil(Math.max(rb - ra, mb - ma) / 1400));
+  const n = Math.floor((rb - ra) / step) + 1, mm = Math.floor((mb - ma) / step) + 1;
+  if (n < 6 || mm < 6) return null;
+  const X = cmvn(A.F, ra, step, n), Y = cmvn(B.F, ma, step, mm);
+  const dist = (i, j) => { let s = 0; for (let c = 0; c < 12; c++) { const v = X[i * 12 + c] - Y[j * 12 + c]; s += v * v; } return Math.sqrt(s); };
+  const w = Math.max(Math.round(0.3 * Math.max(n, mm)), 25);
+  const D = new Float32Array(n * mm).fill(Infinity);
+  for (let i = 0; i < n; i++) {
+    const c = n > 1 ? i * (mm - 1) / (n - 1) : 0;
+    const j0 = Math.max(0, Math.floor(c - w)), j1 = Math.min(mm - 1, Math.ceil(c + w));
+    for (let j = j0; j <= j1; j++) {
+      let best = 0;
+      if (i || j) {
+        best = Infinity;
+        if (i > 0 && D[(i - 1) * mm + j] < best) best = D[(i - 1) * mm + j];
+        if (j > 0 && D[i * mm + j - 1] < best) best = D[i * mm + j - 1];
+        if (i > 0 && j > 0 && D[(i - 1) * mm + j - 1] < best) best = D[(i - 1) * mm + j - 1];
+      }
+      D[i * mm + j] = dist(i, j) + best;
+    }
+  }
+  if (!Number.isFinite(D[n * mm - 1])) return null;
+  const sumJ = new Float32Array(n), cntI = new Float32Array(n), sumI = new Float32Array(mm), cntJ = new Float32Array(mm), dl = new Float32Array(n);
+  let i = n - 1, j = mm - 1;
+  for (;;) {
+    sumJ[i] += j; cntI[i]++; sumI[j] += i; cntJ[j]++; dl[i] += dist(i, j);
+    if (i === 0 && j === 0) break;
+    if (i === 0) { j--; continue; }
+    if (j === 0) { i--; continue; }
+    const dg = D[(i - 1) * mm + j - 1], up = D[(i - 1) * mm + j], lf = D[i * mm + j - 1];
+    if (dg <= up && dg <= lf) { i--; j--; } else if (up < lf) i--; else j--;
+  }
+  const mapR = new Float32Array(n), mapM = new Float32Array(mm), dloc = new Float32Array(n);
+  for (let k = 0; k < n; k++) { mapR[k] = sumJ[k] / cntI[k]; dloc[k] = dl[k] / cntI[k]; }
+  for (let k = 0; k < mm; k++) mapM[k] = sumI[k] / cntJ[k];
+  const hop = step * HOP / ANA_SR;
+  return { refId: r.id, rT0: FEAT_T0 + ra * HOP / ANA_SR, mT0: FEAT_T0 + ma * HOP / ANA_SR, hop, mapR, mapM, dloc };
+}
+function alignFor(m) {
+  const r = S.ref; if (!r || !m) return null;
+  if (!m.align || m.align.refId !== r.id) m.align = computeAlign(r, m) || { refId: r.id, none: true };
+  return m.align.none ? null : m.align;
+}
+function mapThrough(map, srcT0, dstT0, hop, t) {
+  const n = map.length, x = (t - srcT0) / hop;
+  if (x <= 0) return dstT0 + map[0] * hop + x * hop;
+  if (x >= n - 1) return dstT0 + map[n - 1] * hop + (x - (n - 1)) * hop;
+  const i0 = Math.floor(x), f = x - i0;
+  return dstT0 + (map[i0] * (1 - f) + map[i0 + 1] * f) * hop;
+}
+const r2m = (al, t) => (al ? mapThrough(al.mapR, al.rT0, al.mT0, al.hop, t) : t);
+const m2r = (al, t) => (al ? mapThrough(al.mapM, al.mT0, al.rT0, al.hop, t) : t);
+
+// ---------- coaching: turn the measurements into a short list of things to fix ----------
+function pitchPts(t) {
+  if (t._pp) return t._pp;
+  const step = HOP / ANA_SR, raw = [];
+  for (let i = 0; i < t.f0.length; i++) { const time = t.f0t0 + i * step; if (t.f0[i] && time >= t.on && time <= t.off) raw.push([time, t.f0[i]]); }
+  const med = median(raw.map((p) => p[1]));
+  t._pp = { med, pts: raw.map(([time, f]) => [time, 12 * Math.log2(f / med)]) };
+  return t._pp;
+}
+const stIn = (pp, a, b) => pp.pts.filter((p) => p[0] >= a && p[0] <= b).map((p) => p[1]);
+function pausesOf(t, minDur) {
+  const db = Array.from(t.rms, (v) => 20 * Math.log10(v + 1e-6));
+  const i0 = Math.max(0, Math.floor(t.on / 0.01)), i1 = Math.min(db.length - 1, Math.ceil(t.off / 0.01));
+  const lo = quantile(db, 0.1), hi = quantile(db.slice(i0, i1 + 1), 0.9), thr = lo + 0.3 * (hi - lo);
+  const list = []; let s = -1;
+  for (let i = i0; i <= i1; i++) {
+    const quiet = db[i] < thr;
+    if (quiet && s < 0) s = i;
+    if ((!quiet || i === i1) && s >= 0) {
+      const a = s * 0.01 + 0.01, b = (quiet ? i : i - 1) * 0.01 + 0.01;
+      if (b - a >= minDur && a > t.on + 0.12 && b < t.off - 0.12) list.push({ a, b });
+      s = -1;
+    }
+  }
+  return { list, snr: hi - lo };
+}
+const fmtSt = (x) => `${x > 0 ? '+' : ''}${x.toFixed(1)}반음`;
+const shortText = (s) => (s.length > 26 ? s.slice(0, 24).trimEnd() + '…' : s);
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function coachFor(m) {
+  const r = S.ref; if (!r || !m) return null;
+  if (m.coach && m.coach.refId === r.id) return m.coach;
+  const al = alignFor(m);
+  const R2M = (t) => r2m(al, t), M2R = (t) => m2r(al, t);
+  const tips = [], good = [], quality = [], spots = [];
+  const pr = pitchPts(r), pm = pitchPts(m);
+  const rangeOf = (pp) => (pp.pts.length > 5 ? quantile(pp.pts.map((p) => p[1]), 0.9) - quantile(pp.pts.map((p) => p[1]), 0.1) : 0);
+  const gr = rangeOf(pr), gm = rangeOf(pm);
+  const rP = pausesOf(r, 0.18), mP = pausesOf(m, 0.25), snr = mP.snr;
+
+  // recording quality first: bad input makes every other number unreliable
+  let clip = 0; for (let k = 0; k < m.play.length; k++) if (Math.abs(m.play[k]) > 0.985) clip++;
+  if (snr < 15) quality.push('주변 잡음이 커서 분석이 부정확할 수 있어요. 조용한 곳에서 마이크를 입 가까이 두고, "잡음 줄이기"를 켠 채 다시 녹음해보세요.');
+  if (clip > m.play.length * 0.0005) quality.push('소리가 너무 커서 찢어졌어요. 마이크에서 조금 떨어져서 녹음하세요.');
+  if (m.peak < 0.03) quality.push('녹음 소리가 너무 작아요. 마이크에 더 가까이 대고 말하세요.');
+  if (m.off - m.on < 0.45 * (r.off - r.on)) quality.push('원본보다 훨씬 짧아요. 문장을 끝까지 말했는지 확인하세요.');
+
+  // phrases of the original, split at its pauses
+  const phrases = []; let a0 = r.on;
+  for (const p of rP.list) { phrases.push({ a: a0, b: p.a }); a0 = p.b; }
+  phrases.push({ a: a0, b: r.off });
+  let labels = null;
+  if (r.text) {
+    for (const re of [/(?<=[.?!])\s+/, /(?<=[.?!,;:])\s+/]) {
+      const parts = r.text.trim().split(re).filter(Boolean);
+      if (parts.length === phrases.length) { labels = parts; break; }
+    }
+  }
+  const label = (i) => (labels ? `“${esc(shortText(labels[i]))}”` : phrases.length > 1 ? `${i + 1}번째 구간` : '문장');
+  const phraseAt = (t) => { const k = phrases.findIndex((p) => t >= p.a - 0.05 && t <= p.b + 0.05); return k < 0 ? 0 : k; };
+  const clampR = (x, y) => [Math.max(r.on, x), Math.min(r.off, y)];
+  const pair = (ra, rb) => { const [x, y] = clampR(ra, rb); return { ref: [x, y], mine: [Math.max(0, R2M(x)), Math.min(m.dur, R2M(y))] }; };
+
+  // stressed words: the pitch peak of each phrase of the original
+  const hits = [], misses = [];
+  phrases.forEach((ph, i) => {
+    const rpts = pr.pts.filter((p) => p[0] >= ph.a && p[0] <= ph.b); if (rpts.length < 8) return;
+    const rmed = median(rpts.map((p) => p[1]));
+    // the last ~0.35 s is the phrase-final rise/fall, handled separately below
+    const body = rpts.filter((p) => p[0] <= ph.b - 0.35); if (body.length < 5) return;
+    let pk = body[0]; for (const p of body) if (p[1] > pk[1]) pk = p;
+    const promR = pk[1] - rmed; if (promR < 3) return;
+    const ma = R2M(ph.a), mb = R2M(ph.b);
+    const mpts = pm.pts.filter((p) => p[0] >= ma && p[0] <= mb); if (mpts.length < 5) return;
+    const mmed = median(mpts.map((p) => p[1])), tc = R2M(pk[0]);
+    const near = mpts.filter((p) => Math.abs(p[0] - tc) <= 0.15).map((p) => p[1]);
+    const promM = near.length ? Math.max(...near) - mmed : 0;
+    const rec = { i, at: pk[0], promR, promM, ...pair(Math.max(ph.a, pk[0] - 0.4), Math.min(ph.b, pk[0] + 0.4)) };
+    (promM >= Math.max(1.5, 0.5 * promR) ? hits : misses).push(rec);
+  });
+  misses.sort((x, y) => (y.promR - y.promM) - (x.promR - x.promM));
+
+  // overall intonation range
+  let usedMiss = null;
+  if (gr >= 4 && gm < 0.65 * gr) {
+    usedMiss = misses[0] || null;
+    tips.push({ sev: 3 + (gr - gm) * 0.6, title: '억양을 더 크게 움직이세요',
+      why: `원본은 음높이가 ${gr.toFixed(1)}반음 폭으로 오르내리는데 내 녹음은 ${gm.toFixed(1)}반음이에요. 한국어처럼 평평하게 들릴 수 있어요. 강조할 단어에서 음을 확 올렸다가 문장 끝에서 내려보세요.`
+        + (usedMiss ? ` 가장 차이 나는 곳은 ${label(usedMiss.i)} @T 부근이에요.` : ''),
+      at: usedMiss ? usedMiss.at : r.on, ...(usedMiss ? { ref: usedMiss.ref, mine: usedMiss.mine } : pair(r.on, r.off)) });
+  } else if (gr >= 3 && gm > 1.7 * gr) {
+    tips.push({ sev: 2, title: '억양을 조금 차분하게', why: `원본은 ${gr.toFixed(1)}반음 폭인데 내 녹음은 ${gm.toFixed(1)}반음으로 오르내림이 커요.`, at: r.on, ...pair(r.on, r.off) });
+  } else if (gr >= 3) good.push('억양 폭이 원본과 비슷해요.');
+
+  for (const x of misses) {
+    if (x === usedMiss) continue;
+    tips.push({ sev: 2.5 + (x.promR - x.promM) * 0.5, title: '이 단어를 더 강조하세요',
+      why: `${label(x.i)} @T 부근에서 원본은 음을 ${fmtSt(x.promR)} 올려 강조하는데 내 녹음은 ${fmtSt(x.promM)}이에요. 이 단어를 더 높고, 길고, 크게 말해보세요.`, at: x.at, ref: x.ref, mine: x.mine });
+  }
+  if (hits.length && !misses.length) good.push('강조하는 단어가 원본과 같아요.');
+
+  // rise or fall at the end of each phrase
+  const dirOf = (v) => { if (v.length < 6) return null; const k = Math.max(2, Math.floor(v.length / 3)); return median(v.slice(-k)) - median(v.slice(0, k)); };
+  let endsOk = 0;
+  phrases.forEach((ph, i) => {
+    const dr = dirOf(stIn(pr, ph.b - 0.4, ph.b)); if (dr === null) return;
+    const me = R2M(ph.b), dm = dirOf(stIn(pm, me - 0.45, me + 0.05)); if (dm === null) return;
+    const where = pair(Math.max(ph.a, ph.b - 0.9), ph.b);
+    if (dr >= 2 && dm < 1) tips.push({ sev: 4 + Math.min(3, (dr - dm) * 0.3), title: '문장 끝을 올리세요',
+      why: `${label(i)} 끝(@T)에서 원본은 ${fmtSt(dr)} 올라가는데 내 녹음은 ${fmtSt(dm)}이에요. 질문이거나 말이 이어질 때는 끝을 올려요.`, at: ph.b - 0.2, ...where });
+    else if (dr <= -2.5 && dm > 1) tips.push({ sev: 4 + Math.min(3, (dm - dr) * 0.3), title: '문장 끝을 내리세요',
+      why: `${label(i)} 끝(@T)에서 원본은 ${fmtSt(dr)} 내려가며 마무리하는데 내 녹음은 ${fmtSt(dm)} 올라가요.`, at: ph.b - 0.2, ...where });
+    else endsOk++;
+  });
+  if (endsOk >= 2 && !tips.some((x) => x.title.startsWith('문장 끝'))) good.push('문장 끝 억양(올림·내림)이 원본과 같아요.');
+
+  // pauses (skipped when the recording is too noisy to tell silence from speech)
+  if (snr >= 12) {
+    const matched = new Set(); let pausesOk = 0;
+    rP.list.forEach((p, k) => {
+      const c = (p.a + p.b) / 2, mc = R2M(c);
+      const hit = mP.list.findIndex((q) => q.a - 0.2 <= mc && mc <= q.b + 0.2);
+      if (hit >= 0) { matched.add(hit); pausesOk++; return; }
+      tips.push({ sev: 3 + Math.min(2, (p.b - p.a) * 3), title: '여기서 잠깐 끊어 읽으세요',
+        why: `원본은 ${label(k)} 다음(@T)에 ${(p.b - p.a).toFixed(1)}초 쉬는데, 내 녹음은 쉬지 않고 이어 말했어요.`, at: c, ...pair(p.a - 0.8, p.b + 0.8) });
+    });
+    mP.list.forEach((q, k) => {
+      if (matched.has(k)) return;
+      const d = q.b - q.a, rc = M2R((q.a + q.b) / 2);
+      if (d < 0.3 || rc < r.on + 0.3 || rc > r.off - 0.3 || rP.list.some((p) => Math.abs((p.a + p.b) / 2 - rc) < 0.35)) return;
+      const ra = M2R(Math.max(m.on, q.a - 0.8)), rb = M2R(Math.min(m.off, q.b + 0.8));
+      tips.push({ sev: 2.5 + Math.min(2, d * 2), title: '여기서는 멈추지 말고 이어 말하세요',
+        why: `내 녹음은 ${label(phraseAt(rc))} 중간(@T 부근)에서 ${d.toFixed(1)}초 멈췄는데, 원본은 이어서 말해요.`, at: rc,
+        ref: clampR(ra, rb), mine: [Math.max(m.on, q.a - 0.8), Math.min(m.off, q.b + 0.8)] });
+    });
+    if (rP.list.length && pausesOk === rP.list.length) good.push('끊어 읽는 위치가 원본과 같아요.');
+  }
+
+  // speed
+  const ratio = (m.off - m.on) / (r.off - r.on);
+  if (ratio > 1.2) tips.push({ sev: Math.min(5, (ratio - 1) * 8), title: '조금 더 빠르게, 단어를 이어서 말하세요',
+    why: `원본보다 ${Math.round((ratio - 1) * 100)}% 길게 말했어요. 단어마다 끊지 말고 묶어서 흘려 말해보세요.`, at: r.on, ...pair(r.on, r.off) });
+  else if (ratio < 0.83) tips.push({ sev: Math.min(4, (1 - ratio) * 8), title: '조금 더 천천히 또박또박 말하세요',
+    why: `원본보다 ${Math.round((1 - ratio) * 100)}% 짧게 말했어요. 서두르면 강세와 끝소리가 뭉개져요.`, at: r.on, ...pair(r.on, r.off) });
+  else good.push('말 속도가 원본과 비슷해요.');
+
+  // the moments whose sound differs most from the original (vowels / consonants)
+  if (al && snr >= 15) {
+    const d = al.dloc, n = d.length, sm = new Float32Array(n), W2 = Math.max(1, Math.round(0.045 / al.hop));
+    for (let k = 0; k < n; k++) { let s = 0, c = 0; for (let q = Math.max(0, k - W2); q <= Math.min(n - 1, k + W2); q++) { s += d[q]; c++; } sm[k] = s / c; }
+    let mu = 0; for (let k = 0; k < n; k++) mu += sm[k] / n;
+    let sd = 0; for (let k = 0; k < n; k++) sd += (sm[k] - mu) ** 2 / n; sd = Math.sqrt(sd) || 1;
+    const order = Array.from(sm.keys()).sort((x, y) => sm[y] - sm[x]), picked = [];
+    for (const k of order) {
+      const z = (sm[k] - mu) / sd; if (z < 1.8 || sm[k] < mu * 1.3 || picked.length >= 2) break;
+      const t = al.rT0 + k * al.hop;
+      if (t < r.on + 0.1 || t > r.off - 0.1 || picked.some((p) => Math.abs(p.t - t) < 0.6)) continue;
+      picked.push({ t, z });
+    }
+    // voices differ, so these are listening suggestions, not instructions
+    picked.sort((x, y) => x.t - y.t);
+    for (const p of picked) spots.push({ at: p.t, where: label(phraseAt(p.t)), ...pair(p.t - 0.35, p.t + 0.35) });
+  }
+
+  // strongest issue first, and never two tips about the same moment
+  tips.sort((x, y) => y.sev - x.sev);
+  const out = [];
+  for (const tip of tips) { if (!out.some((o) => Math.abs(o.at - tip.at) < 0.4 && o.title === tip.title)) out.push(tip); if (out.length >= 8) break; }
+  m.coach = { refId: r.id, tips: out, good, quality, spots, metrics: { gr, gm, hits: hits.length, stressTotal: hits.length + misses.length, ratio } };
+  return m.coach;
+}
+
+function renderCoach() {
+  const box = $('#coach'), rows = $('#coachRows'), r = S.ref, m = mine();
+  const c = r && m ? coachFor(m) : null;
+  if (!c) { box.hidden = true; return; }
+  box.hidden = false;
+  const v0 = viewOf(r)[0];
+  const T = (tip) => tip.why.replace('@T', `${Math.max(0, tip.at - v0).toFixed(1)}초`);
+  const tipHtml = (tip, k, first) => `<li class="tip${first ? ' first' : ''}">
+      <div>${first ? '<div class="tag">다음 녹음에서는 이것 하나만 신경 쓰세요</div>' : ''}<div class="tip-h">${tip.title}</div><div class="tip-why">${T(tip)}</div></div>
+      <button data-tip="${k}" title="이 부분을 원본, 내 녹음 순서로 들려줘요">▶ 원본 → 내 녹음</button></li>`;
+  let html = '';
+  for (const q of c.quality) html += `<div class="notice">${q}</div>`;
+  if (c.tips.length) {
+    html += `<ol class="tips">${c.tips.slice(0, 3).map((t, k) => tipHtml(t, k, k === 0)).join('')}</ol>`;
+    if (c.tips.length > 3) html += `<details><summary>나머지 ${c.tips.length - 3}개 더 보기</summary><ol class="tips">${c.tips.slice(3).map((t, k) => tipHtml(t, k + 3, false)).join('')}</ol></details>`;
+  } else html += '<div class="tip-h">억양, 강조, 끊어 읽기, 속도가 원본과 비슷해요.</div><div class="tip-why">이제 아래 소리 차이가 큰 곳을 들어보거나, 단어를 드래그해 0.75배로 비교하며 모음·자음을 다듬어보세요.</div>';
+  if (c.good.length) html += `<div class="good">잘한 점: ${c.good.join(' ')}</div>`;
+  if (c.spots.length) {
+    html += `<div class="spots"><span>소리 차이가 큰 곳</span>${c.spots.map((sp, k) => `<button data-spot="${k}">▶ ${sp.where} ${Math.max(0, sp.at - v0).toFixed(1)}초</button>`).join('')}
+      <div class="tip-why">목소리 자체의 차이도 섞여 있어서 참고만 하세요. 들어보고 모음이나 자음이 다르게 들리면 그 부분을 따라 해보세요.</div></div>`;
+  }
+  const prevIdx = S.cur - 1, prev = prevIdx >= 0 ? S.takes[prevIdx] : null, pc = prev ? coachFor(prev) : null;
+  if (pc) {
+    const a = pc.metrics, b = c.metrics, parts = [];
+    if (Math.abs(b.gm - a.gm) >= 0.8) parts.push(`억양 폭 ${a.gm.toFixed(1)} → ${b.gm.toFixed(1)}반음`);
+    if (b.stressTotal && (a.hits !== b.hits)) parts.push(`강조 맞춘 곳 ${a.hits}/${a.stressTotal} → ${b.hits}/${b.stressTotal}`);
+    if (Math.abs(b.ratio - a.ratio) >= 0.08) parts.push(`말한 길이 원본의 ${a.ratio.toFixed(2)}배 → ${b.ratio.toFixed(2)}배`);
+    if (parts.length) html += `<div class="progress">직전 녹음(${prev.no}번)과 비교: ${parts.join(', ')}</div>`;
+  }
+  rows.innerHTML = html;
+  $('#coachMeta').textContent = `녹음 ${m.no} 기준`;
+}
+function playTip(k, list = 'tips') {
+  const m = mine(), c = m && coachFor(m); if (!c || !c[list][k]) return;
+  const tip = c[list][k];
+  S.sel = { src: 'ref', t0: tip.ref[0], t1: tip.ref[1], mine: tip.mine };
+  drawOverlays(); updateButtons(); playAB();
+}
+
 // ---------- canvases ----------
 const els = {
   ref: { box: $('#track-ref'), cv: $('#track-ref .cv'), ov: $('#track-ref .ov'), empty: $('#track-ref .empty') },
@@ -543,6 +887,31 @@ function niceStep(span, W, dpr) {
   return steps.find((s) => s >= target) || 300;
 }
 function font(px, dpr, w = 400) { return `${w} ${Math.round(px * dpr)}px "IBM Plex Sans", "IBM Plex Sans KR", sans-serif`; }
+
+function noiseFloor(t, N, winLen) {
+  const key = N + ':' + winLen; t._nf = t._nf || {};
+  if (t._nf[key]) return t._nf[key];
+  const F = getFFT(N), win = hann(winLen), x = t.emph, n = x.length, nb = N / 2;
+  const step = Math.max(160, Math.floor(n / 600)), cols = [];
+  const re = new Float32Array(N), im = new Float32Array(N);
+  for (let s0 = 0; s0 + winLen < n; s0 += step) {
+    re.fill(0); im.fill(0);
+    for (let i = 0; i < winLen; i++) re[i] = x[s0 + i] * win[i];
+    fft(re, im, F);
+    const row = new Float32Array(nb);
+    for (let b = 0; b < nb; b++) row[b] = 10 * Math.log10(re[b] * re[b] + im[b] * im[b] + 1e-14);
+    cols.push(row);
+  }
+  // noise spectrum = typical level of the quietest 30% of frames (lead-in, gaps, tail)
+  const fl = new Float32Array(nb).fill(-200);
+  if (cols.length > 4) {
+    const energy = cols.map((row) => { let e = 0; for (let b = 2; b < nb; b++) e += 10 ** (row[b] / 10); return e; });
+    const cut = quantile(energy, 0.3), quiet = cols.filter((_, k) => energy[k] <= cut), tmp = new Array(quiet.length);
+    for (let b = 0; b < nb; b++) { for (let k = 0; k < quiet.length; k++) tmp[k] = quiet[k][b]; fl[b] = quantile(tmp, 0.5); }
+  }
+  t._nf[key] = fl;
+  return fl;
+}
 
 function renderTrack(kind) {
   const e = els[kind], t = trackOf(kind);
@@ -591,14 +960,16 @@ function renderTrack(kind) {
     for (let b = 0; b < nb; b++) { const db = 10 * Math.log10(re[b] * re[b] + im[b] * im[b] + 1e-14); mag[c * nb + b] = db; if (db > mx) mx = db; }
   }
   const range = broad ? 55 : 62, lo = mx - range;
+  const floor = noiseFloor(t, N, winLen);   // hide steady background noise so speech stands out
   const rows = Math.round(specH), img = ctx.createImageData(cols, rows), d = img.data;
   for (let r = 0; r < rows; r++) {
     const f = S.maxF * (1 - (r + 0.5) / rows), fb = f / binHz, b0 = Math.min(nb - 2, Math.floor(fb)), fr = fb - b0;
+    const L = Math.min(mx - 15, Math.max(lo, floor[b0] + 9)), span = mx - L;
     for (let c = 0; c < cols; c++) {
       const o = (r * cols + c) * 4;
       if (!valid[c]) { d[o] = 11; d[o + 1] = 21; d[o + 2] = 36; d[o + 3] = 255; continue; }
       const v0 = mag[c * nb + b0], v1 = mag[c * nb + b0 + 1];
-      let v = (v0 + (v1 - v0) * fr - lo) / range; v = v < 0 ? 0 : v > 1 ? 1 : v;
+      let v = (v0 + (v1 - v0) * fr - L) / span; v = v < 0 ? 0 : v > 1 ? 1 : v;
       const li = (v * 255) | 0;
       d[o] = LUT[li * 3]; d[o + 1] = LUT[li * 3 + 1]; d[o + 2] = LUT[li * 3 + 2]; d[o + 3] = 255;
     }
@@ -687,10 +1058,15 @@ function renderIntonation() {
     ctx.fillRect(0, Math.round(y(s)), W, 1);
     ctx.fillStyle = COLORS.muted; ctx.fillText((s > 0 ? '+' : '') + s, 6 * dpr, y(s) - 7 * dpr);
   }
+  const al = S.ref ? alignFor(mine()) : null;
+  $('#intoMeta').textContent = al
+    ? '내 녹음을 원본 타이밍에 맞춰 겹쳤어요. 각자 평균 음높이를 0으로 맞춘 반음 단위라 목소리 높이가 달라도 모양만 비교돼요.'
+    : '각자 평균 음높이를 0으로 맞춘 반음 단위라서 목소리 높이가 달라도 모양만 비교돼요.';
   for (const t of tracks) {
     const { med } = voicedSemis(t);
     if (!med) continue;
-    drawPitchPath(ctx, t, (time) => tToX(t, time, W), y, COLORS[t.kind], dpr, [0, H], (f) => Math.max(-R, Math.min(R, 12 * Math.log2(f / med))));
+    const xOf = t.kind === 'mine' && al ? (time) => tToX(S.ref, m2r(al, time), W) : (time) => tToX(t, time, W);
+    drawPitchPath(ctx, t, xOf, y, COLORS[t.kind], dpr, [0, H], (f) => Math.max(-R, Math.min(R, 12 * Math.log2(f / med))));
   }
 }
 
@@ -702,15 +1078,9 @@ function renderStats() {
   const sr = voicedSemis(r), sm = voicedSemis(m);
   const rangeOf = (s) => (s.semis.length > 5 ? quantile(s.semis, 0.9) - quantile(s.semis, 0.1) : 0);
   const gr = rangeOf(sr), gm = rangeOf(sm);
-  let speedHint = '원본과 비슷한 속도예요.';
-  if (ratio > 1.15) speedHint = `원본보다 ${Math.round((ratio - 1) * 100)}% 길게 말했어요. 단어 사이를 더 이어서 말해보세요.`;
-  else if (ratio < 0.87) speedHint = `원본보다 ${Math.round((1 - ratio) * 100)}% 짧게 말했어요.`;
-  let pitchHint = '억양 폭이 원본과 비슷해요.';
-  if (gr && gm && gm < gr * 0.65) pitchHint = '원본보다 억양이 평평해요. 강세 음절에서 음을 더 올렸다 내려보세요.';
-  else if (gr && gm && gm > gr * 1.5) pitchHint = '원본보다 억양 폭이 커요.';
   rows.innerHTML = `
-    <div>말한 길이 <b class="ref-c">원본 ${lr.toFixed(2)}초</b>, <b class="mine-c">내 녹음 ${lm.toFixed(2)}초</b> <span class="hint">${speedHint}</span></div>
-    <div>음높이 폭 <b class="ref-c">원본 ${gr.toFixed(1)}반음</b>, <b class="mine-c">내 녹음 ${gm.toFixed(1)}반음</b> <span class="hint">${pitchHint}</span></div>`;
+    <div>말한 길이 <b class="ref-c">원본 ${lr.toFixed(2)}초</b>, <b class="mine-c">내 녹음 ${lm.toFixed(2)}초</b> <span class="hint">(원본의 ${ratio.toFixed(2)}배)</span></div>
+    <div>음높이 폭 <b class="ref-c">원본 ${gr.toFixed(1)}반음</b>, <b class="mine-c">내 녹음 ${gm.toFixed(1)}반음</b></div>`;
 }
 
 function renderTakes() {
@@ -718,7 +1088,7 @@ function renderTakes() {
   S.takes.forEach((tk, i) => {
     const b = document.createElement('button');
     b.textContent = String(tk.no); b.setAttribute('aria-pressed', String(i === S.cur)); b.setAttribute('aria-label', `녹음 ${tk.no}`);
-    b.addEventListener('click', () => { S.cur = i; S.sel = S.sel && S.sel.src === 'mine' ? null : S.sel; renderAll(); });
+    b.addEventListener('click', () => { S.cur = i; S.sel = null; renderAll(); });
     box.appendChild(b);
   });
 }
@@ -734,7 +1104,7 @@ function updateButtons() {
 }
 
 function renderAll() {
-  renderTrack('ref'); renderTrack('mine'); renderIntonation(); renderStats(); renderTakes(); drawOverlays(); updateButtons();
+  renderTrack('ref'); renderTrack('mine'); renderIntonation(); renderStats(); renderCoach(); renderTakes(); drawOverlays(); updateButtons();
 }
 
 // ---------- overlays: selection + playheads ----------
@@ -855,7 +1225,7 @@ async function addTakeBlob(blob, label) {
   S.takes.push(t);
   while (S.takes.length > 12) disposeTrack(S.takes.shift());
   S.cur = S.takes.length - 1;
-  if (S.sel && S.sel.src === 'mine') S.sel = null;
+  S.sel = null;
   renderAll();
 }
 async function cropRef() {
@@ -864,7 +1234,7 @@ async function cropRef() {
   const slice = S.ref.play.slice(a, b);
   setStatus('구간을 자르는 중…');
   const base = S.ref.label.replace(/ \([\d.]+–[\d.]+초\)$/, '');
-  await setRef(slice, { label: `${base} (${sel[0].toFixed(1)}–${sel[1].toFixed(1)}초)`, source: S.ref.source, text: S.ref.text }, true);
+  await setRef(slice, { label: `${base} (${sel[0].toFixed(1)}–${sel[1].toFixed(1)}초)`, source: S.ref.source }, true);
   setStatus('');
 }
 
@@ -968,7 +1338,7 @@ async function toggleRecord() {
   S.rec = rec; updateButtons();
   let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: $('#noiseSup').checked, autoGainControl: false } });
   } catch (e) {
     S.rec = null; updateButtons();
     setStatus(EMBEDDED
@@ -1088,7 +1458,7 @@ $('#delTake').addEventListener('click', () => {
   if (S.cur < 0 || S.rec) return;
   stopAll(); disposeTrack(S.takes[S.cur]); S.takes.splice(S.cur, 1);
   S.cur = S.takes.length ? Math.min(S.cur, S.takes.length - 1) : -1;
-  if (S.sel && S.sel.src === 'mine') S.sel = null; renderAll();
+  S.sel = null; renderAll();
 });
 $('#recMode').addEventListener('change', (e) => { if (e.target.value === 'shadow') setStatus('쉐도잉은 이어폰을 끼고 하세요. 스피커 소리가 같이 녹음되면 비교가 흐려져요.'); });
 $('#rate').addEventListener('change', (e) => { S.rate = Number(e.target.value); for (const p of S.playing) p.el.playbackRate = S.rate; });
@@ -1127,6 +1497,11 @@ for (const kind of ['ref', 'mine']) {
 }
 document.addEventListener('dragover', (e) => e.preventDefault());
 document.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) loadRefFile(f); });
+
+$('#coachRows').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-tip], button[data-spot]'); if (!b) return;
+  if (b.dataset.tip !== undefined) playTip(Number(b.dataset.tip)); else playTip(Number(b.dataset.spot), 'spots');
+});
 
 let rq = 0;
 new ResizeObserver(() => { cancelAnimationFrame(rq); rq = requestAnimationFrame(() => { if (S.rec && S.rec.phase === 'recording') { renderTrack('ref'); renderIntonation(); } else renderAll(); }); }).observe($('#tracks'));
