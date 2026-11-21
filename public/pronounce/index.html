@@ -1647,7 +1647,7 @@ async function cropRef() {
 // Pages opened from a local file have no CacheStorage, so the ~90 MB model would be re-downloaded every visit.
 // This small IndexedDB-backed stand-in lets the model library keep its files between visits.
 async function ensureModelCache() {
-  try { const c = await self.caches.open('pc-probe'); if (c) return; } catch {}
+  try { const c = await self.caches.open('pc-probe'); await self.caches.delete('pc-probe'); if (c) return; } catch {}
   installModelCache();
 }
 function installModelCache() {
