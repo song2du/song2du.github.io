@@ -141,6 +141,15 @@
   .tip button { white-space: nowrap; }
   .coach details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
   .good { color: #9FD8B0; font-size: 13.5px; }
+  .words { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+  .words > span { color: var(--muted); margin-right: 4px; }
+  .words .w { font-family: "IBM Plex Sans", sans-serif; font-size: 13.5px; padding: 3px 9px; }
+  .words .w.ok { border-color: #3E6B57; }
+  .words .w.bad { background: var(--mine); border-color: var(--mine); color: #2A1B00; font-weight: 600; }
+  .words .w.skip { color: var(--muted); border-style: dashed; }
+  .words .tip-why { flex-basis: 100%; margin: 2px 0 0; }
+  #pronBtn { margin-top: 4px; font-size: 12.5px; }
+  #pronBtn[aria-pressed="true"] { border-color: var(--ref); color: var(--ref); }
   .spots { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13px; }
   .spots > span { color: var(--muted); margin-right: 2px; }
   .spots button { font-size: 12.5px; padding: 4px 9px; }
@@ -314,7 +323,11 @@
     </div>
 
     <div class="coach" id="coach" hidden>
-      <div class="thead"><div class="tname">이렇게 고쳐보세요</div><div class="tmeta" id="coachMeta"></div></div>
+      <div class="thead">
+        <div class="tname">이렇게 고쳐보세요</div><div class="tmeta" id="coachMeta"></div>
+        <button id="pronBtn" aria-pressed="false" title="모음·자음까지 검사해요. 처음 한 번 약 360MB를 내려받아요.">발음 검사 켜기</button>
+        <div class="tmeta" id="pronStatus" aria-live="polite"></div>
+      </div>
       <div class="rows" id="coachRows" aria-live="polite"></div>
     </div>
   </section>
@@ -655,6 +668,381 @@ function mapThrough(map, srcT0, dstT0, hop, t) {
 const r2m = (al, t) => (al ? mapThrough(al.mapR, al.rT0, al.mT0, al.hop, t) : t);
 const m2r = (al, t) => (al ? mapThrough(al.mapM, al.mT0, al.rT0, al.hop, t) : t);
 
+// ---------- pronunciation check: CTC GOP + phoneme recognition (no DOM; shared by page and tests) ----------
+const PR = (() => {
+  // vocabulary of robg/speako-phoneme-recognizer (TIMIT-39 IPA); 41 = [PAD] = CTC blank, 0 '|' and 16 ' ' = word gaps
+  const VOCAB = { 'ɑ': 1, 'æ': 2, 'ə': 3, 'aʊ': 4, 'aɪ': 5, 'b': 6, 'ʧ': 7, 'd': 8, 'ð': 9, 'ɾ': 10, 'ɛ': 11, 'ɝ': 12, 'eɪ': 13, 'f': 14, 'g': 15, 'h': 17, 'ɪ': 18, 'i': 19, 'ʤ': 20, 'k': 21, 'l': 22, 'm': 23, 'n': 24, 'ŋ': 25, 'oʊ': 26, 'ɔɪ': 27, 'p': 28, 'ɹ': 29, 's': 30, 'ʃ': 31, 't': 32, 'θ': 33, 'ʊ': 34, 'u': 35, 'v': 36, 'w': 37, 'j': 38, 'z': 39 };
+  const SYM = {}; for (const [k, v] of Object.entries(VOCAB)) SYM[v] = k;
+  const BLANK = 41, SEPS = [0, 16], SKIP = new Set([0, 16, 40, 41, 42, 43]);
+  const ARPA = { AA: 'ɑ', AE: 'æ', AH: 'ə', AO: 'ɑ', AW: 'aʊ', AY: 'aɪ', B: 'b', CH: 'ʧ', D: 'd', DH: 'ð', EH: 'ɛ', ER: 'ɝ', EY: 'eɪ', F: 'f', G: 'g', HH: 'h', IH: 'ɪ', IY: 'i', JH: 'ʤ', K: 'k', L: 'l', M: 'm', N: 'n', NG: 'ŋ', OW: 'oʊ', OY: 'ɔɪ', P: 'p', R: 'ɹ', S: 's', SH: 'ʃ', T: 't', TH: 'θ', UH: 'ʊ', UW: 'u', V: 'v', W: 'w', Y: 'j', Z: 'z', ZH: 'ʃ' };
+  const VOWELS = new Set(['ɑ', 'æ', 'ə', 'aʊ', 'aɪ', 'ɛ', 'ɝ', 'eɪ', 'ɪ', 'i', 'oʊ', 'ɔɪ', 'ʊ', 'u'].map((s) => VOCAB[s]));
+  const id = (s) => VOCAB[s];
+  // sounds Korean speakers often swap for the expected one (always tried as alternatives)
+  const CONFUSE = { 'θ': ['s', 't', 'ʃ', 'f'], 'ð': ['d', 'z'], 'f': ['p', 'h'], 'v': ['b', 'f'], 'ɹ': ['l'], 'l': ['ɹ'], 'z': ['ʤ', 's'], 'ʃ': ['s'], 's': ['ʃ', 'θ'], 'ʤ': ['z'], 'p': ['f'], 'b': ['v'],
+    'æ': ['ɛ'], 'ɛ': ['æ'], 'i': ['ɪ'], 'ɪ': ['i'], 'u': ['ʊ'], 'ʊ': ['u'], 'ɝ': ['ə', 'ɑ'], 'eɪ': ['ɛ'], 'oʊ': ['ɑ', 'ə'], 'ɑ': ['oʊ', 'ə'], 'ŋ': ['n'], 'w': ['u'], 'j': ['i'] };
+  // realisations that are fine in fluent American English, never reported as errors
+  const OK_ALT = { 't': ['ɾ', 'd'], 'd': ['ɾ', 't'] };
+  const REDUCED = new Set(['ə', 'ɪ', 'ʊ', 'i', 'ɝ'].map(id));
+  const STOPS = new Set(['p', 't', 'k', 'b', 'd', 'g'].map(id));
+  const FUNCTION = new Set('a an the to of and for you your he him his her them that at as is it in on be was were are am can have has had do does i me my we us our or but so if from with by this these those there their they what will would could should not no'.split(' '));
+
+  const lse = (a, b) => (a === -Infinity ? b : b === -Infinity ? a : a > b ? a + Math.log1p(Math.exp(b - a)) : b + Math.log1p(Math.exp(a - b)));
+
+  // logits [T,V] -> log-probs with the word-gap tokens folded into the blank
+  function logProbs(data, T, V) {
+    const LP = new Float32Array(T * V);
+    for (let t = 0; t < T; t++) {
+      let m = -Infinity; for (let v = 0; v < V; v++) if (data[t * V + v] > m) m = data[t * V + v];
+      let s = 0; for (let v = 0; v < V; v++) s += Math.exp(data[t * V + v] - m);
+      const z = m + Math.log(s);
+      for (let v = 0; v < V; v++) LP[t * V + v] = data[t * V + v] - z;
+      let b = LP[t * V + BLANK]; for (const sp of SEPS) { b = lse(b, LP[t * V + sp]); LP[t * V + sp] = -Infinity; }
+      LP[t * V + BLANK] = b;
+    }
+    return { LP, T, V };
+  }
+
+  // CTC log-likelihood of a label sequence
+  function logLik(A, seq) {
+    const { LP, T, V } = A, n = seq.length, S = 2 * n + 1;
+    if (!n) { let s = 0; for (let t = 0; t < T; t++) s += LP[t * V + BLANK]; return s; }
+    const lab = (s) => (s & 1 ? seq[s >> 1] : BLANK);
+    let a = new Float64Array(S).fill(-Infinity), b = new Float64Array(S);
+    a[0] = LP[BLANK]; a[1] = LP[lab(1)];
+    for (let t = 1; t < T; t++) {
+      const o = t * V;
+      for (let s = 0; s < S; s++) {
+        let v = a[s];
+        if (s >= 1) v = lse(v, a[s - 1]);
+        if (s >= 2 && (s & 1) && seq[s >> 1] !== seq[(s >> 1) - 1]) v = lse(v, a[s - 2]);
+        b[s] = v + LP[o + lab(s)];
+      }
+      const tmp = a; a = b; b = tmp;
+    }
+    return lse(a[S - 1], a[S - 2]);
+  }
+
+  // Viterbi forced alignment: first/last frame of every label
+  function align(A, seq) {
+    const { LP, T, V } = A, n = seq.length, S = 2 * n + 1;
+    const lab = (s) => (s & 1 ? seq[s >> 1] : BLANK);
+    const bp = new Int8Array(T * S);
+    let a = new Float64Array(S).fill(-Infinity), b = new Float64Array(S);
+    a[0] = LP[BLANK]; if (S > 1) a[1] = LP[lab(1)];
+    for (let t = 1; t < T; t++) {
+      const o = t * V;
+      for (let s = 0; s < S; s++) {
+        let v = a[s], k = 0;
+        if (s >= 1 && a[s - 1] > v) { v = a[s - 1]; k = 1; }
+        if (s >= 2 && (s & 1) && seq[s >> 1] !== seq[(s >> 1) - 1] && a[s - 2] > v) { v = a[s - 2]; k = 2; }
+        b[s] = v + LP[o + lab(s)]; bp[t * S + s] = k;
+      }
+      const tmp = a; a = b; b = tmp;
+    }
+    let s = S > 1 && a[S - 2] > a[S - 1] ? S - 2 : S - 1;
+    const first = new Int32Array(n).fill(-1), last = new Int32Array(n).fill(-1);
+    for (let t = T - 1; t >= 0; t--) {
+      if (s & 1) { const k = s >> 1; if (last[k] < 0) last[k] = t; first[k] = t; }
+      if (t > 0) s -= bp[t * S + s];
+    }
+    return { first, last, score: Math.max(a[S - 1], S > 1 ? a[S - 2] : -Infinity) };
+  }
+
+  // best-path (greedy) decoding: ids with their centre frame
+  function greedy(A) {
+    const { LP, T, V } = A, out = []; let prev = -1, start = 0;
+    for (let t = 0; t <= T; t++) {
+      let bi = -1;
+      if (t < T) { let bv = -Infinity; for (let v = 0; v < V; v++) if (LP[t * V + v] > bv) { bv = LP[t * V + v]; bi = v; } }
+      if (bi !== prev) {
+        if (prev >= 0 && prev !== BLANK && !SKIP.has(prev)) out.push({ id: prev, f: (start + t - 1) / 2 });
+        prev = bi; start = t;
+      }
+    }
+    return out;
+  }
+
+  // text -> expected phonemes (CMU dictionary), choosing per word the variant that best fits the original audio
+  function expected(text, dict, refA) {
+    const words = [];
+    for (const raw of text.replace(/[“”"()\[\]]/g, ' ').split(/\s+/)) {
+      for (const part of raw.split(/(?<=[a-z])-(?=[a-z])/i)) {
+        const w = part.toLowerCase().replace(/^[^a-z']+|[^a-z']+$/g, '');
+        if (w) words.push({ text: part.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, ''), key: w });
+      }
+    }
+    const variants = (w) => {
+      const out = [];
+      for (let i = 1; i <= 4; i++) { const p = dict[i === 1 ? w : `${w}(${i})`]; if (p) out.push(p); }
+      if (!out.length && w.endsWith("'s") && dict[w.slice(0, -2)]) out.push(dict[w.slice(0, -2)] + ' Z');
+      return out;
+    };
+    const toIds = (p) => p.split(' ').map((x) => { const m = x.match(/^([A-Z]+)(\d?)$/); return { id: id(ARPA[m[1]]), stress: m[2] === '' ? null : Number(m[2]) }; });
+    let oov = 0;
+    for (const w of words) {
+      const vs = variants(w.key);
+      w.oov = !vs.length; if (w.oov) oov++;
+      w.vars = vs.length ? vs.map(toIds) : [naiveG2P(w.key)];
+      w.pick = 0;
+    }
+    const build = () => {
+      const seq = [], meta = [];
+      words.forEach((w, wi) => w.vars[w.pick].forEach((p, pi, arr) => {
+        seq.push(p.id);
+        meta.push({ word: wi, stress: p.stress, final: pi === arr.length - 1, first: pi === 0 });
+      }));
+      return { seq, meta };
+    };
+    // pick variants against the original
+    if (refA) for (const w of words) {
+      if (w.vars.length < 2) continue;
+      let best = -Infinity, bi = 0;
+      for (let i = 0; i < w.vars.length; i++) { w.pick = i; const ll = logLik(refA, build().seq); if (ll > best) { best = ll; bi = i; } }
+      w.pick = bi;
+    }
+    const { seq, meta } = build();
+    return { words, seq, meta, oov };
+  }
+  function naiveG2P(w) {
+    const map = { a: 'æ', b: 'b', c: 'k', d: 'd', e: 'ɛ', f: 'f', g: 'g', h: 'h', i: 'ɪ', j: 'ʤ', k: 'k', l: 'l', m: 'm', n: 'n', o: 'ɑ', p: 'p', q: 'k', r: 'ɹ', s: 's', t: 't', u: 'ə', v: 'v', w: 'w', x: 'k', y: 'j', z: 'z' };
+    const out = []; for (const ch of w) if (map[ch]) out.push({ id: id(map[ch]), stress: null });
+    return out.length ? out : [{ id: id('ə'), stress: null }];
+  }
+
+  const isOkAlt = (exp, alt, meta) => {
+    if (alt === exp) return true;
+    const o = OK_ALT[SYM[exp]]; if (o && o.includes(SYM[alt])) return true;
+    if (meta && meta.stress === 0 && REDUCED.has(exp) && REDUCED.has(alt)) return true;
+    return false;
+  };
+  function evaluable(E, k) {
+    const m = E.meta[k], w = E.words[m.word], p = E.seq[k];
+    if (w.oov) return false;
+    if (VOWELS.has(p) && (m.stress === 0 || FUNCTION.has(w.key))) return false;   // reduced vowels vary freely
+    if (FUNCTION.has(w.key) && p === id('h')) return false;                       // "him", "her": h is often dropped
+    return true;
+  }
+
+  // GOP: how much better the expected sequence explains the audio than the best substitution/deletion at k
+  function gopAt(A, seq, k, base, spans, extraAlts) {
+    const cand = new Set(), p = seq[k];
+    (CONFUSE[SYM[p]] || []).forEach((s) => cand.add(id(s)));
+    (extraAlts || []).forEach((q) => cand.add(q));
+    if (spans) {
+      const { LP, T, V } = A, f0 = Math.max(0, spans.first[k] - 2), f1 = Math.min(T - 1, spans.last[k] + 2), best = new Float32Array(V).fill(-Infinity);
+      for (let t = f0; t <= f1; t++) for (let v = 0; v < V; v++) if (LP[t * V + v] > best[v]) best[v] = LP[t * V + v];
+      Array.from(best.keys()).filter((v) => !SKIP.has(v) && v !== p).sort((x, y) => best[y] - best[x]).slice(0, 5).forEach((v) => cand.add(v));
+    }
+    cand.delete(p);
+    let bestLL = -Infinity, alt = null;
+    for (const q of cand) {
+      if (SKIP.has(q)) continue;
+      const s2 = seq.slice(); s2[k] = q;
+      const ll = logLik(A, s2); if (ll > bestLL) { bestLL = ll; alt = q; }
+    }
+    const s3 = seq.slice(0, k).concat(seq.slice(k + 1)), ld = logLik(A, s3);
+    if (ld > bestLL) { bestLL = ld; alt = 'del'; }
+    return { lpr: base - bestLL, alt };
+  }
+
+  // edit-distance alignment of expected vs recognised
+  function editAlign(E, R) {
+    const n = E.seq.length, m = R.length, D = new Float32Array((n + 1) * (m + 1)), W = m + 1;
+    for (let i = 0; i <= n; i++) D[i * W] = i; for (let j = 0; j <= m; j++) D[j] = j;
+    const sub = (i, j) => (isOkAlt(E.seq[i], R[j].id, E.meta[i]) ? 0 : 1);
+    for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++)
+      D[i * W + j] = Math.min(D[(i - 1) * W + j - 1] + sub(i - 1, j - 1), D[(i - 1) * W + j] + 1, D[i * W + j - 1] + 1);
+    const ops = new Array(n), ins = [];
+    let i = n, j = m;
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && D[i * W + j] === D[(i - 1) * W + j - 1] + sub(i - 1, j - 1)) { ops[i - 1] = { op: sub(i - 1, j - 1) ? 'sub' : 'match', r: R[j - 1].id }; i--; j--; }
+      else if (i > 0 && D[i * W + j] === D[(i - 1) * W + j] + 1) { ops[i - 1] = { op: 'del' }; i--; }
+      else { ins.push({ after: i - 1, r: R[j - 1].id }); j--; }
+    }
+    return { ops, ins };
+  }
+
+  // full check of one take against the original
+  function check(refA, takeA, E) {
+    const seq = E.seq, n = seq.length;
+    const refBase = logLik(refA, seq), takeBase = logLik(takeA, seq);
+    const refSp = align(refA, seq), takeSp = align(takeA, seq);
+    // does the text fit the original at all? (per-frame gap to the free best path)
+    const free = (A) => { let s = 0; for (let t = 0; t < A.T; t++) { let m = -Infinity; for (let v = 0; v < A.V; v++) if (A.LP[t * A.V + v] > m) m = A.LP[t * A.V + v]; s += m; } return s; };
+    const fit = (refSp.score - free(refA)) / Math.max(1, n);
+    const R = greedy(takeA), ed = editAlign(E, R);
+    const errors = [], phones = [];
+    for (let k = 0; k < n; k++) {
+      const ev = evaluable(E, k);
+      const ph = { k, id: seq[k], word: E.meta[k].word, ev, ok: true };
+      phones.push(ph);
+      if (!ev) continue;
+      const rg = gopAt(refA, seq, k, refBase, refSp);
+      ph.refLpr = rg.lpr;
+      if (rg.lpr < 0.5) { ph.ev = false; continue; }      // the original itself doesn't clearly say this sound
+      const g = gopAt(takeA, seq, k, takeBase, takeSp, ed.ops[k].r !== undefined ? [ed.ops[k].r] : []);
+      ph.lpr = g.lpr; ph.alt = g.alt; ph.rec = ed.ops[k];
+      const recBad = ed.ops[k].op === 'sub' || ed.ops[k].op === 'del';
+      const m = E.meta[k], agree = g.alt !== 'del' && ed.ops[k].op === 'sub' && ed.ops[k].r === g.alt;
+      let thr = agree ? (VOWELS.has(seq[k]) ? -0.7 : 0) : -1;   // both methods heard the same wrong sound: a small margin is enough (vowels need a bit more)
+      if (g.alt === 'del' && STOPS.has(seq[k]) && m.final) thr = k + 1 < n && !VOWELS.has(seq[k + 1]) ? -3.5 : -2;   // unreleased final stops are normal
+      const gopBad = g.lpr < thr && !(g.alt !== 'del' && isOkAlt(seq[k], g.alt, m));
+      if ((gopBad && recBad) || (g.lpr < -5 && gopBad)) {
+        let heard = g.alt;
+        if (ed.ops[k].op === 'sub' && g.alt !== 'del' && g.alt !== ed.ops[k].r && (CONFUSE[SYM[seq[k]]] || []).includes(SYM[ed.ops[k].r])) heard = ed.ops[k].r;
+        ph.ok = false;
+        errors.push({ type: heard === 'del' ? 'del' : 'sub', k, word: E.meta[k].word, exp: seq[k], heard, conf: -g.lpr });
+      }
+    }
+    // extra vowels after consonants ("bus" -> "bus-eu"), confirmed by likelihood
+    for (const x of ed.ins) {
+      if (!VOWELS.has(x.r) || x.after < 0 || x.after >= n) continue;
+      const k = x.after; if (VOWELS.has(seq[k]) || E.words[E.meta[k].word].oov) continue;
+      const nextIsCons = k + 1 >= n || !VOWELS.has(seq[k + 1]);
+      if (!(E.meta[k].final || nextIsCons)) continue;
+      const s2 = seq.slice(0, k + 1).concat([x.r], seq.slice(k + 1)), gain = logLik(takeA, s2) - takeBase;
+      if (gain > 1) errors.push({ type: 'ins', k, word: E.meta[k].word, exp: seq[k], heard: x.r, conf: gain });
+    }
+    // a vowel + r said as one r-coloured vowel ("very" -> v-er-y) is normal
+    const rIdx = id('ɹ'), erIdx = id('ɝ'), drop = new Set();
+    errors.forEach((e, i) => {
+      if (e.type === 'sub' && e.heard === erIdx && seq[e.k + 1] === rIdx) { drop.add(i); errors.forEach((f, j) => { if (f.k === e.k + 1 && f.type === 'del') drop.add(j); }); }
+      if (e.type === 'del' && seq[e.k] === rIdx && e.k > 0 && VOWELS.has(seq[e.k - 1])) {
+        const prev = phones[e.k - 1];
+        if (prev && (prev.alt === erIdx || (prev.rec && prev.rec.r === erIdx) || (ed.ops[e.k - 1] && ed.ops[e.k - 1].r === erIdx))) drop.add(i);
+      }
+    });
+    const kept = errors.filter((_, i) => !drop.has(i));
+    for (const ph of phones) ph.ok = !kept.some((e) => e.k === ph.k && e.type !== 'ins');
+    return { errors: kept, phones, refSp, takeSp, fit, recognized: R };
+  }
+
+  return { VOCAB, SYM, BLANK, VOWELS, id, logProbs, logLik, align, greedy, expected, check, isOkAlt, CONFUSE };
+})();
+
+// ---------- pronunciation check: loading the model and turning errors into instructions ----------
+const TF_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/+esm';
+const PHON_MODEL = 'robg/speako-phoneme-recognizer', PHON_REV = 'ad0f63cd58fc1bb1e9c261a3b4135997a31c2e58';
+const CMU_URL = 'https://cdn.jsdelivr.net/npm/cmu-pronouncing-dictionary@3.0.0/index.js';
+const PH_NAME = { 'θ': 'th', 'ð': '울리는 th', 'ɹ': 'r', 'l': 'l', 'f': 'f', 'v': 'v', 'p': 'p', 'b': 'b', 's': 's', 'z': 'z', 'ʃ': 'sh', 'ʧ': 'ch', 'ʤ': 'j', 'ŋ': 'ng', 'h': 'h', 'w': 'w', 'j': 'y', 't': 't', 'd': 'd', 'k': 'k', 'g': 'g', 'm': 'm', 'n': 'n', 'ɾ': '튕기는 t',
+  'i': '긴 "이"(ee)', 'ɪ': '짧은 "이"(i)', 'ɛ': '"에"(e)', 'æ': '"애"(æ)', 'ɑ': '"아"', 'ə': '약한 "어"', 'ʊ': '짧은 "우"', 'u': '긴 "우"(oo)', 'ɝ': '"어r"(er)', 'eɪ': '"에이"', 'aɪ': '"아이"', 'ɔɪ': '"오이"', 'aʊ': '"아우"', 'oʊ': '"오우"' };
+const PH_TIP = {
+  'θ': '혀끝을 윗니와 아랫니 사이로 살짝 내밀고, 그 틈으로 바람만 내보내세요. s나 t처럼 혀를 잇몸에 대지 마세요.',
+  'ð': '혀끝을 이 사이에 두고 목을 울리며 소리를 내세요. d처럼 혀를 잇몸에 붙이면 안 돼요.',
+  'f': '윗니를 아랫입술 안쪽에 살짝 대고 그 틈으로 바람을 내보내세요. 두 입술을 붙이면 p가 돼요.',
+  'v': '윗니를 아랫입술에 대고 목을 울리며 바람을 내세요. 두 입술을 붙이면 b가 돼요.',
+  'ɹ': '혀끝을 어디에도 닿지 않게 살짝 뒤로 말고, 입술을 조금 둥글게 내미세요.',
+  'l': '혀끝을 윗니 뒤 잇몸에 확실히 붙였다가 떼세요. 단어 끝의 l은 혀를 붙인 채로 끝내요.',
+  'z': 's처럼 혀를 붙이지 않고 바람을 내면서 목을 울리세요. "즈"처럼 혀를 붙이면 j가 돼요.',
+  'ʃ': '입술을 앞으로 둥글게 내밀고 "쉬" 하듯 바람을 내세요.',
+  's': '혀끝을 윗잇몸 가까이 두고 바람만 "스" 내세요.',
+  'ʤ': '혀를 입천장에 붙였다 떼며 "쥐"처럼 터뜨리세요.',
+  'p': '두 입술을 붙였다가 터뜨리세요.', 'b': '두 입술을 붙였다가 목을 울리며 터뜨리세요.',
+  'ŋ': '혀 뒤쪽을 입천장에 붙인 채 코로 소리를 내세요. 끝에 g를 따로 터뜨리지 않아요.',
+  'æ': '"애"보다 턱을 훨씬 아래로 내리고 입을 옆으로 벌리세요.',
+  'ɛ': '"에"처럼 턱을 조금만 내리세요. æ처럼 크게 벌리지 마세요.',
+  'i': '입꼬리를 옆으로 당기고 "이—" 하고 길고 팽팽하게 내세요.',
+  'ɪ': '힘을 빼고 "이"와 "에" 사이로 짧게 내세요.',
+  'u': '입술을 동그랗게 내밀고 "우—" 길게 내세요.', 'ʊ': '입술에 힘을 빼고 "우"와 "어" 사이로 짧게 내세요.',
+  'ɝ': '혀를 뒤로 말아 r 소리를 섞어서 "어r"처럼 내세요.', 'ɑ': '입을 크게 벌리고 목 안쪽에서 "아" 하세요.',
+  'eɪ': '"에"에서 시작해 "이"로 미끄러지세요.', 'oʊ': '"오"에서 시작해 "우"로 입술을 모으세요.',
+  'w': '입술을 "우"처럼 동그랗게 모았다가 펴면서 다음 소리로 넘어가세요.',
+};
+const PRON_KEY = 'pc-pron';
+let pronOn = (() => { try { return localStorage.getItem(PRON_KEY) === '1'; } catch { return false; } })();
+let pronP = null, pronBusy = false, pronStatus = '';
+function setPronStatus(msg) { pronStatus = msg; const el = $('#pronStatus'); if (el) el.textContent = msg; }
+function getPron(onProgress) {
+  if (!pronP) {
+    pronP = (async () => {
+      await ensureModelCache();
+      const [T, cmu] = await Promise.all([import(TF_URL), import(CMU_URL)]);
+      const opts = { revision: PHON_REV };
+      const files = {};
+      const [proc, model] = await Promise.all([
+        T.AutoProcessor.from_pretrained(PHON_MODEL, opts),
+        T.AutoModelForCTC.from_pretrained(PHON_MODEL, { ...opts, dtype: 'q8', device: 'wasm', progress_callback: (p) => {
+          if (p.status === 'progress' && p.total) { files[p.file] = [p.loaded, p.total]; const v = Object.values(files); onProgress && onProgress(v.reduce((s, f) => s + f[0], 0) / v.reduce((s, f) => s + f[1], 0)); }
+        } }),
+      ]);
+      return { proc, model, dict: cmu.dictionary };
+    })();
+    pronP.catch(() => { pronP = null; });
+  }
+  return pronP;
+}
+async function phonemeLP(t) {
+  if (t._lp) return t._lp;
+  const P = await getPron();
+  const a = Math.max(0, t.on - 0.25), b = Math.min(t.dur, t.off + 0.25);
+  const inp = await P.proc(t.ana.slice(Math.floor(a * ANA_SR), Math.ceil(b * ANA_SR)));
+  const { logits } = await P.model(inp);
+  const A = PR.logProbs(logits.data, logits.dims[1], logits.dims[2]);
+  A.t0 = a; t._lp = A;
+  return A;
+}
+const frameTime = (A, f) => A.t0 + (f * 320 + 200) / 16000;
+
+function pronTip(e, E, words, res, rA) {
+  const w = words[e.word], wt = esc(w.text), exp = PR.SYM[e.exp], heard = e.heard === 'del' ? null : PR.SYM[e.heard];
+  const N = (x) => PH_NAME[x] || x;
+  const ipaExp = w.ks.map((k) => PR.SYM[E.seq[k]]).join('');
+  const ipaHeard = e.type === 'sub' ? w.ks.map((k) => (k === e.k ? heard : PR.SYM[E.seq[k]])).join('')
+    : e.type === 'del' ? w.ks.filter((k) => k !== e.k).map((k) => PR.SYM[E.seq[k]]).join('')
+    : w.ks.map((k) => PR.SYM[E.seq[k]] + (k === e.k ? heard : '')).join('');
+  const final = E.meta[e.k].final;
+  let title, why;
+  if (e.type === 'sub') { title = `“${wt}”에서 ${N(exp)} 소리가 ${N(heard)}처럼 들렸어요`; why = PH_TIP[exp] || '원본을 0.75배로 들으며 입 모양을 따라 해보세요.'; }
+  else if (e.type === 'del') { title = `“${wt}”에서 ${final ? '끝 ' : ''}${N(exp)} 소리가 빠졌어요`; why = `${N(exp)} 소리를 짧게라도 끝까지 내세요. ` + (PH_TIP[exp] || ''); }
+  else { title = `“${wt}”에서 ${N(exp)} 뒤에 모음을 붙였어요`; why = '자음으로 끝내고, 뒤에 "으" 같은 모음을 붙이지 마세요. 다음 단어로 바로 이어 말해보세요.'; }
+  why += ` 발음기호로는 원본 /${ipaExp}/, 내 녹음은 /${ipaHeard}/처럼 들렸어요.`;
+  const sev = e.type === 'ins' ? 3.4 + Math.min(1.5, e.conf * 0.15) : 3.2 + Math.min(2.5, e.conf * 0.25);
+  return { sev, title, why, at: frameTime(rA, res.refSp.first[e.k]), ref: w.ref, mine: w.mine, kind: 'pron' };
+}
+function buildPron(r, m, E, res, rA, mA) {
+  const words = E.words.map((w, wi) => {
+    const ks = []; E.meta.forEach((x, k) => { if (x.word === wi) ks.push(k); });
+    const span = (sp, A, t) => {
+      const f0 = Math.min(...ks.map((k) => sp.first[k])), f1 = Math.max(...ks.map((k) => sp.last[k]));
+      return [Math.max(0, frameTime(A, f0) - 0.06), Math.min(t.dur, frameTime(A, f1) + 0.1)];
+    };
+    const checked = ks.some((k) => res.phones[k].ev);
+    return { text: w.text, ks, ref: span(res.refSp, rA, r), mine: span(res.takeSp, mA, m), status: res.errors.some((e) => e.word === wi) ? 'bad' : checked ? 'ok' : 'skip' };
+  });
+  const tips = res.errors.map((e) => pronTip(e, E, words, res, rA));
+  return { refId: r.id, words, tips, nErr: res.errors.length };
+}
+async function runPron() {
+  const r = S.ref, m = mine();
+  if (!pronOn || !r || !m || (m.pron && m.pron.refId === r.id) || pronBusy) return;
+  pronBusy = true;
+  try {
+    setPronStatus('발음 모델 준비 중…');
+    const P = await getPron((f) => setPronStatus(`발음 모델 내려받는 중 ${Math.round(f * 100)}% (처음 한 번만, 약 360MB)`));
+    const text = ((r.text || (r.source === 'file' ? $('#sentence').value : '')) || '').trim();
+    if (!text) m.pron = { refId: r.id, skip: '원본 문장을 몰라서 발음 검사를 못 했어요. 위 입력칸에 이 클립의 문장을 적어주세요.' };
+    else if (r.off - r.on > 30 || m.off - m.on > 30) m.pron = { refId: r.id, skip: '발음 검사는 30초 이하 구간에서만 해요. 원본에서 구간을 골라 "선택 구간만 남기기"를 눌러주세요.' };
+    else {
+      setPronStatus('발음 분석 중…');
+      const rA = await phonemeLP(r), mA = await phonemeLP(m);
+      if (!r._E || r._E.text !== text) r._E = { text, E: PR.expected(text, P.dict, rA) };
+      const res = PR.check(rA, mA, r._E.E);
+      m.pron = res.fit < -2.5
+        ? { refId: r.id, skip: '위에 적힌 문장이 원본 소리와 맞지 않아 발음 검사를 건너뛰었어요. 입력칸을 원본 내용으로 고쳐주세요.' }
+        : buildPron(r, m, r._E.E, res, rA, mA);
+    }
+    setPronStatus('');
+  } catch (e) {
+    console.error(e);
+    setPronStatus(`발음 모델을 불러오지 못했어요. 인터넷 연결을 확인해주세요. (원인: ${String((e && e.message) || e).slice(0, 100)})`);
+  } finally {
+    pronBusy = false;
+    renderCoach();
+    const m2 = mine();
+    if (pronOn && S.ref && m2 && !(m2.pron && m2.pron.refId === S.ref.id) && !pronStatus.startsWith('발음 모델을 불러오지')) setTimeout(runPron, 0);
+  }
+}
+
 // ---------- coaching: turn the measurements into a short list of things to fix ----------
 function pitchPts(t) {
   if (t._pp) return t._pp;
@@ -828,11 +1216,19 @@ function coachFor(m) {
   return m.coach;
 }
 
+function allTips(m) {
+  const c = coachFor(m); if (!c) return [];
+  const p = pronOn && m.pron && m.pron.refId === S.ref.id && m.pron.tips ? m.pron.tips : [];
+  return [...c.tips, ...p].sort((x, y) => y.sev - x.sev);
+}
 function renderCoach() {
   const box = $('#coach'), rows = $('#coachRows'), r = S.ref, m = mine();
   const c = r && m ? coachFor(m) : null;
+  $('#pronBtn').textContent = pronOn ? '발음 검사 끄기' : '발음 검사 켜기';
+  $('#pronBtn').setAttribute('aria-pressed', String(pronOn));
   if (!c) { box.hidden = true; return; }
   box.hidden = false;
+  const tips = allTips(m), pr = pronOn && m.pron && m.pron.refId === r.id ? m.pron : null;
   const v0 = viewOf(r)[0];
   const T = (tip) => tip.why.replace('@T', `${Math.max(0, tip.at - v0).toFixed(1)}초`);
   const tipHtml = (tip, k, first) => `<li class="tip${first ? ' first' : ''}">
@@ -840,12 +1236,19 @@ function renderCoach() {
       <button data-tip="${k}" title="이 부분을 원본, 내 녹음 순서로 들려줘요">▶ 원본 → 내 녹음</button></li>`;
   let html = '';
   for (const q of c.quality) html += `<div class="notice">${q}</div>`;
-  if (c.tips.length) {
-    html += `<ol class="tips">${c.tips.slice(0, 3).map((t, k) => tipHtml(t, k, k === 0)).join('')}</ol>`;
-    if (c.tips.length > 3) html += `<details><summary>나머지 ${c.tips.length - 3}개 더 보기</summary><ol class="tips">${c.tips.slice(3).map((t, k) => tipHtml(t, k + 3, false)).join('')}</ol></details>`;
-  } else html += '<div class="tip-h">억양, 강조, 끊어 읽기, 속도가 원본과 비슷해요.</div><div class="tip-why">이제 아래 소리 차이가 큰 곳을 들어보거나, 단어를 드래그해 0.75배로 비교하며 모음·자음을 다듬어보세요.</div>';
-  if (c.good.length) html += `<div class="good">잘한 점: ${c.good.join(' ')}</div>`;
-  if (c.spots.length) {
+  if (pr && pr.skip) html += `<div class="notice">${pr.skip}</div>`;
+  if (tips.length) {
+    html += `<ol class="tips">${tips.slice(0, 3).map((t, k) => tipHtml(t, k, k === 0)).join('')}</ol>`;
+    if (tips.length > 3) html += `<details><summary>나머지 ${tips.length - 3}개 더 보기</summary><ol class="tips">${tips.slice(3).map((t, k) => tipHtml(t, k + 3, false)).join('')}</ol></details>`;
+  } else html += `<div class="tip-h">억양, 강조, 끊어 읽기, 속도${pr && pr.words ? ', 발음이' : '가'} 원본과 비슷해요.</div><div class="tip-why">${pr && pr.words ? '단어를 눌러 원본과 한 번 더 비교해보세요.' : '발음(모음·자음)까지 보려면 왼쪽의 "발음 검사 켜기"를 누르세요.'}</div>`;
+  const good = [...c.good];
+  if (pr && pr.words && !pr.nErr) good.push('검사한 자음·모음이 모두 원본처럼 들렸어요.');
+  if (good.length) html += `<div class="good">잘한 점: ${good.join(' ')}</div>`;
+  if (pr && pr.words) {
+    html += `<div class="words"><span>단어별 발음</span>${pr.words.map((w, i) => `<button class="w ${w.status}" data-word="${i}" title="${w.status === 'bad' ? '고칠 소리가 있어요' : w.status === 'ok' ? '원본처럼 들렸어요' : '약하게 발음되는 단어라 검사하지 않았어요'}">${esc(w.text)}</button>`).join('')}
+      <div class="tip-why">단어를 누르면 원본, 내 녹음 순서로 들려줘요. 주황색은 고칠 소리가 있는 단어, 흐린 단어는 원래 약하게 발음돼서 검사하지 않은 단어예요. 원어민 녹음으로 학습한 모델이라 가끔 잘못 들을 수 있어요.</div></div>`;
+  }
+  if (!pr && !pronOn && c.spots.length) {
     html += `<div class="spots"><span>소리 차이가 큰 곳</span>${c.spots.map((sp, k) => `<button data-spot="${k}">▶ ${sp.where} ${Math.max(0, sp.at - v0).toFixed(1)}초</button>`).join('')}
       <div class="tip-why">목소리 자체의 차이도 섞여 있어서 참고만 하세요. 들어보고 모음이나 자음이 다르게 들리면 그 부분을 따라 해보세요.</div></div>`;
   }
@@ -861,8 +1264,9 @@ function renderCoach() {
   $('#coachMeta').textContent = `녹음 ${m.no} 기준`;
 }
 function playTip(k, list = 'tips') {
-  const m = mine(), c = m && coachFor(m); if (!c || !c[list][k]) return;
-  const tip = c[list][k];
+  const m = mine(), c = m && coachFor(m); if (!c) return;
+  const arr = list === 'tips' ? allTips(m) : list === 'words' ? (m.pron && m.pron.words) || [] : c[list];
+  const tip = arr[k]; if (!tip) return;
   S.sel = { src: 'ref', t0: tip.ref[0], t1: tip.ref[1], mine: tip.mine };
   drawOverlays(); updateButtons(); playAB();
 }
@@ -1105,6 +1509,7 @@ function updateButtons() {
 
 function renderAll() {
   renderTrack('ref'); renderTrack('mine'); renderIntonation(); renderStats(); renderCoach(); renderTakes(); drawOverlays(); updateButtons();
+  runPron();
 }
 
 // ---------- overlays: selection + playheads ----------
@@ -1498,9 +1903,17 @@ for (const kind of ['ref', 'mine']) {
 document.addEventListener('dragover', (e) => e.preventDefault());
 document.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) loadRefFile(f); });
 
+$('#pronBtn').addEventListener('click', () => {
+  pronOn = !pronOn;
+  try { localStorage.setItem(PRON_KEY, pronOn ? '1' : '0'); } catch {}
+  if (!pronOn) setPronStatus('');
+  renderCoach(); runPron();
+});
 $('#coachRows').addEventListener('click', (e) => {
-  const b = e.target.closest('button[data-tip], button[data-spot]'); if (!b) return;
-  if (b.dataset.tip !== undefined) playTip(Number(b.dataset.tip)); else playTip(Number(b.dataset.spot), 'spots');
+  const b = e.target.closest('button[data-tip], button[data-spot], button[data-word]'); if (!b) return;
+  if (b.dataset.tip !== undefined) playTip(Number(b.dataset.tip));
+  else if (b.dataset.word !== undefined) playTip(Number(b.dataset.word), 'words');
+  else playTip(Number(b.dataset.spot), 'spots');
 });
 
 let rq = 0;
