@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>발음 비교</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E1A2B;
+    --panel: #132238;
+    --panel-2: #1A2C47;
+    --line: #263B5A;
+    --text: #E6ECF5;
+    --muted: #8FA3BD;
+    --ref: #5CC6E0;
+    --mine: #F3B648;
+    --rec: #EF5F5B;
+    --radius-s: 6px;
+    --radius-m: 10px;
+    --head-w: 208px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: "IBM Plex Sans KR", "IBM Plex Sans", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 20px 24px 48px; }
+
+  .top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .top h1 { font-size: 16px; font-weight: 600; margin: 0; letter-spacing: 0.01em; }
+  .keys { margin: 0; color: var(--muted); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+  .keys span { white-space: nowrap; }
+  kbd {
+    font-family: "IBM Plex Sans", sans-serif; font-size: 11.5px; font-weight: 500;
+    display: inline-block; min-width: 20px; padding: 0 5px; margin-right: 4px; text-align: center;
+    border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; color: var(--text); background: var(--panel);
+  }
+
+  /* sentence */
+  .source { margin: 28px 0 18px; }
+  #sentence {
+    display: block; width: 100%; resize: none; overflow: hidden;
+    font-family: "IBM Plex Sans", "IBM Plex Sans KR", sans-serif;
+    font-size: clamp(22px, 2.9vw, 34px); font-weight: 500; line-height: 1.3; letter-spacing: -0.005em;
+    color: var(--text); background: transparent; border: 0; border-bottom: 1px solid var(--line);
+    padding: 4px 0 14px; outline: none; max-width: 30em;
+  }
+  #sentence:focus { border-bottom-color: var(--ref); }
+  #sentence::placeholder { color: #4D6380; }
+  .source-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-top: 14px; }
+  .or { color: var(--muted); }
+  #status { min-height: 21px; margin: 10px 0 0; color: var(--muted); }
+  #status.err { color: #F59491; }
+  #status.ok { color: var(--ref); }
+
+  /* controls */
+  button, .btn, select {
+    font: inherit; font-size: 13px; color: var(--text);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius-s);
+    padding: 6px 11px; cursor: pointer; line-height: 1.35;
+  }
+  select { padding-right: 6px; }
+  button:hover:not(:disabled), .btn:hover, select:hover { border-color: #3A5478; }
+  button:disabled { opacity: 0.42; cursor: default; }
+  :focus-visible { outline: 2px solid var(--ref); outline-offset: 2px; }
+  button.primary { background: var(--ref); border-color: var(--ref); color: #062030; font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #7AD3E9; border-color: #7AD3E9; }
+  .field { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+  .check { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; cursor: pointer; }
+  .check input { accent-color: var(--ref); margin: 0; }
+
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px;
+    padding: 10px 12px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius-m) var(--radius-m) 0 0; border-bottom: 0;
+  }
+  .transport, .opts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .opts label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+
+  /* tracks */
+  .tracks { border: 1px solid var(--line); border-radius: 0 0 var(--radius-m) var(--radius-m); overflow: hidden; background: var(--panel); }
+  .track { display: grid; grid-template-columns: var(--head-w) 1fr; border-top: 1px solid var(--line); }
+  .track:first-child { border-top: 0; }
+  .thead {
+    padding: 12px 12px 12px 14px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+    border-right: 1px solid var(--line); position: relative;
+  }
+  .thead::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--c, transparent); }
+  #track-ref { --c: var(--ref); }
+  #track-mine { --c: var(--mine); }
+  .tname { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .tmeta { color: var(--muted); font-size: 12.5px; word-break: break-all; }
+  .tbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tbtns button, .tbtns .btn { padding: 5px 9px; font-size: 12.5px; }
+  .tbody { position: relative; min-width: 0; background: var(--bg); }
+  .tbody canvas { display: block; width: 100%; }
+  .tbody .ov { position: absolute; inset: 0; height: 100%; cursor: crosshair; touch-action: none; }
+  .empty {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+    padding: 0 24px; color: var(--muted); pointer-events: none; font-size: 13.5px;
+  }
+  .empty[hidden] { display: none; }
+  .track.drop .tbody { outline: 2px dashed var(--c, var(--ref)); outline-offset: -6px; }
+
+  button.rec { border-color: var(--rec); color: #FFD9D8; font-weight: 600; padding: 7px 14px; }
+  button.rec .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--rec); margin-right: 7px; vertical-align: 0; }
+  button.rec.on { background: var(--rec); color: #fff; }
+  button.rec.on .dot { background: #fff; animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.25; } }
+  #recMode { font-size: 12.5px; padding: 4px 6px; max-width: 100%; }
+  .meter { width: 100%; height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--mine); transition: width 60ms linear; }
+  .takes { display: flex; flex-wrap: wrap; gap: 4px; }
+  .takes button { padding: 2px 0; min-width: 26px; font-size: 12px; font-family: "IBM Plex Sans", sans-serif; }
+  .takes button[aria-pressed="true"] { background: var(--mine); border-color: var(--mine); color: #2A1B00; font-weight: 600; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: 3px; margin-right: 6px; }
+
+  .stats { display: grid; grid-template-columns: var(--head-w) 1fr; border-top: 1px solid var(--line); }
+  .stats[hidden] { display: none; }
+  .stats .thead { font-size: 13px; color: var(--muted); }
+  .stats .rows { padding: 12px 16px; display: grid; gap: 6px; font-size: 13.5px; }
+  .stats .rows b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stats .ref-c { color: var(--ref); }
+  .stats .mine-c { color: var(--mine); }
+  .stats .hint { color: var(--muted); }
+
+  .note { color: var(--muted); font-size: 13px; max-width: 72ch; margin: 18px 0 0; }
+
+  @media (max-width: 760px) {
+    .wrap { padding: 16px 14px 40px; }
+    .track, .stats { grid-template-columns: 1fr; }
+    .thead { border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; align-items: center; }
+    .meter { width: 80px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button.rec.on .dot { animation: none; }
+    .meter span { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>발음 비교</h1>
+    <p class="keys" aria-label="단축키">
+      <span><kbd>1</kbd>원본</span><span><kbd>2</kbd>내 녹음</span><span><kbd>3</kbd>동시</span><span><kbd>4</kbd>번갈아</span>
+      <span><kbd>R</kbd>녹음</span><span><kbd>Space</kbd>정지</span><span><kbd>Esc</kbd>선택 해제</span>
+    </p>
+  </header>
+
+  <section class="source">
+    <textarea id="sentence" rows="1" spellcheck="false" aria-label="연습할 문장" placeholder="연습할 영어 문장을 입력하세요">Could you walk me through how you arrived at that number?</textarea>
+    <div class="source-row">
+      <label class="field">목소리
+        <select id="voice">
+          <optgroup label="미국 영어">
+            <option value="af_heart" selected>Heart (여성)</option>
+            <option value="af_bella">Bella (여성)</option>
+            <option value="af_nicole">Nicole (여성, 차분함)</option>
+            <option value="am_michael">Michael (남성)</option>
+            <option value="am_fenrir">Fenrir (남성)</option>
+            <option value="am_puck">Puck (남성)</option>
+          </optgroup>
+          <optgroup label="영국 영어">
+            <option value="bf_emma">Emma (여성)</option>
+            <option value="bm_george">George (남성)</option>
+            <option value="bm_fable">Fable (남성)</option>
+          </optgroup>
+        </select>
+      </label>
+      <label class="field">말 속도
+        <select id="speed">
+          <option value="0.8">느리게</option>
+          <option value="0.9">조금 느리게</option>
+          <option value="1" selected>보통</option>
+          <option value="1.1">조금 빠르게</option>
+        </select>
+      </label>
+      <button id="gen" class="primary">AI 음성 만들기</button>
+      <span class="or">또는</span>
+      <label class="btn" for="refFile" tabindex="0" id="refFileBtn">원본 파일 넣기</label>
+      <input type="file" id="refFile" accept="audio/*,video/*" hidden>
+      <button id="fallback" hidden>브라우저 기본 음성으로 듣기</button>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="toolbar" aria-label="재생과 보기 설정">
+    <div class="transport">
+      <button id="playBoth" title="단축키 3">▶ 동시 재생</button>
+      <button id="playAB" title="단축키 4">번갈아 듣기</button>
+      <button id="stop" title="Space">■ 정지</button>
+    </div>
+    <div class="opts">
+      <label>재생 속도
+        <select id="rate">
+          <option value="0.6">0.6배</option>
+          <option value="0.75">0.75배</option>
+          <option value="0.9">0.9배</option>
+          <option value="1" selected>1배</option>
+        </select>
+      </label>
+      <label>시간축
+        <select id="view">
+          <option value="real">실제 길이</option>
+          <option value="fit">길이 맞춤</option>
+        </select>
+      </label>
+      <label>스펙트로그램
+        <select id="specMode">
+          <option value="broad">발음 보기 (광대역)</option>
+          <option value="narrow">억양 보기 (협대역)</option>
+        </select>
+      </label>
+      <label>최대 주파수
+        <select id="maxF">
+          <option value="5000" selected>5 kHz</option>
+          <option value="8000">8 kHz</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="trim" checked> 앞뒤 무음 자르기</label>
+    </div>
+  </section>
+
+  <section class="tracks" id="tracks">
+    <div class="track" id="track-ref" data-kind="ref">
+      <div class="thead">
+        <div class="tname">원본</div>
+        <div class="tmeta" id="refMeta">비어 있음</div>
+        <div class="tbtns">
+          <button id="playRef" title="단축키 1">▶ 재생</button>
+          <button id="crop" disabled title="원본에서 드래그로 구간을 고른 뒤 누르세요">선택 구간만 남기기</button>
+        </div>
+      </div>
+      <div class="tbody">
+        <canvas class="cv"></canvas>
+        <canvas class="ov" aria-label="원본 트랙: 클릭하면 그 지점부터 재생, 드래그하면 구간 선택"></canvas>
+        <div class="empty">위에서 AI 음성을 만들거나, 오디오·영상 파일을 넣거나 여기로 끌어다 놓으세요.</div>
+      </div>
+    </div>
+
+    <div class="track" id="track-mine" data-kind="mine">
+      <div class="thead">
+        <div class="tname">내 녹음</div>
+        <button id="rec" class="rec" title="단축키 R"><span class="dot"></span><span class="label">녹음</span></button>
+        <select id="recMode" aria-label="녹음 방식">
+          <option value="listen">원본 듣고 따라 말하기</option>
+          <option value="shadow">원본과 동시에 말하기 (쉐도잉)</option>
+          <option value="plain">바로 녹음</option>
+        </select>
+        <label class="check"><input type="checkbox" id="autoStop" checked> 말 끝나면 자동 정지</label>
+        <div class="meter" aria-hidden="true"><span id="meterBar"></span></div>
+        <div class="takes" id="takes" aria-label="녹음 목록"></div>
+        <div class="tbtns">
+          <button id="playMine" title="단축키 2">▶ 재생</button>
+          <label class="btn" for="mineFile" tabindex="0" id="mineFileBtn">파일 넣기</label>
+          <input type="file" id="mineFile" accept="audio/*,video/*" hidden>
+          <button id="delTake">지우기</button>
+        </div>
+      </div>
+      <div class="tbody">
+        <canvas class="cv"></canvas>
+        <canvas class="ov" aria-label="내 녹음 트랙: 클릭하면 그 지점부터 재생, 드래그하면 구간 선택"></canvas>
+        <div class="empty">R 키나 녹음 버튼을 누르고 따라 말해보세요.</div>
+      </div>
+    </div>
+
+    <div class="track" id="track-into">
+      <div class="thead">
+        <div class="tname">억양 겹쳐보기</div>
+        <div class="tmeta">각자 평균 음높이를 0으로 맞춘 반음 단위라서 목소리 높이가 달라도 모양만 비교돼요.</div>
+        <div class="legend"><span><i style="background:var(--ref)"></i>원본</span><span><i style="background:var(--mine)"></i>내 녹음</span></div>
+      </div>
+      <div class="tbody">
+        <canvas class="cv"></canvas>
+        <div class="empty">원본과 내 녹음의 억양 곡선을 여기에 겹쳐 보여줘요.</div>
+      </div>
+    </div>
+
+    <div class="stats" id="stats" hidden>
+      <div class="thead">비교</div>
+      <div class="rows" id="statRows"></div>
+    </div>
+  </section>
+
+  <p class="note">스펙트로그램의 진한 가로 띠(포먼트) 높이가 모음 소리를 결정해요. 원본과 띠의 높이나 모양이 다르면 모음이 다르게 난 거예요. 위아래 색 선은 음높이(억양)이고 오른쪽 색 눈금으로 읽어요. 트랙을 드래그하면 같은 부분이 다른 트랙에도 표시되고, 그 구간만 재생돼요.</p>
+</div>
+
+<script type="module">
+// ---------- constants ----------
+const ANA_SR = 16000;      // analysis sample rate
+const PLAY_SR = 32000;     // playback sample rate
+const HOP = 160;           // 10 ms at 16 kHz
+const PMIN = 60, PMAX = 500;
+const KOKORO_URL = 'https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js';
+const MODEL_ID = 'onnx-community/Kokoro-82M-v1.0-ONNX';
+const COLORS = { ref: '#5CC6E0', mine: '#F3B648', rec: '#EF5F5B', bg: '#0E1A2B', blank: '#0B1524', muted: '#8FA3BD', grid: '#263B5A' };
+const LAYOUT = { wave: 46, gap: 6, spec: 200, axis: 20 };   // css px
+const TRACK_H = LAYOUT.wave + LAYOUT.gap + LAYOUT.spec + LAYOUT.axis;
+const INTO_H = 170;
+
+const $ = (s) => document.querySelector(s);
+// true when the page is shown inside another app's preview frame (e.g. a chat file preview), where mic and downloads are blocked
+const EMBEDDED = (() => { try { return window.top !== window.self; } catch { return true; } })();
+const S = {
+  ref: null, takes: [], cur: -1,
+  view: 'real', trim: true, maxF: 5000, spec: 'broad', rate: 1,
+  sel: null, playing: [], abSeq: 0, rec: null, ac: null, raf: 0,
+};
+const mine = () => (S.cur >= 0 ? S.takes[S.cur] : null);
+const trackOf = (k) => (k === 'ref' ? S.ref : mine());
+
+// ---------- status ----------
+function setStatus(msg, kind = '') { const el = $('#status'); el.textContent = msg || ''; el.className = kind; }
+
+// ---------- audio utils ----------
+function mixdown(buf) {
+  const n = buf.length, ch = buf.numberOfChannels;
+  if (ch === 1) return new Float32Array(buf.getChannelData(0));
+  const out = new Float32Array(n);
+  for (let c = 0; c < ch; c++) { const d = buf.getChannelData(c); for (let i = 0; i < n; i++) out[i] += d[i] / ch; }
+  return out;
+}
+async function decodeBlob(blob) {
+  const ab = await blob.arrayBuffer();
+  const ctx = new OfflineAudioContext(1, 1, PLAY_SR);
+  const buf = await ctx.decodeAudioData(ab);
+  return mixdown(buf);
+}
+async function resample(x, srIn, srOut) {
+  if (srIn === srOut) return new Float32Array(x);
+  const len = Math.max(1, Math.round(x.length * srOut / srIn));
+  const oc = new OfflineAudioContext(1, len, srOut);
+  const b = oc.createBuffer(1, x.length, srIn);
+  b.copyToChannel(x instanceof Float32Array ? x : new Float32Array(x), 0);
+  const src = oc.createBufferSource(); src.buffer = b; src.connect(oc.destination); src.start();
+  const r = await oc.startRendering();
+  return new Float32Array(r.getChannelData(0));
+}
+function wavBlob(x, sr) {
+  const n = x.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, 'data'); v.setUint32(40, n * 2, true);
+  let peak = 0; for (let i = 0; i < n; i++) { const a = Math.abs(x[i]); if (a > peak) peak = a; }
+  const g = peak > 0 ? Math.min(0.89 / peak, 20) : 1;   // loudness-match both tracks for fair A/B
+  for (let i = 0; i < n; i++) { const s = Math.max(-1, Math.min(1, x[i] * g)); v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true); }
+  return new Blob([buf], { type: 'audio/wav' });
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function median(arr) { if (!arr.length) return 0; const a = Array.from(arr).sort((x, y) => x - y); return a[a.length >> 1]; }
+function quantile(arr, q) { if (!arr.length) return 0; const a = Array.from(arr).sort((x, y) => x - y); return a[Math.min(a.length - 1, Math.max(0, Math.floor(q * (a.length - 1))))]; }
+
+// ---------- analysis ----------
+async function analyze(t) {
+  const x = t.ana, n = x.length;
+  // pre-emphasis for spectrogram (+6 dB/oct, as in Praat)
+  const emph = new Float32Array(n); emph[0] = x[0] || 0;
+  for (let i = 1; i < n; i++) emph[i] = x[i] - 0.97 * x[i - 1];
+  t.emph = emph;
+  let peak = 0; for (let i = 0; i < n; i++) { const a = Math.abs(x[i]); if (a > peak) peak = a; }
+  t.peak = peak || 1;
+
+  // frame RMS
+  const nf = Math.max(1, Math.floor(n / HOP));
+  const rms = new Float32Array(nf); let mx = 0;
+  for (let i = 0; i < nf; i++) {
+    let s = 0; const a = i * HOP, b = Math.min(n, a + 320);
+    for (let j = a; j < b; j++) s += x[j] * x[j];
+    rms[i] = Math.sqrt(s / Math.max(1, b - a)); if (rms[i] > mx) mx = rms[i];
+  }
+  const floor = quantile(rms, 0.1);
+  const thr = Math.max(mx * 0.035, floor * 3, 1e-5);
+  let first = -1, last = -1;
+  for (let i = 0; i + 2 < nf; i++) if (rms[i] > thr && rms[i + 1] > thr && rms[i + 2] > thr) { first = i; break; }
+  for (let i = nf - 1; i >= 2; i--) if (rms[i] > thr && rms[i - 1] > thr && rms[i - 2] > thr) { last = i; break; }
+  t.dur = n / ANA_SR;
+  if (first < 0 || last <= first) { t.on = 0; t.off = t.dur; }
+  else {
+    t.on = Math.max(0, first * HOP / ANA_SR - 0.1);
+    t.off = Math.min(t.dur, (last * HOP + 320) / ANA_SR + 0.15);
+  }
+
+  // pitch (YIN)
+  const W = 480, tauMin = Math.floor(ANA_SR / 600), tauMax = Math.ceil(ANA_SR / 70);
+  const pf = Math.max(0, Math.floor((n - W - tauMax) / HOP));
+  const f0 = new Float32Array(pf);
+  const d = new Float32Array(tauMax + 2);
+  const vthr = Math.max(mx * 0.05, floor * 3);
+  for (let i = 0; i < pf; i++) {
+    if (i % 300 === 299) await sleep(0);
+    const off = i * HOP;
+    const ri = Math.min(nf - 1, Math.round((off + W / 2) / HOP));
+    if (rms[ri] < vthr) continue;
+    for (let tau = 1; tau <= tauMax; tau++) {
+      let s = 0;
+      for (let j = 0; j < W; j++) { const v = x[off + j] - x[off + j + tau]; s += v * v; }
+      d[tau] = s;
+    }
+    d[0] = 1; let run = 0;
+    for (let tau = 1; tau <= tauMax; tau++) { run += d[tau]; d[tau] = run > 0 ? d[tau] * tau / run : 1; }
+    let tau = -1;
+    for (let k = tauMin; k <= tauMax; k++) {
+      if (d[k] < 0.15) { while (k + 1 <= tauMax && d[k + 1] < d[k]) k++; tau = k; break; }
+    }
+    if (tau < 0) continue;
+    let better = tau;
+    if (tau > 1 && tau < tauMax) { const a = d[tau - 1], b = d[tau], c = d[tau + 1]; const den = a + c - 2 * b; if (den > 0) better = tau + (a - c) / (2 * den); }
+    f0[i] = ANA_SR / better;
+  }
+  cleanPitch(f0);
+  t.f0 = f0;
+  t.f0t0 = (W / 2) / ANA_SR;   // time of frame 0 centre
+}
+function cleanPitch(f) {
+  const n = f.length;
+  // octave-jump fix against local median
+  const fixed = new Float32Array(f);
+  for (let i = 0; i < n; i++) {
+    if (!f[i]) continue;
+    const nb = [];
+    for (let k = Math.max(0, i - 15); k <= Math.min(n - 1, i + 15); k++) if (f[k] && k !== i) nb.push(f[k]);
+    if (nb.length < 6) continue;
+    const m = median(nb), r = f[i] / m;
+    if (r > 1.8 && r < 2.25) fixed[i] = f[i] / 2;
+    else if (r < 0.56 && r > 0.44) fixed[i] = f[i] * 2;
+  }
+  // median filter (5) within voiced runs
+  for (let i = 0; i < n; i++) {
+    if (!fixed[i]) { f[i] = 0; continue; }
+    const w = [];
+    for (let k = i - 2; k <= i + 2; k++) if (k >= 0 && k < n && fixed[k]) w.push(fixed[k]);
+    f[i] = median(w);
+  }
+  // drop very short voiced blips (< 40 ms)
+  let i = 0;
+  while (i < n) {
+    if (!f[i]) { i++; continue; }
+    let j = i; while (j < n && f[j]) j++;
+    if (j - i < 4) for (let k = i; k < j; k++) f[k] = 0;
+    i = j;
+  }
+}
+
+async function makeTrack(play, kind, meta = {}) {
+  const ana = await resample(play, PLAY_SR, ANA_SR);
+  const t = { kind, play, ana, ...meta };
+  await analyze(t);
+  t.url = URL.createObjectURL(wavBlob(play, PLAY_SR));
+  t.el = new Audio(t.url);
+  t.el.preload = 'auto';
+  t.el.preservesPitch = true;
+  return t;
+}
+function disposeTrack(t) { if (!t) return; try { t.el.pause(); } catch {} URL.revokeObjectURL(t.url); }
+
+// ---------- view mapping ----------
+const viewOf = (t) => (S.trim ? [t.on, t.off] : [0, t.dur]);
+function maxSpan() {
+  const sp = [S.ref, mine()].filter(Boolean).map((t) => { const [a, b] = viewOf(t); return b - a; });
+  return sp.length ? Math.max(...sp) : 1;
+}
+function tToX(t, time, W) { const [a, b] = viewOf(t); return S.view === 'fit' ? (time - a) / (b - a) * W : (time - a) / maxSpan() * W; }
+function xToT(t, x, W) { const [a, b] = viewOf(t); return S.view === 'fit' ? a + x / W * (b - a) : a + x / W * maxSpan(); }
+function selFor(kind) {
+  if (!S.sel) return null;
+  const src = trackOf(S.sel.src), dst = trackOf(kind);
+  if (!src || !dst) return null;
+  if (kind === S.sel.src) return [S.sel.t0, S.sel.t1];
+  const [sa, sb] = viewOf(src), [da, db] = viewOf(dst);
+  const m = S.view === 'fit' ? (tt) => da + (tt - sa) / (sb - sa) * (db - da) : (tt) => da + (tt - sa);
+  const a = Math.max(da, Math.min(db, m(S.sel.t0))), b = Math.max(da, Math.min(db, m(S.sel.t1)));
+  return b - a < 0.02 ? null : [a, b];
+}
+function rangeFor(kind) { const t = trackOf(kind); if (!t) return null; return selFor(kind) || viewOf(t); }
+
+// ---------- FFT ----------
+const fftCache = new Map();
+function getFFT(N) {
+  if (fftCache.has(N)) return fftCache.get(N);
+  const bits = Math.log2(N), rev = new Uint32Array(N);
+  for (let i = 0; i < N; i++) { let r = 0; for (let b = 0; b < bits; b++) r |= ((i >> b) & 1) << (bits - 1 - b); rev[i] = r; }
+  const cos = new Float32Array(N / 2), sin = new Float32Array(N / 2);
+  for (let i = 0; i < N / 2; i++) { cos[i] = Math.cos(2 * Math.PI * i / N); sin[i] = -Math.sin(2 * Math.PI * i / N); }
+  const o = { N, rev, cos, sin }; fftCache.set(N, o); return o;
+}
+function fft(re, im, F) {
+  const { N, rev, cos, sin } = F;
+  for (let i = 0; i < N; i++) { const j = rev[i]; if (j > i) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+  for (let size = 2; size <= N; size <<= 1) {
+    const half = size >> 1, step = N / size;
+    for (let i = 0; i < N; i += size) {
+      for (let j = 0; j < half; j++) {
+        const k = j * step, wr = cos[k], wi = sin[k], a = i + j, b = a + half;
+        const tr = re[b] * wr - im[b] * wi, ti = re[b] * wi + im[b] * wr;
+        re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+      }
+    }
+  }
+}
+const winCache = new Map();
+function hann(L) { if (winCache.has(L)) return winCache.get(L); const w = new Float32Array(L); for (let i = 0; i < L; i++) w[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (L - 1)); winCache.set(L, w); return w; }
+
+// spectrogram colour map: ink blue -> white, so the coloured pitch lines stay readable
+const LUT = (() => {
+  const stops = [[0, [14, 26, 43]], [0.3, [30, 52, 86]], [0.55, [70, 104, 150]], [0.78, [150, 180, 214]], [1, [246, 250, 255]]];
+  const lut = new Uint8ClampedArray(256 * 3);
+  for (let i = 0; i < 256; i++) {
+    const v = i / 255; let k = 0; while (k < stops.length - 2 && v > stops[k + 1][0]) k++;
+    const [p0, c0] = stops[k], [p1, c1] = stops[k + 1], f = (v - p0) / (p1 - p0);
+    for (let c = 0; c < 3; c++) lut[i * 3 + c] = c0[c] + (c1[c] - c0[c]) * f;
+  }
+  return lut;
+})();
+
+// ---------- canvases ----------
+const els = {
+  ref: { box: $('#track-ref'), cv: $('#track-ref .cv'), ov: $('#track-ref .ov'), empty: $('#track-ref .empty') },
+  mine: { box: $('#track-mine'), cv: $('#track-mine .cv'), ov: $('#track-mine .ov'), empty: $('#track-mine .empty') },
+  into: { box: $('#track-into'), cv: $('#track-into .cv'), empty: $('#track-into .empty') },
+};
+function sizeCanvas(cv, cssH) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.max(10, Math.round(cv.clientWidth * dpr)), h = Math.round(cssH * dpr);
+  if (cv.width !== w) cv.width = w;
+  if (cv.height !== h) cv.height = h;
+  cv.style.height = cssH + 'px';
+  return dpr;
+}
+function niceStep(span, W, dpr) {
+  const target = span * (90 * dpr) / W;
+  const steps = [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10, 15, 30, 60, 120];
+  return steps.find((s) => s >= target) || 300;
+}
+function font(px, dpr, w = 400) { return `${w} ${Math.round(px * dpr)}px "IBM Plex Sans", "IBM Plex Sans KR", sans-serif`; }
+
+function renderTrack(kind) {
+  const e = els[kind], t = trackOf(kind);
+  const dpr = sizeCanvas(e.cv, TRACK_H); sizeCanvas(e.ov, TRACK_H);
+  const ctx = e.cv.getContext('2d'), W = e.cv.width, H = e.cv.height;
+  const waveH = LAYOUT.wave * dpr, specY = (LAYOUT.wave + LAYOUT.gap) * dpr, specH = LAYOUT.spec * dpr, axisY = specY + specH;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
+  e.empty.hidden = !!t || (kind === 'mine' && !!S.rec);
+  if (!t) {
+    ctx.fillStyle = COLORS.blank; ctx.fillRect(0, specY, W, specH);
+    return;
+  }
+  const color = COLORS[kind];
+  const cols = W, map = (c) => xToT(t, c, W);
+
+  // waveform
+  const x = t.ana, n = x.length, mid = waveH / 2;
+  ctx.fillStyle = color; ctx.globalAlpha = 0.85;
+  for (let c = 0; c < cols; c++) {
+    const a = Math.floor(map(c) * ANA_SR), b = Math.max(a + 1, Math.floor(map(c + 1) * ANA_SR));
+    if (b <= 0 || a >= n) continue;
+    let lo = 0, hi = 0;
+    for (let i = Math.max(0, a); i < Math.min(n, b); i++) { const v = x[i]; if (v < lo) lo = v; if (v > hi) hi = v; }
+    const y0 = mid - (hi / t.peak) * (mid - 2), y1 = mid - (lo / t.peak) * (mid - 2);
+    ctx.fillRect(c, y0, 1, Math.max(1, y1 - y0));
+  }
+  ctx.globalAlpha = 1;
+
+  // spectrogram
+  const broad = S.spec === 'broad';
+  const winLen = broad ? 96 : 512, N = broad ? 512 : 1024;   // 6 ms vs 32 ms window
+  const F = getFFT(N), win = hann(winLen), binHz = ANA_SR / N;
+  const nb = Math.min(N / 2, Math.ceil(S.maxF / binHz) + 2);
+  const mag = new Float32Array(cols * nb), valid = new Uint8Array(cols);
+  const re = new Float32Array(N), im = new Float32Array(N), em = t.emph;
+  let mx = -Infinity;
+  for (let c = 0; c < cols; c++) {
+    const tm = map(c + 0.5);
+    if (tm < 0 || tm > t.dur) continue;
+    valid[c] = 1;
+    const start = Math.round(tm * ANA_SR) - (winLen >> 1);
+    re.fill(0); im.fill(0);
+    for (let i = 0; i < winLen; i++) { const k = start + i; if (k >= 0 && k < n) re[i] = em[k] * win[i]; }
+    fft(re, im, F);
+    for (let b = 0; b < nb; b++) { const db = 10 * Math.log10(re[b] * re[b] + im[b] * im[b] + 1e-14); mag[c * nb + b] = db; if (db > mx) mx = db; }
+  }
+  const range = broad ? 55 : 62, lo = mx - range;
+  const rows = Math.round(specH), img = ctx.createImageData(cols, rows), d = img.data;
+  for (let r = 0; r < rows; r++) {
+    const f = S.maxF * (1 - (r + 0.5) / rows), fb = f / binHz, b0 = Math.min(nb - 2, Math.floor(fb)), fr = fb - b0;
+    for (let c = 0; c < cols; c++) {
+      const o = (r * cols + c) * 4;
+      if (!valid[c]) { d[o] = 11; d[o + 1] = 21; d[o + 2] = 36; d[o + 3] = 255; continue; }
+      const v0 = mag[c * nb + b0], v1 = mag[c * nb + b0 + 1];
+      let v = (v0 + (v1 - v0) * fr - lo) / range; v = v < 0 ? 0 : v > 1 ? 1 : v;
+      const li = (v * 255) | 0;
+      d[o] = LUT[li * 3]; d[o + 1] = LUT[li * 3 + 1]; d[o + 2] = LUT[li * 3 + 2]; d[o + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, Math.round(specY));
+
+  // frequency labels (left)
+  ctx.font = font(10.5, dpr); ctx.textBaseline = 'middle';
+  const stepF = S.maxF > 6000 ? 2000 : 1000;
+  for (let f = stepF; f < S.maxF; f += stepF) {
+    const y = specY + specH * (1 - f / S.maxF);
+    ctx.fillStyle = 'rgba(230,236,245,0.14)'; ctx.fillRect(0, Math.round(y), 6 * dpr, 1);
+    ctx.fillStyle = 'rgba(14,26,43,0.75)'; ctx.fillRect(7 * dpr, y - 7 * dpr, 26 * dpr, 14 * dpr);
+    ctx.fillStyle = COLORS.muted; ctx.textAlign = 'left'; ctx.fillText(`${f / 1000}k`, 9 * dpr, y);
+  }
+
+  // pitch contour on spectrogram (log scale, right axis)
+  const py = (f) => specY + specH * (1 - Math.log(f / PMIN) / Math.log(PMAX / PMIN));
+  drawPitchPath(ctx, t, (time) => tToX(t, time, W), py, color, dpr, [specY, specY + specH]);
+  ctx.textAlign = 'right';
+  for (const f of [100, 200, 300, 400]) {
+    const y = py(f);
+    ctx.fillStyle = 'rgba(14,26,43,0.75)'; ctx.fillRect(W - 34 * dpr, y - 7 * dpr, 32 * dpr, 14 * dpr);
+    ctx.fillStyle = color; ctx.fillText(String(f), W - 5 * dpr, y);
+  }
+
+  // time axis
+  const [va, vb] = viewOf(t);
+  const span = S.view === 'fit' ? vb - va : maxSpan();
+  const step = niceStep(span, W, dpr);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = font(10.5, dpr);
+  for (let s = 0; s <= span + 1e-6; s += step) {
+    const xx = tToX(t, va + s, W);
+    if (xx < 0 || xx > W) continue;
+    ctx.fillStyle = COLORS.grid; ctx.fillRect(Math.round(xx), axisY, 1, 4 * dpr);
+    ctx.fillStyle = COLORS.muted;
+    const label = (step < 1 ? s.toFixed(step < 0.1 ? 2 : 1) : String(Math.round(s))) + 's';
+    ctx.fillText(label, Math.min(W - 14 * dpr, Math.max(12 * dpr, xx)), axisY + 5 * dpr);
+  }
+}
+
+function drawPitchPath(ctx, t, xOf, yOf, color, dpr, clip, valueOf = (f) => f) {
+  const f0 = t.f0, step = HOP / ANA_SR;
+  const segs = []; let seg = null;
+  for (let i = 0; i < f0.length; i++) {
+    const time = t.f0t0 + i * step;
+    if (!f0[i] || (S.trim && (time < t.on || time > t.off))) { seg = null; continue; }
+    const v = valueOf(f0[i]); if (v === null) { seg = null; continue; }
+    if (!seg) { seg = []; segs.push(seg); }
+    seg.push([xOf(time), yOf(v)]);
+  }
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, clip[0], ctx.canvas.width, clip[1] - clip[0]); ctx.clip();
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  for (const pass of [[COLORS.bg, 5.5], [color, 2.4]]) {
+    ctx.strokeStyle = pass[0]; ctx.lineWidth = pass[1] * dpr;
+    for (const s of segs) {
+      ctx.beginPath();
+      s.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      if (s.length === 1) ctx.lineTo(s[0][0] + 0.5, s[0][1]);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function voicedSemis(t) {
+  const [a, b] = viewOf(t), step = HOP / ANA_SR, vals = [];
+  for (let i = 0; i < t.f0.length; i++) { const time = t.f0t0 + i * step; if (t.f0[i] && time >= a && time <= b) vals.push(t.f0[i]); }
+  const med = median(vals);
+  return { med, semis: vals.map((f) => 12 * Math.log2(f / med)) };
+}
+
+function renderIntonation() {
+  const e = els.into, dpr = sizeCanvas(e.cv, INTO_H);
+  const ctx = e.cv.getContext('2d'), W = e.cv.width, H = e.cv.height;
+  ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
+  const tracks = [S.ref, mine()].filter(Boolean);
+  e.empty.hidden = tracks.length > 0;
+  if (!tracks.length) return;
+  const top = 12 * dpr, bot = H - 12 * dpr, R = 12;
+  const y = (s) => top + (bot - top) * (1 - (s + R) / (2 * R));
+  ctx.font = font(10.5, dpr); ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  for (const s of [-10, -5, 0, 5, 10]) {
+    ctx.fillStyle = s === 0 ? 'rgba(143,163,189,0.35)' : 'rgba(143,163,189,0.12)';
+    ctx.fillRect(0, Math.round(y(s)), W, 1);
+    ctx.fillStyle = COLORS.muted; ctx.fillText((s > 0 ? '+' : '') + s, 6 * dpr, y(s) - 7 * dpr);
+  }
+  for (const t of tracks) {
+    const { med } = voicedSemis(t);
+    if (!med) continue;
+    drawPitchPath(ctx, t, (time) => tToX(t, time, W), y, COLORS[t.kind], dpr, [0, H], (f) => Math.max(-R, Math.min(R, 12 * Math.log2(f / med))));
+  }
+}
+
+function renderStats() {
+  const box = $('#stats'), rows = $('#statRows'), r = S.ref, m = mine();
+  if (!r || !m) { box.hidden = true; return; }
+  box.hidden = false;
+  const lr = r.off - r.on, lm = m.off - m.on, ratio = lm / lr;
+  const sr = voicedSemis(r), sm = voicedSemis(m);
+  const rangeOf = (s) => (s.semis.length > 5 ? quantile(s.semis, 0.9) - quantile(s.semis, 0.1) : 0);
+  const gr = rangeOf(sr), gm = rangeOf(sm);
+  let speedHint = '원본과 비슷한 속도예요.';
+  if (ratio > 1.15) speedHint = `원본보다 ${Math.round((ratio - 1) * 100)}% 길게 말했어요. 단어 사이를 더 이어서 말해보세요.`;
+  else if (ratio < 0.87) speedHint = `원본보다 ${Math.round((1 - ratio) * 100)}% 짧게 말했어요.`;
+  let pitchHint = '억양 폭이 원본과 비슷해요.';
+  if (gr && gm && gm < gr * 0.65) pitchHint = '원본보다 억양이 평평해요. 강세 음절에서 음을 더 올렸다 내려보세요.';
+  else if (gr && gm && gm > gr * 1.5) pitchHint = '원본보다 억양 폭이 커요.';
+  rows.innerHTML = `
+    <div>말한 길이 <b class="ref-c">원본 ${lr.toFixed(2)}초</b>, <b class="mine-c">내 녹음 ${lm.toFixed(2)}초</b> <span class="hint">${speedHint}</span></div>
+    <div>음높이 폭 <b class="ref-c">원본 ${gr.toFixed(1)}반음</b>, <b class="mine-c">내 녹음 ${gm.toFixed(1)}반음</b> <span class="hint">${pitchHint}</span></div>`;
+}
+
+function renderTakes() {
+  const box = $('#takes'); box.innerHTML = '';
+  S.takes.forEach((tk, i) => {
+    const b = document.createElement('button');
+    b.textContent = String(tk.no); b.setAttribute('aria-pressed', String(i === S.cur)); b.setAttribute('aria-label', `녹음 ${tk.no}`);
+    b.addEventListener('click', () => { S.cur = i; S.sel = S.sel && S.sel.src === 'mine' ? null : S.sel; renderAll(); });
+    box.appendChild(b);
+  });
+}
+
+function updateButtons() {
+  const r = !!S.ref, m = !!mine(), rec = !!S.rec;
+  $('#playRef').disabled = !r; $('#playMine').disabled = !m; $('#delTake').disabled = !m || rec;
+  $('#playBoth').disabled = !(r && m); $('#playAB').disabled = !(r && m);
+  $('#crop').disabled = !(r && S.sel && selFor('ref'));
+  const rb = $('#rec'); rb.classList.toggle('on', rec);
+  rb.querySelector('.label').textContent = !rec ? '녹음' : S.rec.phase === 'listening' ? '취소' : '정지';
+  $('#refMeta').textContent = r ? `${S.ref.label}, ${(S.ref.dur).toFixed(1)}초` : '비어 있음';
+}
+
+function renderAll() {
+  renderTrack('ref'); renderTrack('mine'); renderIntonation(); renderStats(); renderTakes(); drawOverlays(); updateButtons();
+}
+
+// ---------- overlays: selection + playheads ----------
+function drawOverlays() {
+  for (const kind of ['ref', 'mine']) {
+    const e = els[kind], t = trackOf(kind), ctx = e.ov.getContext('2d');
+    sizeCanvas(e.ov, TRACK_H);
+    const W = e.ov.width, H = e.ov.height, dpr = W / Math.max(1, e.ov.clientWidth);
+    ctx.clearRect(0, 0, W, H);
+    if (!t) continue;
+    const hgt = (LAYOUT.wave + LAYOUT.gap + LAYOUT.spec) * dpr;
+    const sel = selFor(kind);
+    if (sel) {
+      const x0 = tToX(t, sel[0], W), x1 = tToX(t, sel[1], W);
+      ctx.fillStyle = 'rgba(230,236,245,0.10)'; ctx.fillRect(x0, 0, x1 - x0, hgt);
+      ctx.fillStyle = COLORS[kind]; ctx.fillRect(Math.round(x0), 0, Math.max(1, dpr), hgt); ctx.fillRect(Math.round(x1), 0, Math.max(1, dpr), hgt);
+    }
+    for (const p of S.playing) {
+      if (p.kind !== kind) continue;
+      const x = tToX(t, p.el.currentTime, W);
+      ctx.fillStyle = '#FFFFFF'; ctx.fillRect(Math.round(x), 0, Math.max(1.5 * dpr, 1), hgt);
+    }
+  }
+}
+
+// ---------- playback ----------
+function stopAll() {
+  S.abSeq++;
+  for (const p of S.playing) { p.el.pause(); p.done(); }
+  S.playing = [];
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  drawOverlays();
+}
+function playRange(kind, a, b) {
+  const t = trackOf(kind); if (!t) return Promise.resolve();
+  for (const p of S.playing.filter((q) => q.kind === kind)) { p.el.pause(); p.done(); }
+  S.playing = S.playing.filter((q) => q.kind !== kind);
+  return new Promise((resolve) => {
+    const el = t.el;
+    const p = { kind, el, b, fin: false, done: () => { if (!p.fin) { p.fin = true; resolve(); } } };
+    el.pause(); el.playbackRate = S.rate; el.preservesPitch = true; el.currentTime = a;
+    S.playing.push(p);
+    el.play().then(loop).catch(() => { S.playing = S.playing.filter((q) => q !== p); p.done(); });
+  });
+}
+function loop() {
+  if (S.raf) return;
+  const tick = () => {
+    for (const p of [...S.playing]) {
+      if (p.el.ended || p.el.currentTime >= p.b - 0.005) { p.el.pause(); S.playing = S.playing.filter((q) => q !== p); p.done(); }
+    }
+    drawOverlays();
+    if (S.playing.length) S.raf = requestAnimationFrame(tick); else S.raf = 0;
+  };
+  S.raf = requestAnimationFrame(tick);
+}
+function play(kind) { const r = rangeFor(kind); if (!r) return; stopAll(); playRange(kind, r[0], r[1]); }
+function playBoth() { const a = rangeFor('ref'), b = rangeFor('mine'); if (!a || !b) return; stopAll(); playRange('ref', a[0], a[1]); playRange('mine', b[0], b[1]); }
+async function playAB() {
+  const a = rangeFor('ref'), b = rangeFor('mine'); if (!a || !b) return;
+  stopAll(); const seq = S.abSeq;
+  await playRange('ref', a[0], a[1]); if (seq !== S.abSeq) return;
+  await sleep(300); if (seq !== S.abSeq) return;
+  await playRange('mine', b[0], b[1]);
+}
+
+// ---------- pointer: click to play, drag to select ----------
+for (const kind of ['ref', 'mine']) {
+  const ov = els[kind].ov; let down = null;
+  ov.addEventListener('pointerdown', (ev) => {
+    if (!trackOf(kind) || ev.button !== 0) return;
+    ov.setPointerCapture(ev.pointerId);
+    down = { x: ev.offsetX, drag: false };
+  });
+  ov.addEventListener('pointermove', (ev) => {
+    if (!down) return; const t = trackOf(kind); if (!t) return;
+    if (Math.abs(ev.offsetX - down.x) > 4) down.drag = true;
+    if (!down.drag) return;
+    const W = ov.clientWidth, [va, vb] = viewOf(t);
+    const a = xToT(t, Math.min(down.x, ev.offsetX), W), b = xToT(t, Math.max(down.x, ev.offsetX), W);
+    S.sel = { src: kind, t0: Math.max(va, a), t1: Math.min(vb, b) };
+    drawOverlays(); updateButtons();
+  });
+  ov.addEventListener('pointerup', (ev) => {
+    if (!down) return; const t = trackOf(kind); const wasDrag = down.drag; down = null;
+    if (!t) return;
+    if (wasDrag) { if (S.sel && S.sel.t1 - S.sel.t0 < 0.03) S.sel = null; drawOverlays(); updateButtons(); return; }
+    const time = xToT(t, ev.offsetX, ov.clientWidth);
+    const sel = selFor(kind);
+    stopAll();
+    if (sel && time >= sel[0] && time <= sel[1]) playRange(kind, sel[0], sel[1]);
+    else { S.sel = null; drawOverlays(); updateButtons(); const end = viewOf(t)[1]; if (time < end) playRange(kind, Math.max(0, time), end); }
+  });
+}
+
+// ---------- loading sources ----------
+async function setRef(play, meta, keepTakes = false) {
+  const t = await makeTrack(play, 'ref', meta);
+  stopAll(); disposeTrack(S.ref); S.ref = t; S.sel = null;
+  if (!keepTakes) { S.takes.forEach(disposeTrack); S.takes = []; S.cur = -1; S.takeNo = 0; }
+  renderAll();
+}
+async function loadRefFile(file) {
+  if (!file) return;
+  setStatus('파일을 읽는 중…');
+  try {
+    const play = await decodeBlob(file);
+    if (play.length < PLAY_SR * 0.2) throw new Error('short');
+    await setRef(play, { label: file.name, source: 'file' });
+    setStatus(S.ref.dur > 15 ? '긴 파일이에요. 연습할 부분을 드래그한 뒤 "선택 구간만 남기기"를 누르세요.' : '', S.ref.dur > 15 ? 'ok' : '');
+  } catch (e) { console.error(e); setStatus('이 파일은 열 수 없어요. mp3, wav, m4a, mp4, webm 파일을 넣어주세요.', 'err'); }
+}
+async function addTakeBlob(blob, label) {
+  const play = await decodeBlob(blob);
+  if (play.length < PLAY_SR * 0.2) throw new Error('녹음이 너무 짧아요');
+  S.takeNo = (S.takeNo || 0) + 1;
+  const t = await makeTrack(play, 'mine', { no: S.takeNo, label: label || `녹음 ${S.takeNo}` });
+  S.takes.push(t);
+  while (S.takes.length > 12) disposeTrack(S.takes.shift());
+  S.cur = S.takes.length - 1;
+  if (S.sel && S.sel.src === 'mine') S.sel = null;
+  renderAll();
+}
+async function cropRef() {
+  const sel = selFor('ref'); if (!S.ref || !sel) return;
+  const a = Math.floor(sel[0] * PLAY_SR), b = Math.ceil(sel[1] * PLAY_SR);
+  const slice = S.ref.play.slice(a, b);
+  setStatus('구간을 자르는 중…');
+  const base = S.ref.label.replace(/ \([\d.]+–[\d.]+초\)$/, '');
+  await setRef(slice, { label: `${base} (${sel[0].toFixed(1)}–${sel[1].toFixed(1)}초)`, source: S.ref.source, text: S.ref.text }, true);
+  setStatus('');
+}
+
+// ---------- AI voice (Kokoro, runs in the browser) ----------
+// Pages opened from a local file have no CacheStorage, so the ~90 MB model would be re-downloaded every visit.
+// This small IndexedDB-backed stand-in lets the model library keep its files between visits.
+async function ensureModelCache() {
+  try { const c = await self.caches.open('pc-probe'); if (c) return; } catch {}
+  installModelCache();
+}
+function installModelCache() {
+  const dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('pronunciation-compare-cache', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('files');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+  dbp.catch(() => {});
+  const run = (mode, fn) => dbp.then((db) => new Promise((res, rej) => {
+    const tx = db.transaction('files', mode), req = fn(tx.objectStore('files'));
+    tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
+  }));
+  const keyOf = (name, k) => name + '|' + (typeof k === 'string' ? k : k.url);
+  const store = (name) => ({
+    async match(k) {
+      try { const v = await run('readonly', (st) => st.get(keyOf(name, k))); return v ? new Response(v.body, { headers: v.headers }) : undefined; }
+      catch { return undefined; }
+    },
+    async put(k, resp) {
+      try { const body = await resp.arrayBuffer(); await run('readwrite', (st) => st.put({ body, headers: [...resp.headers.entries()] }, keyOf(name, k))); }
+      catch (e) { console.warn('model cache write failed', e); }
+    },
+  });
+  try { Object.defineProperty(self, 'caches', { configurable: true, value: { open: async (name) => store(name) } }); } catch {}
+}
+
+let ttsP = null;
+function getTTS(onProgress) {
+  if (!ttsP) {
+    ttsP = (async () => {
+      await ensureModelCache();
+      const mod = await import(KOKORO_URL);
+      const files = {};
+      return mod.KokoroTTS.from_pretrained(MODEL_ID, {
+        dtype: 'q8', device: 'wasm',
+        progress_callback: (p) => {
+          if (p.status === 'progress' && p.total) {
+            files[p.file] = { l: p.loaded, t: p.total };
+            const v = Object.values(files), L = v.reduce((s, f) => s + f.l, 0), T = v.reduce((s, f) => s + f.t, 0);
+            onProgress(L / T, T);
+          }
+        },
+      });
+    })();
+    ttsP.catch(() => { ttsP = null; });
+  }
+  return ttsP;
+}
+async function generate() {
+  const text = $('#sentence').value.trim();
+  if (!text) { setStatus('먼저 연습할 문장을 입력하세요.', 'err'); $('#sentence').focus(); return; }
+  if (text.length > 500) { setStatus('문장이 너무 길어요. 500자 이하로 줄여주세요.', 'err'); return; }
+  const btn = $('#gen'); btn.disabled = true;
+  const voiceSel = $('#voice'), voice = voiceSel.value, vname = voiceSel.selectedOptions[0].textContent.split(' ')[0];
+  try {
+    setStatus('AI 음성 모델을 준비하는 중…');
+    const tts = await getTTS((frac, total) => setStatus(`AI 음성 모델 불러오는 중 ${Math.round(frac * 100)}% (처음 한 번만 약 ${Math.round(total / 1e6)}MB를 내려받아요)`));
+    setStatus('음성 만드는 중…');
+    const out = await tts.generate(text, { voice, speed: Number($('#speed').value) });
+    const play = await resample(out.audio, out.sampling_rate, PLAY_SR);
+    const same = S.ref && S.ref.text === text;
+    await setRef(play, { label: `AI 음성 (${vname})`, source: 'tts', text }, same);
+    setStatus('');
+    $('#fallback').hidden = true;
+  } catch (e) {
+    console.error(e);
+    const detail = String((e && e.message) || e).replace(/\s+/g, ' ').slice(0, 160);
+    setStatus(EMBEDDED
+      ? `지금은 미리보기 화면 안이라 AI 음성이 막혀 있어요. 파일을 내려받아 Chrome이나 Edge에서 직접 여세요. (원인: ${detail})`
+      : `AI 음성을 만들지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요. 그동안 브라우저 기본 음성으로 들을 수는 있어요(분석은 안 돼요). (원인: ${detail})`, 'err');
+    $('#fallback').hidden = !('speechSynthesis' in window);
+  } finally { btn.disabled = false; }
+}
+function speakFallback() {
+  const text = $('#sentence').value.trim(); if (!text || !('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text); u.lang = $('#voice').value.startsWith('b') ? 'en-GB' : 'en-US'; u.rate = Number($('#speed').value);
+  speechSynthesis.speak(u);
+}
+
+// ---------- recording ----------
+function meter(v) { $('#meterBar').style.width = Math.min(100, Math.sqrt(v) * 260) + '%'; }
+async function toggleRecord() {
+  if (S.rec) { finishRecording(); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+    setStatus('이 브라우저에서는 마이크를 쓸 수 없어요. 이 파일을 Chrome이나 Edge에서 열어주세요.', 'err'); return;
+  }
+  stopAll();
+  const ac = S.ac || (S.ac = new AudioContext());
+  if (ac.state === 'suspended') ac.resume();
+  const rec = { phase: 'starting', levels: [], noise: [], cancelled: false };
+  S.rec = rec; updateButtons();
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+  } catch (e) {
+    S.rec = null; updateButtons();
+    setStatus(EMBEDDED
+      ? '지금은 미리보기 화면 안이라 마이크가 막혀 있어요. 파일을 내려받아 Chrome이나 Edge에서 직접 여세요.'
+      : '마이크를 쓸 수 없어요. 주소창 왼쪽 아이콘에서 마이크를 허용한 뒤 다시 눌러주세요.', 'err'); return;
+  }
+  if (rec.cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
+  rec.stream = stream;
+  rec.src = ac.createMediaStreamSource(stream); rec.an = ac.createAnalyser(); rec.an.fftSize = 1024; rec.src.connect(rec.an);
+  const mode = S.ref ? $('#recMode').value : 'plain';
+  rec.mode = mode;
+  if (mode === 'listen') {
+    rec.phase = 'listening'; updateButtons(); renderTrack('mine'); drawLive(rec);
+    setStatus('원본을 듣고, 끝나면 바로 따라 말하세요.');
+    const r = rangeFor('ref');
+    await playRange('ref', r[0], r[1]);
+    if (rec.cancelled || S.rec !== rec) return;
+  }
+  beginRecorder(rec);
+  if (mode === 'shadow') {
+    const r = rangeFor('ref'); rec.refPlaying = true;
+    playRange('ref', r[0], r[1]).then(() => { rec.refPlaying = false; });
+  }
+}
+function beginRecorder(rec) {
+  rec.phase = 'recording'; updateButtons(); renderTrack('mine');
+  const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((m) => MediaRecorder.isTypeSupported(m));
+  const mr = new MediaRecorder(rec.stream, mime ? { mimeType: mime } : undefined);
+  rec.mr = mr; rec.chunks = [];
+  mr.ondataavailable = (e) => { if (e.data && e.data.size) rec.chunks.push(e.data); };
+  mr.onstop = () => onRecorderStop(rec);
+  mr.start(100);
+  rec.t0 = performance.now(); rec.speech = false; rec.lastLoud = 0;
+  rec.sm = 0; rec.floor = Infinity; rec.peak = 0;
+  const auto = $('#autoStop').checked;
+  setStatus(rec.mode === 'shadow' ? '원본과 같이 말하세요. 이어폰을 끼면 스피커 소리가 섞이지 않아요.' : auto ? '녹음 중이에요. 다 말하고 잠깐 멈추면 자동으로 끝나요.' : '녹음 중이에요. R을 다시 누르면 끝나요.');
+  const buf = new Float32Array(rec.an.fftSize);
+  const tick = () => {
+    if (S.rec !== rec || rec.phase !== 'recording') return;
+    rec.an.getFloatTimeDomainData(buf);
+    let s = 0; for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+    const rms = Math.sqrt(s / buf.length), el = (performance.now() - rec.t0) / 1000;
+    rec.levels.push([el, rms]);
+    // robust to speaking right away: floor = running minimum of smoothed level, threshold also follows the loudest part so far
+    rec.sm = rec.sm ? rec.sm * 0.7 + rms * 0.3 : rms;
+    if (el > 0.1) { rec.floor = Math.min(rec.floor, rec.sm); rec.peak = Math.max(rec.peak, rec.sm); }
+    const floor = Number.isFinite(rec.floor) ? rec.floor : 0.002;
+    const thr = Math.max(0.006, floor * 3.5, rec.peak * 0.12);
+    if (rec.sm > thr && el > 0.12) { rec.speech = true; rec.lastLoud = el; }
+    meter(rms); drawLive(rec);
+    if (el > 30 || ($('#autoStop').checked && rec.speech && !rec.refPlaying && el - rec.lastLoud > 1.1)) { finishRecording(); return; }
+    rec.raf = requestAnimationFrame(tick);
+  };
+  rec.raf = requestAnimationFrame(tick);
+}
+function drawLive(rec) {
+  const e = els.mine, dpr = sizeCanvas(e.cv, TRACK_H), ctx = e.cv.getContext('2d'), W = e.cv.width, H = e.cv.height;
+  const specY = (LAYOUT.wave + LAYOUT.gap) * dpr, specH = LAYOUT.spec * dpr;
+  ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = COLORS.blank; ctx.fillRect(0, specY, W, specH);
+  ctx.font = font(13, dpr, 500); ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+  if (rec.phase === 'listening') { ctx.fillStyle = COLORS.ref; ctx.fillText('원본 듣는 중… 끝나면 바로 따라 말하세요', 14 * dpr, specY + 12 * dpr); return; }
+  const last = rec.levels.length ? rec.levels[rec.levels.length - 1][0] : 0;
+  ctx.fillStyle = COLORS.rec; ctx.fillText(`녹음 중 ${last.toFixed(1)}초`, 14 * dpr, specY + 12 * dpr);
+  const refSpan = S.ref ? viewOf(S.ref)[1] - viewOf(S.ref)[0] : 0;
+  const pps = W / Math.max(4, refSpan + 1.5);
+  let peak = 0.02; for (const [, v] of rec.levels) if (v > peak) peak = v;
+  const mid = specY + specH / 2;
+  for (const [tm, v] of rec.levels) {
+    const x = tm * pps; if (x > W) break;
+    const h = Math.max(dpr, Math.sqrt(v / peak) * specH * 0.42);
+    ctx.fillRect(x, mid - h, Math.max(dpr, 2 * dpr), h * 2);
+  }
+}
+function finishRecording() {
+  const rec = S.rec; if (!rec) return;
+  if (rec.phase === 'starting' || rec.phase === 'listening') {
+    rec.cancelled = true; stopAll(); cleanupRec(rec); S.rec = null; updateButtons(); renderTrack('mine'); setStatus('녹음을 취소했어요.'); return;
+  }
+  if (rec.phase !== 'recording') return;
+  rec.phase = 'stopping'; cancelAnimationFrame(rec.raf);
+  if (rec.refPlaying) { stopAll(); rec.refPlaying = false; }
+  try { rec.mr.stop(); } catch { onRecorderStop(rec); }
+}
+function cleanupRec(rec) { if (rec.stream) rec.stream.getTracks().forEach((t) => t.stop()); try { rec.src && rec.src.disconnect(); } catch {} meter(0); }
+async function onRecorderStop(rec) {
+  cleanupRec(rec); S.rec = null; updateButtons();
+  const blob = new Blob(rec.chunks || [], { type: (rec.mr && rec.mr.mimeType) || 'audio/webm' });
+  if (blob.size < 800) { setStatus('녹음된 소리가 없어요. 마이크를 확인하고 다시 해보세요.', 'err'); renderAll(); return; }
+  setStatus('분석 중…');
+  try { await addTakeBlob(blob); setStatus(''); }
+  catch (e) { console.error(e); setStatus('녹음을 읽지 못했어요. 다시 한 번 녹음해보세요.', 'err'); renderAll(); }
+}
+
+// ---------- wiring ----------
+const sentence = $('#sentence');
+const autosize = () => { sentence.style.height = 'auto'; sentence.style.height = sentence.scrollHeight + 'px'; };
+sentence.addEventListener('input', autosize);
+sentence.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); generate(); } });
+$('#gen').addEventListener('click', generate);
+$('#fallback').addEventListener('click', speakFallback);
+$('#refFile').addEventListener('change', (e) => { loadRefFile(e.target.files[0]); e.target.value = ''; });
+$('#mineFile').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  setStatus('파일을 읽는 중…');
+  try { await addTakeBlob(f, f.name); setStatus(''); } catch (err) { setStatus('이 파일은 열 수 없어요.', 'err'); }
+});
+for (const id of ['refFileBtn', 'mineFileBtn']) $('#' + id).addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#' + id).click(); } });
+$('#playRef').addEventListener('click', () => play('ref'));
+$('#playMine').addEventListener('click', () => play('mine'));
+$('#playBoth').addEventListener('click', playBoth);
+$('#playAB').addEventListener('click', playAB);
+$('#stop').addEventListener('click', stopAll);
+$('#crop').addEventListener('click', cropRef);
+$('#rec').addEventListener('click', toggleRecord);
+$('#delTake').addEventListener('click', () => {
+  if (S.cur < 0 || S.rec) return;
+  stopAll(); disposeTrack(S.takes[S.cur]); S.takes.splice(S.cur, 1);
+  S.cur = S.takes.length ? Math.min(S.cur, S.takes.length - 1) : -1;
+  if (S.sel && S.sel.src === 'mine') S.sel = null; renderAll();
+});
+$('#recMode').addEventListener('change', (e) => { if (e.target.value === 'shadow') setStatus('쉐도잉은 이어폰을 끼고 하세요. 스피커 소리가 같이 녹음되면 비교가 흐려져요.'); });
+$('#rate').addEventListener('change', (e) => { S.rate = Number(e.target.value); for (const p of S.playing) p.el.playbackRate = S.rate; });
+$('#view').addEventListener('change', (e) => { S.view = e.target.value; renderAll(); });
+$('#specMode').addEventListener('change', (e) => { S.spec = e.target.value; renderAll(); });
+$('#maxF').addEventListener('change', (e) => { S.maxF = Number(e.target.value); renderAll(); });
+$('#trim').addEventListener('change', (e) => { S.trim = e.target.checked; renderAll(); });
+
+document.addEventListener('keydown', (e) => {
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'TEXTAREA' || tag === 'INPUT' || (tag === 'SELECT' && e.code !== 'Escape')) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.code;
+  if (k === 'Digit1' || k === 'Numpad1') { play('ref'); }
+  else if (k === 'Digit2' || k === 'Numpad2') { play('mine'); }
+  else if (k === 'Digit3' || k === 'Numpad3') { playBoth(); }
+  else if (k === 'Digit4' || k === 'Numpad4') { playAB(); }
+  else if (k === 'KeyR') { toggleRecord(); }
+  else if (k === 'Space') { if (S.rec) finishRecording(); else if (S.playing.length) stopAll(); else play('ref'); }
+  else if (k === 'Escape') { S.sel = null; drawOverlays(); updateButtons(); return; }
+  else return;
+  e.preventDefault();
+});
+
+// drag & drop audio files onto a track
+for (const kind of ['ref', 'mine']) {
+  const box = els[kind].box;
+  box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('drop'); });
+  box.addEventListener('dragleave', () => box.classList.remove('drop'));
+  box.addEventListener('drop', async (e) => {
+    e.preventDefault(); e.stopPropagation(); box.classList.remove('drop');
+    const f = e.dataTransfer.files[0]; if (!f) return;
+    if (kind === 'ref') loadRefFile(f);
+    else { setStatus('파일을 읽는 중…'); try { await addTakeBlob(f, f.name); setStatus(''); } catch { setStatus('이 파일은 열 수 없어요.', 'err'); } }
+  });
+}
+document.addEventListener('dragover', (e) => e.preventDefault());
+document.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) loadRefFile(f); });
+
+let rq = 0;
+new ResizeObserver(() => { cancelAnimationFrame(rq); rq = requestAnimationFrame(() => { if (S.rec && S.rec.phase === 'recording') { renderTrack('ref'); renderIntonation(); } else renderAll(); }); }).observe($('#tracks'));
+autosize();
+renderAll();
+if (EMBEDDED) setStatus('지금은 미리보기 화면 안이라 AI 음성과 마이크가 막힐 수 있어요. 파일을 내려받아 Chrome이나 Edge에서 직접 여세요.', 'err');
+else if (!window.isSecureContext) setStatus('이 주소에서는 마이크가 막혀 있어요. 파일을 내려받아 Chrome에서 직접 열어주세요.', 'err');
+
+</script>
+</body>
+</html>
