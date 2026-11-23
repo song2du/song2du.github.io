@@ -102,6 +102,11 @@
   #nudge button, #clipRealign { font-size: 12.5px; padding: 4px 9px; }
   .track[hidden] { display: none; }
   .words .w.omit { background: transparent; border-color: var(--mine); color: var(--mine); text-decoration: line-through; }
+  #picker { display: grid; gap: 10px; width: 100%; max-width: 860px; }
+  #picker[hidden] { display: none; }
+  #pickCv { display: block; width: 100%; border: 1px solid var(--line); border-radius: 8px; cursor: crosshair; touch-action: none; }
+  #pickRange { font-weight: 600; font-size: 13.5px; font-variant-numeric: tabular-nums; margin-right: 6px; }
+  #picker button[data-pick] { font-size: 12.5px; padding: 4px 9px; }
   #sentence {
     display: block; width: 100%; resize: none; overflow: hidden;
     font-family: "IBM Plex Sans", "IBM Plex Sans KR", sans-serif;
@@ -288,13 +293,29 @@
 
   <section class="study" id="study" hidden>
     <div id="studySetup">
-      <p class="lead">1분 안팎의 클립과 원문을 넣으면 문장별로 받아쓰고, 외우고, 원본과 똑같은 타이밍으로 말하는 연습을 할 수 있어요.</p>
+      <p class="lead">파일을 넣고 공부할 구간을 고른 뒤 그 부분의 원문을 붙여넣으면, 문장별로 받아쓰고, 외우고, 원본과 똑같은 타이밍으로 말하는 연습을 할 수 있어요.</p>
       <div class="setup-row">
         <label class="btn" for="clipFile" tabindex="0" id="clipFileBtn">클립 파일 고르기</label>
         <input type="file" id="clipFile" accept="audio/*,video/*" hidden>
-        <span class="muted" id="clipFileName">1분 안팎의 오디오·영상 파일</span>
+        <span class="muted" id="clipFileName">길이는 상관없어요. 오디오나 영상 파일</span>
       </div>
-      <textarea id="clipText" rows="6" spellcheck="false" aria-label="클립의 영어 원문" placeholder="이 클립의 영어 원문을 붙여넣으세요. 화자 이름과 (지문)은 자동으로 빼요."></textarea>
+      <div id="picker" hidden>
+        <canvas id="pickCv" aria-label="파일 전체 파형: 누르면 그 위치부터 재생, 드래그하면 구간 선택"></canvas>
+        <div class="setup-row">
+          <button id="pickPlay">▶ 재생</button>
+          <span class="muted" id="pickTime"></span>
+          <button id="pickIn">여기를 시작으로</button>
+          <button id="pickOut">여기를 끝으로</button>
+          <button id="pickSel">▶ 고른 구간 듣기</button>
+        </div>
+        <div class="setup-row">
+          <b id="pickRange"></b>
+          <span class="muted">시작</span><button data-pick="a:-1">1초 앞으로</button><button data-pick="a:1">1초 뒤로</button>
+          <span class="muted">끝</span><button data-pick="b:-1">1초 앞으로</button><button data-pick="b:1">1초 뒤로</button>
+        </div>
+        <p class="muted">파형을 누르면 그 위치부터 재생돼요. 들으면서 공부할 부분이 시작될 때 "여기를 시작으로", 끝날 때 "여기를 끝으로"를 누르거나, 파형을 드래그해서 고르세요. 30초~1분이 적당해요.</p>
+      </div>
+      <textarea id="clipText" rows="6" spellcheck="false" aria-label="고른 구간의 영어 원문" placeholder="고른 구간의 영어 원문을 붙여넣으세요. 화자 이름과 (지문)은 자동으로 빼요."></textarea>
       <div class="setup-row">
         <button id="clipGo" class="primary">문장으로 나누기</button>
         <button id="clipGoRough">모델 없이 대략 나누기</button>
@@ -2144,7 +2165,7 @@ document.addEventListener('keydown', (e) => {
   else if (k === 'Digit3' || k === 'Numpad3') { playBoth(); }
   else if (k === 'Digit4' || k === 'Numpad4') { playAB(); }
   else if (k === 'KeyR') { toggleRecord(); }
-  else if (k === 'Space') { if (S.rec) finishRecording(); else if (S.playing.length) stopAll(); else play('ref'); }
+  else if (k === 'Space') { if (ST.on && !ST.clip) { if (ST.src) pickToggle(); } else if (S.rec) finishRecording(); else if (S.playing.length) stopAll(); else play('ref'); }
   else if (k === 'Escape') { S.sel = null; drawOverlays(); updateButtons(); return; }
   else return;
   e.preventDefault();
@@ -2180,7 +2201,7 @@ $('#coachRows').addEventListener('click', (e) => {
 
 // ---------- clip study mode: dictation -> memorise -> sync with the original ----------
 const SYNC_H = 130;
-const ST = { on: false, clip: null, stage: 'dict', cur: 0, mask: 0, refKey: '', file: null, busy: false, dict: null, loadP: Promise.resolve(), saveWarned: false };
+const ST = { on: false, clip: null, stage: 'dict', cur: 0, mask: 0, refKey: '', file: null, src: null, busy: false, dict: null, loadP: Promise.resolve(), saveWarned: false };
 const userErr = (msg) => Object.assign(new Error(msg), { user: true });
 const WEAK_EXTRA = new Set("than been into its it's i'm you're he's she's we're they're that's there's who which when then just some any did didn't don't doesn't isn't wasn't aren't i've you've we've i'll you'll we'll about up out".split(' '));
 
@@ -2213,7 +2234,87 @@ async function saveAudio(c, blob) {
 }
 
 function setStudyStatus(msg, kind = '') { const el = $('#studyStatus'); el.textContent = msg || ''; el.className = kind; if (ST.clip) setStatus(msg, kind); }
-function setClipFile(f) { if (!f) return; ST.file = f; $('#clipFileName').textContent = f.name; setStudyStatus(''); }
+const fmtT = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+const PICK_H = 84;
+
+// any length of file: decode once, then choose the stretch to study on an overview of the whole thing
+async function setClipFile(f) {
+  if (!f || ST.busy) return;
+  pickStop(); ST.busy = true;
+  setStudyStatus('파일을 읽는 중… 긴 파일은 조금 걸려요.');
+  try {
+    let play; try { play = await decodeBlob(f); } catch (e) { console.error(e); throw userErr('이 파일을 열지 못했어요. mp3, wav, m4a, mp4, webm 파일인지 확인해주세요. 아주 긴 파일은 메모리가 모자라서 안 열릴 수 있어요.'); }
+    const dur = play.length / PLAY_SR;
+    if (dur < 3) throw userErr('파일이 너무 짧아요. 3초보다 긴 파일을 넣어주세요.');
+    const N = 2000, peaks = new Float32Array(N), per = play.length / N; let top = 0;
+    for (let i = 0; i < N; i++) {
+      let m = 0; const e = Math.min(play.length, Math.floor((i + 1) * per));
+      for (let j = Math.floor(i * per); j < e; j += 3) { const v = Math.abs(play[j]); if (v > m) m = v; }
+      peaks[i] = m; if (m > top) top = m;
+    }
+    if (ST.src) URL.revokeObjectURL(ST.src.url);
+    // played from the decoded samples (as a WAV) so that positions heard and positions cut are the same
+    const url = URL.createObjectURL(wavBlob(play, PLAY_SR)), el = new Audio(url); el.preload = 'auto';
+    const whole = dur <= 120;
+    ST.src = { name: f.name.replace(/\.[^.]+$/, ''), file: f.name, play, dur, peaks, top: top || 1, url, el, a: whole ? 0 : null, b: whole ? dur : null, until: null };
+    ST.file = f;
+    setStudyStatus('');
+  } catch (e) {
+    if (!e.user) console.error(e);
+    setStudyStatus(e.user ? e.message : `파일을 열지 못했어요. (원인: ${String((e && e.message) || e).slice(0, 100)})`, 'err');
+  } finally { ST.busy = false; renderPicker(); }
+}
+function pickStop() { const s = ST.src; if (s) { s.el.pause(); s.until = null; } }
+function pickLoop() {
+  const s = ST.src; if (!s) return;
+  if (s.until !== null && s.el.currentTime >= s.until) { s.el.pause(); s.until = null; }
+  renderPicker();
+  if (!s.el.paused && !s.el.ended) requestAnimationFrame(pickLoop);
+}
+function pickPlayFrom(t, until = null) {
+  const s = ST.src; if (!s) return;
+  stopAll(); s.el.pause();
+  s.el.currentTime = Math.max(0, Math.min(s.dur - 0.05, t)); s.until = until;
+  s.el.play().then(() => requestAnimationFrame(pickLoop)).catch(() => {});
+}
+function pickToggle() { const s = ST.src; if (!s) return; if (s.el.paused) pickPlayFrom(s.el.ended ? 0 : s.el.currentTime); else { pickStop(); renderPicker(); } }
+function pickSet(which, t) {
+  const s = ST.src; if (!s) return;
+  t = Math.max(0, Math.min(s.dur, t));
+  if (which === 'a') { s.a = t; if (s.b !== null && s.b <= t + 0.5) s.b = null; }
+  else { if (s.a === null) s.a = 0; if (t <= s.a + 0.5) { setStudyStatus('끝은 시작보다 뒤에 있어야 해요.', 'err'); return; } s.b = t; }
+  setStudyStatus(''); renderPicker();
+}
+function renderPicker() {
+  const s = ST.src, box = $('#picker'); box.hidden = !s;
+  $('#clipFileName').textContent = s ? `${s.file}, ${fmtT(s.dur)}` : '길이는 상관없어요. 오디오나 영상 파일';
+  if (!s) return;
+  const cv = $('#pickCv'), dpr = sizeCanvas(cv, PICK_H), ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const x = (t) => (t / s.dur) * W, axis = 18 * dpr, mid = (H - axis) / 2, N = s.peaks.length;
+  ctx.fillStyle = '#132238'; ctx.fillRect(0, 0, W, H);
+  const xa = s.a === null ? -1 : x(s.a), xb = s.b === null ? xa : x(s.b);
+  if (s.a !== null && s.b !== null) { ctx.fillStyle = 'rgba(92,198,224,0.16)'; ctx.fillRect(xa, 0, xb - xa, H - axis); }
+  for (let c = 0; c < W; c++) {
+    const i0 = Math.floor((c / W) * N), i1 = Math.max(i0 + 1, Math.floor(((c + 1) / W) * N)); let m = 0;
+    for (let i = i0; i < i1 && i < N; i++) if (s.peaks[i] > m) m = s.peaks[i];
+    const h = Math.max(1, (m / s.top) * (mid - 3));
+    ctx.fillStyle = s.b !== null && c >= xa && c <= xb ? COLORS.ref : '#55708F'; ctx.fillRect(c, mid - h, 1, h * 2);
+  }
+  const step = niceStep(s.dur, W, dpr * 0.8);
+  ctx.font = font(10.5, dpr); ctx.textBaseline = 'top'; ctx.textAlign = 'center';
+  for (let t = 0; t <= s.dur; t += step) { ctx.fillStyle = COLORS.grid; ctx.fillRect(Math.round(x(t)), H - axis, 1, 4 * dpr); ctx.fillStyle = COLORS.muted; ctx.fillText(fmtT(t), Math.min(W - 14 * dpr, Math.max(12 * dpr, x(t))), H - axis + 5 * dpr); }
+  ctx.fillStyle = COLORS.ref;
+  if (s.a !== null) ctx.fillRect(Math.round(xa), 0, Math.max(2, 2 * dpr), H - axis);
+  if (s.b !== null) ctx.fillRect(Math.round(xb) - Math.max(2, 2 * dpr), 0, Math.max(2, 2 * dpr), H - axis);
+  ctx.fillStyle = '#FFFFFF'; ctx.fillRect(Math.round(x(s.el.currentTime)), 0, Math.max(1.5 * dpr, 1), H - axis);
+  $('#pickPlay').textContent = s.el.paused ? '▶ 재생' : '■ 멈춤';
+  $('#pickTime').textContent = `${fmtT(s.el.currentTime)} / ${fmtT(s.dur)}`;
+  const len = s.a !== null && s.b !== null ? s.b - s.a : 0;
+  $('#pickRange').textContent = s.a === null ? '아직 구간을 고르지 않았어요' : s.b === null ? `시작 ${fmtT(s.a)}, 끝을 정해주세요`
+    : `고른 구간 ${fmtT(s.a)} ~ ${fmtT(s.b)}, ${len >= 60 ? `${Math.floor(len / 60)}분 ${Math.round(len % 60)}초` : `${Math.round(len)}초`}`;
+  $('#pickSel').disabled = !(s.a !== null && s.b !== null);
+  for (const b of document.querySelectorAll('#picker button[data-pick]')) b.disabled = (b.dataset.pick[0] === 'a' ? s.a : s.b) === null;
+}
 
 // run the phoneme model over a long clip in pieces cut at quiet moments
 async function clipLP(P, ana, onProg) {
@@ -2270,9 +2371,15 @@ async function alignClip(c, ana) {
   const sp = PR.align(A, E.seq);
   if (!Number.isFinite(sp.score)) throw new Error('alignment failed');
   let free = 0; for (let t = 0; t < A.T; t++) { let m = -Infinity; for (let v = 0; v < A.V; v++) if (A.LP[t * A.V + v] > m) m = A.LP[t * A.V + v]; free += m; }
-  const fit = (sp.score - free) / E.seq.length;
+  let fit = (sp.score - free) / E.seq.length;
   const wt = E.words.map(() => [Infinity, -Infinity]);
   E.meta.forEach((m, k) => { const w = wt[m.word]; w[0] = Math.min(w[0], A.times[sp.first[k]]); w[1] = Math.max(w[1], A.times[sp.last[k]]); });
+  const sub = sliceLP(A, A.times[sp.first[0]] - 0.3, A.times[sp.last[E.seq.length - 1]] + 0.45);
+  if (sub && sub.T >= E.seq.length * 2) {
+    const sp2 = PR.align(sub, E.seq); let f2 = 0;
+    for (let t = 0; t < sub.T; t++) { let m = -Infinity; for (let v = 0; v < sub.V; v++) if (sub.LP[t * sub.V + v] > m) m = sub.LP[t * sub.V + v]; f2 += m; }
+    if (Number.isFinite(sp2.score)) fit = (sp2.score - f2) / E.seq.length;
+  }
   const span = c.sents.map(() => [Infinity, -Infinity]);
   c.sents.forEach((s) => { s.words = []; });
   E.words.forEach((w, i) => {
@@ -2320,18 +2427,21 @@ function roughSplit(c, ana) {
 
 async function createClip(rough) {
   if (ST.busy) return;
-  const file = ST.file, raw = $('#clipText').value;
-  if (!file) { setStudyStatus('먼저 클립 파일을 고르세요.', 'err'); return; }
+  const src = ST.src, raw = $('#clipText').value;
+  if (!src) { setStudyStatus('먼저 클립 파일을 고르세요.', 'err'); return; }
+  if (src.a === null || src.b === null) { setStudyStatus('공부할 구간을 먼저 고르세요. 파형을 드래그하거나, 들으면서 "여기를 시작으로"와 "여기를 끝으로"를 누르면 돼요.', 'err'); return; }
+  if (src.b - src.a > 300) { setStudyStatus('한 번에 공부할 구간은 5분까지예요. 30초~1분 정도로 짧게 고르는 걸 추천해요.', 'err'); return; }
+  if (src.b - src.a < 3) { setStudyStatus('구간이 너무 짧아요. 3초보다 길게 골라주세요.', 'err'); return; }
   const texts = PR.sentences(raw);
-  if (!texts.length) { setStudyStatus('이 클립의 영어 원문을 붙여넣으세요.', 'err'); return; }
+  if (!texts.length) { setStudyStatus('고른 구간의 영어 원문을 붙여넣으세요.', 'err'); return; }
+  pickStop(); renderPicker();
   ST.busy = true; $('#clipGo').disabled = $('#clipGoRough').disabled = true;
   try {
-    setStudyStatus('클립을 읽는 중…');
-    let play; try { play = await decodeBlob(file); } catch { throw userErr('이 파일은 열 수 없어요. mp3, wav, m4a, mp4, webm 파일을 넣어주세요.'); }
+    setStudyStatus('클립을 준비하는 중…');
+    const whole = src.a < 0.5 && src.b > src.dur - 0.5;
+    const play = whole ? src.play.slice() : src.play.slice(Math.floor(src.a * PLAY_SR), Math.ceil(src.b * PLAY_SR));
     const dur = play.length / PLAY_SR;
-    if (dur < 3) throw userErr('클립이 너무 짧아요. 3초보다 긴 클립을 넣어주세요.');
-    if (dur > 300) throw userErr('5분보다 긴 클립은 넣을 수 없어요. 1~2분 길이로 잘라서 넣어주세요.');
-    const c = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name.replace(/\.[^.]+$/, ''), added: Date.now(), dur, play, transcript: raw,
+    const c = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: whole ? src.name : `${src.name} ${fmtT(src.a)}`, added: Date.now(), dur, play, transcript: raw,
       sents: texts.map((text) => ({ text, a: 0, b: 0, words: null })), aligned: 'rough', prog: { dict: {}, memo: {}, sync: [] } };
     const ana = await resample(play, PLAY_SR, ANA_SR);
     let note = '';
@@ -2340,9 +2450,9 @@ async function createClip(rough) {
       catch (e) { if (e.user) throw e; console.error(e); note = `발음 모델을 쓰지 못해서 문장을 대략 나눴어요. (원인: ${String((e && e.message) || e).slice(0, 80)}) `; }
     }
     if (c.aligned !== 'model') { roughSplit(c, ana); note += '문장 구간이 어긋나면 받아쓰기 화면의 "구간이 어긋났나요?"에서 조정하세요.'; }
-    else if (c.fit < -3.5) note = '원문이 클립 소리와 잘 맞지 않는 것 같아요. 문장 구간이 이상하면 원문을 확인해주세요.';
-    await saveMeta(c); await saveAudio(c, file);
-    ST.file = null; $('#clipFileName').textContent = '1분 안팎의 오디오·영상 파일'; $('#clipText').value = '';
+    else if (c.fit < -3.5) note = '원문이 고른 구간의 소리와 잘 맞지 않는 것 같아요. 문장 구간이 이상하면 구간과 원문이 같은 부분인지 확인해주세요.';
+    await saveMeta(c); await saveAudio(c, wavBlob(play, PLAY_SR));
+    $('#clipText').value = ''; if (!whole) { src.a = src.b = null; }
     setStudyStatus('');
     await openClip(c);
     if (note) setStatus(note, c.aligned === 'model' ? 'err' : '');
@@ -2586,7 +2696,7 @@ function renderStudy() {
   if (!ST.on) return;
   const c = ST.clip;
   $('#studySetup').hidden = !!c; $('#studyClip').hidden = !c;
-  if (!c) { renderLibrary(); return; }
+  if (!c) { renderPicker(); renderLibrary(); return; }
   const n = c.sents.length, P = c.prog;
   const nd = c.sents.filter((_, i) => P.dict[i]).length, nm = c.sents.filter((_, i) => (P.memo[i] || 0) >= 3).length;
   $('#clipName').textContent = c.name;
@@ -2612,15 +2722,41 @@ function renderStudy() {
 }
 
 // ----- wiring -----
-function setMode(on) { ST.on = on; stopAll(); renderStudy(); if (on && ST.clip) studyLoadRef(); }
+function setMode(on) { ST.on = on; stopAll(); pickStop(); renderStudy(); if (on && ST.clip) studyLoadRef(); }
 $('#modeSingle').addEventListener('click', () => setMode(false));
 $('#modeClip').addEventListener('click', () => setMode(true));
 $('#clipFile').addEventListener('change', (e) => { setClipFile(e.target.files[0]); e.target.value = ''; });
 $('#clipFileBtn').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#clipFileBtn').click(); } });
+$('#pickPlay').addEventListener('click', pickToggle);
+$('#pickIn').addEventListener('click', () => ST.src && pickSet('a', ST.src.el.currentTime));
+$('#pickOut').addEventListener('click', () => ST.src && pickSet('b', ST.src.el.currentTime));
+$('#pickSel').addEventListener('click', () => { const s = ST.src; if (s && s.a !== null && s.b !== null) pickPlayFrom(s.a, s.b); });
+$('#picker').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-pick]'), s = ST.src; if (!b || !s) return;
+  const [w, by] = b.dataset.pick.split(':'); if (s[w] === null) return;
+  pickSet(w, s[w] + Number(by));
+  if (w === 'a') pickPlayFrom(s.a, Math.min(s.dur, s.a + 2.5)); else if (s.b !== null) pickPlayFrom(Math.max(0, s.b - 2.5), s.b);
+});
+{
+  const cv = $('#pickCv'); let down = null;
+  const tAt = (ev) => { const s = ST.src; return Math.max(0, Math.min(s.dur, (ev.offsetX / cv.clientWidth) * s.dur)); };
+  cv.addEventListener('pointerdown', (ev) => { if (!ST.src || ev.button !== 0) return; cv.setPointerCapture(ev.pointerId); down = { x: ev.offsetX, t: tAt(ev), drag: false }; });
+  cv.addEventListener('pointermove', (ev) => {
+    if (!down || !ST.src) return;
+    if (Math.abs(ev.offsetX - down.x) > 4) down.drag = true;
+    if (!down.drag) return;
+    const t = tAt(ev); ST.src.a = Math.min(down.t, t); ST.src.b = Math.max(down.t, t); renderPicker();
+  });
+  cv.addEventListener('pointerup', (ev) => {
+    if (!down || !ST.src) return; const d = down; down = null;
+    if (d.drag) { const s = ST.src; if (s.b - s.a < 1) { s.a = s.b = null; } setStudyStatus(''); renderPicker(); }
+    else pickPlayFrom(tAt(ev));
+  });
+}
 $('#clipGo').addEventListener('click', () => createClip(false));
 $('#clipGoRough').addEventListener('click', () => createClip(true));
 $('#clipRealign').addEventListener('click', realignClip);
-$('#clipClose').addEventListener('click', () => { stopAll(); ST.clip = null; ST.refKey = ''; renderStudy(); });
+$('#clipClose').addEventListener('click', () => { stopAll(); ST.clip = null; ST.refKey = ''; $('#studyStatus').textContent = ''; renderStudy(); });
 $('#library').addEventListener('click', async (e) => {
   const o = e.target.closest('button[data-open]'), d = e.target.closest('button[data-del]');
   if (o) openSaved(o.dataset.open);
