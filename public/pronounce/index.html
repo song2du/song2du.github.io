@@ -43,7 +43,65 @@
   }
 
   /* sentence */
-  .source { margin: 28px 0 18px; }
+  .source { margin: 20px 0 10px; }
+  .source[hidden], .study[hidden] { display: none; }
+  .modes, .steps, .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .modes { margin-top: 18px; }
+  .modes button, .steps button, .seg button { border: 0; border-radius: 0; background: transparent; color: var(--muted); padding: 7px 14px; }
+  .modes button + button, .steps button + button, .seg button + button { border-left: 1px solid var(--line); }
+  .modes button[aria-pressed="true"], .steps button[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--text); font-weight: 600; }
+  .steps button span { font-weight: 400; color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
+  .seg button { padding: 5px 11px; }
+  .study { margin: 20px 0 10px; }
+  #studySetup, #studyClip, #stageDict, #stageMemo, #stageSync { display: grid; gap: 12px; justify-items: start; }
+  #studySetup[hidden], #studyClip[hidden], #stageDict[hidden], #stageMemo[hidden], #stageSync[hidden], .setup-row[hidden], .chips[hidden] { display: none; }
+  #stageDict, #stageMemo, #stageSync { width: 100%; }
+  .lead { margin: 0; max-width: 62ch; font-size: 15px; }
+  .muted { color: var(--muted); font-size: 13px; }
+  p.muted { margin: 0; max-width: 72ch; }
+  .setup-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  #clipText, #dictInput {
+    width: 100%; max-width: 860px; resize: vertical; font: inherit; color: var(--text);
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 10px 12px; outline: none;
+  }
+  #dictInput { font-family: "IBM Plex Sans", "IBM Plex Sans KR", sans-serif; font-size: 18px; line-height: 1.45; }
+  #clipText:focus, #dictInput:focus { border-color: var(--ref); }
+  #clipText::placeholder, #dictInput::placeholder { color: #4D6380; }
+  #studyStatus { margin: 0; min-height: 21px; color: var(--muted); }
+  #studyStatus.err { color: #F59491; }
+  #library { width: 100%; }
+  #library h2 { font-size: 14px; font-weight: 600; margin: 10px 0 8px; }
+  .lib { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-width: 860px; }
+  .lib li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+  .lib-name { font-weight: 600; word-break: break-all; }
+  .lib-btns { display: flex; gap: 6px; }
+  .clip-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; width: 100%; }
+  .clip-name { font-size: 18px; font-weight: 600; word-break: break-all; }
+  #clipClose { margin-left: auto; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { min-width: 34px; padding: 4px 0; font-family: "IBM Plex Sans", sans-serif; font-variant-numeric: tabular-nums; }
+  .chip.part { border-color: #8A6A2A; }
+  .chip.good { border-color: #3E8E66; color: #9FD8B0; }
+  .chip[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--bg); font-weight: 600; }
+  .script { margin: 0; max-width: 34em; font-family: "IBM Plex Sans", "IBM Plex Sans KR", sans-serif; font-size: clamp(17px, 1.7vw, 21px); line-height: 1.6; }
+  #syncText { max-width: 46em; font-size: 16px; }
+  .script .mk { color: var(--muted); letter-spacing: 0.08em; }
+  .script .bar { display: inline-block; height: 0.62em; border-bottom: 2px solid #3A5478; vertical-align: baseline; }
+  .script .sn { display: inline-block; min-width: 1.5em; margin-right: 4px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .dw { font: inherit; padding: 0 3px; border: 0; border-radius: 4px; background: rgba(243, 182, 72, 0.16); color: var(--mine); border-bottom: 2px solid var(--mine); line-height: inherit; }
+  .dw:hover:not(:disabled) { background: rgba(243, 182, 72, 0.3); }
+  #dictResult { display: grid; gap: 10px; width: 100%; }
+  .typed { margin: 0; color: var(--muted); max-width: 60em; }
+  .typed s { color: #F59491; }
+  .why { font-size: 14px; max-width: 78ch; }
+  .why b { font-weight: 600; margin-right: 6px; }
+  .why .dw { font-size: 14px; }
+  .hist { font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  #nudge summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  #nudge .setup-row { margin-top: 8px; }
+  #nudge button, #clipRealign { font-size: 12.5px; padding: 4px 9px; }
+  .track[hidden] { display: none; }
+  .words .w.omit { background: transparent; border-color: var(--mine); color: var(--mine); text-decoration: line-through; }
   #sentence {
     display: block; width: 100%; resize: none; overflow: hidden;
     font-family: "IBM Plex Sans", "IBM Plex Sans KR", sans-serif;
@@ -55,7 +113,7 @@
   #sentence::placeholder { color: #4D6380; }
   .source-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-top: 14px; }
   .or { color: var(--muted); }
-  #status { min-height: 21px; margin: 10px 0 0; color: var(--muted); }
+  #status { min-height: 21px; margin: 0 0 10px; color: var(--muted); }
   #status.err { color: #F59491; }
   #status.ok { color: var(--ref); }
 
@@ -187,7 +245,12 @@
     </p>
   </header>
 
-  <section class="source">
+  <nav class="modes" aria-label="연습 방식">
+    <button id="modeSingle" aria-pressed="true">한 문장 연습</button>
+    <button id="modeClip" aria-pressed="false">클립 통암기</button>
+  </nav>
+
+  <section class="source" id="single">
     <textarea id="sentence" rows="1" spellcheck="false" aria-label="연습할 문장" placeholder="연습할 영어 문장을 입력하세요">Could you walk me through how you arrived at that number?</textarea>
     <div class="source-row">
       <label class="field">목소리
@@ -221,8 +284,79 @@
       <input type="file" id="refFile" accept="audio/*,video/*" hidden>
       <button id="fallback" hidden>브라우저 기본 음성으로 듣기</button>
     </div>
-    <p id="status" role="status" aria-live="polite"></p>
   </section>
+
+  <section class="study" id="study" hidden>
+    <div id="studySetup">
+      <p class="lead">1분 안팎의 클립과 원문을 넣으면 문장별로 받아쓰고, 외우고, 원본과 똑같은 타이밍으로 말하는 연습을 할 수 있어요.</p>
+      <div class="setup-row">
+        <label class="btn" for="clipFile" tabindex="0" id="clipFileBtn">클립 파일 고르기</label>
+        <input type="file" id="clipFile" accept="audio/*,video/*" hidden>
+        <span class="muted" id="clipFileName">1분 안팎의 오디오·영상 파일</span>
+      </div>
+      <textarea id="clipText" rows="6" spellcheck="false" aria-label="클립의 영어 원문" placeholder="이 클립의 영어 원문을 붙여넣으세요. 화자 이름과 (지문)은 자동으로 빼요."></textarea>
+      <div class="setup-row">
+        <button id="clipGo" class="primary">문장으로 나누기</button>
+        <button id="clipGoRough">모델 없이 대략 나누기</button>
+        <span class="muted">정확히 나누려면 발음 모델을 써요. 처음 한 번 약 360MB를 내려받아요.</span>
+      </div>
+      <p id="studyStatus" role="status" aria-live="polite"></p>
+      <div id="library"></div>
+    </div>
+
+    <div id="studyClip" hidden>
+      <div class="clip-head">
+        <div class="clip-name" id="clipName"></div>
+        <span id="clipRough" class="muted" hidden>문장 구간을 대략 나눈 클립이에요. <button id="clipRealign">정확히 다시 나누기</button></span>
+        <button id="clipClose">클립 목록</button>
+      </div>
+      <div class="steps" id="steps">
+        <button data-stage="dict" aria-pressed="true">1 받아쓰기 <span id="stDict"></span></button>
+        <button data-stage="memo" aria-pressed="false">2 통암기 <span id="stMemo"></span></button>
+        <button data-stage="sync" aria-pressed="false">3 싱크 맞추기 <span id="stSync"></span></button>
+      </div>
+      <div class="chips" id="sentChips" aria-label="문장 고르기"></div>
+      <div class="setup-row" id="maskBar" hidden>
+        <span class="muted">원문</span>
+        <span class="seg"><button data-mask="0" aria-pressed="true">전부 보기</button><button data-mask="1" aria-pressed="false">첫 글자만</button><button data-mask="2" aria-pressed="false">가리기</button></span>
+      </div>
+
+      <div id="stageDict">
+        <div class="setup-row">
+          <button id="dictPlay">▶ 듣기</button>
+          <label class="check"><input type="checkbox" id="dictLoop"> 반복해서 듣기</label>
+          <span class="muted">Enter로 확인, Shift+Enter로 다시 듣기</span>
+        </div>
+        <textarea id="dictInput" rows="2" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="받아쓰기" placeholder="들리는 대로 적으세요"></textarea>
+        <div class="setup-row">
+          <button id="dictCheck" class="primary">확인</button>
+          <button id="dictReveal">정답 보기</button>
+          <button id="dictNext">다음 문장</button>
+          <details id="nudge"><summary>구간이 어긋났나요?</summary>
+            <div class="setup-row">
+              <span class="muted">시작</span><button data-nudge="a:-0.2">0.2초 앞으로</button><button data-nudge="a:0.2">0.2초 뒤로</button>
+              <span class="muted">끝</span><button data-nudge="b:-0.2">0.2초 앞으로</button><button data-nudge="b:0.2">0.2초 뒤로</button>
+            </div>
+          </details>
+        </div>
+        <div id="dictResult" aria-live="polite"></div>
+      </div>
+
+      <div id="stageMemo" hidden>
+        <p class="script" id="memoText"></p>
+        <div class="setup-row"><button id="memoPlay">▶ 듣기</button><button id="memoNext">다음 문장</button></div>
+        <p class="muted">R을 누르면 원본을 한 번 들려준 뒤 녹음해요. "가리기"로 두고 녹음한 문장은 완료로 표시돼요. 녹음 방식을 "바로 녹음"으로 바꾸면 원본을 듣지 않고 외운 대로 말해볼 수 있어요.</p>
+      </div>
+
+      <div id="stageSync" hidden>
+        <p class="script" id="syncText"></p>
+        <p class="muted">이어폰을 끼고 R을 누르면 원본이 재생돼요. 원본과 동시에 시작해서 동시에 끝나게 말하세요. 녹음이 끝나면 어디서 앞서고 뒤처졌는지 보여줘요.</p>
+        <div id="syncHistory"></div>
+      </div>
+    </div>
+  </section>
+
+  <p id="status" role="status" aria-live="polite"></p>
 
   <section class="toolbar" aria-label="재생과 보기 설정">
     <div class="transport">
@@ -303,6 +437,14 @@
         <canvas class="ov" aria-label="내 녹음 트랙: 클릭하면 그 지점부터 재생, 드래그하면 구간 선택"></canvas>
         <div class="empty">R 키나 녹음 버튼을 누르고 따라 말해보세요.</div>
       </div>
+    </div>
+
+    <div class="track" id="track-sync" hidden>
+      <div class="thead">
+        <div class="tname">싱크</div>
+        <div class="tmeta" id="syncMeta"></div>
+      </div>
+      <div class="tbody"><canvas class="cv"></canvas></div>
     </div>
 
     <div class="track" id="track-into">
@@ -762,27 +904,103 @@ const PR = (() => {
     return out;
   }
 
-  // text -> expected phonemes (CMU dictionary), choosing per word the variant that best fits the original audio
-  function expected(text, dict, refA) {
-    const words = [];
-    for (const raw of text.replace(/[“”"()\[\]]/g, ' ').split(/\s+/)) {
-      for (const part of raw.split(/(?<=[a-z])-(?=[a-z])/i)) {
-        const w = part.toLowerCase().replace(/^[^a-z']+|[^a-z']+$/g, '');
-        if (w) words.push({ text: part.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, ''), key: w });
+  // ---- spoken-form tokens: digits, money, percents, acronyms -> the words actually said ----
+  const ONES = 'zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split(' ');
+  const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  const ORD = { one: 'first', two: 'second', three: 'third', five: 'fifth', eight: 'eighth', nine: 'ninth', twelve: 'twelfth' };
+  const ALIAS = { dr: 'doctor', vs: 'versus', mrs: 'missus', ok: 'okay' };
+  function numWords(n) {
+    n = Math.floor(n);
+    if (!(n >= 0) || n >= 1e15) return String(n).replace(/\D/g, '').split('').map((d) => ONES[+d]);
+    if (n < 20) return [ONES[n]];
+    if (n < 100) return [TENS[Math.floor(n / 10)], ...(n % 10 ? [ONES[n % 10]] : [])];
+    if (n < 1000) return [ONES[Math.floor(n / 100)], 'hundred', ...(n % 100 ? numWords(n % 100) : [])];
+    for (const [v, name] of [[1e12, 'trillion'], [1e9, 'billion'], [1e6, 'million'], [1e3, 'thousand']]) if (n >= v) return [...numWords(Math.floor(n / v)), name, ...(n % v ? numWords(n % v) : [])];
+  }
+  const plural = (w) => { const l = w[w.length - 1]; w[w.length - 1] = l.endsWith('y') ? l.slice(0, -1) + 'ies' : l === 'six' ? 'sixes' : l + 's'; return w; };
+  function ordWords(n) { const w = numWords(n), l = w[w.length - 1]; w[w.length - 1] = ORD[l] || (l.endsWith('y') ? l.slice(0, -1) + 'ieth' : l + 'th'); return w; }
+  function yearWords(n) { if (n >= 2000 && n <= 2009) return numWords(n); const a = Math.floor(n / 100), b = n % 100; return [...numWords(a), ...(b === 0 ? ['hundred'] : b < 10 ? ['oh', ONES[b]] : numWords(b))]; }
+  function speakNum(s) {
+    let m;
+    if ((m = s.match(/^(\d{1,2}):(\d{2})$/))) { const mi = +m[2]; return [...numWords(+m[1]), ...(mi === 0 ? [] : mi < 10 ? ['oh', ONES[mi]] : numWords(mi))]; }
+    if ((m = s.match(/^(\d{4})(s?)$/)) && +m[1] >= 1100 && +m[1] <= 2099) { const w = yearWords(+m[1]); return m[2] ? plural(w) : w; }
+    if ((m = s.match(/^(\d[\d,]*)(st|nd|rd|th)$/i))) return ordWords(+m[1].replace(/,/g, ''));
+    if ((m = s.match(/^(\d[\d,]*)(?:\.(\d+))?(s?)$/))) { const w = numWords(+m[1].replace(/,/g, '')); if (m[2]) { w.push('point'); for (const d of m[2]) w.push(ONES[+d]); } return m[3] ? plural(w) : w; }
+    return null;
+  }
+  // -> { raws: display tokens, words: [{ text, key, src (index into raws), caps, dotted }] }
+  function tokens(text) {
+    let t = String(text).replace(/[“”"()\[\]]/g, ' ').replace(/[—–]/g, ' ').replace(/[’‘]/g, "'").replace(/&/g, ' and ').replace(/%/g, ' percent ');
+    t = t.replace(/\$\s?(\d[\d,]*(?:\.\d+)?)(\s(?:hundred|thousand|million|billion|trillion))?/gi, (m, num, mag) => `${num}${mag || ''} dollars`);
+    const raws = t.split(/\s+/).filter(Boolean), words = [];
+    raws.forEach((raw, src) => {
+      for (const part of raw.split(/(?<=[A-Za-z0-9])-(?=[A-Za-z0-9])|\//)) {
+        const core = part.replace(/^[^A-Za-z0-9']+|[^A-Za-z0-9']+$/g, '').replace(/^'+(?=[^a-z])|'+$/gi, '');
+        if (!core) continue;
+        const word = (w) => { const key = w.toLowerCase().replace(/^'+|'+$/g, ''); if (/[a-z]/.test(key)) words.push({ text: w, key, src, caps: /^[A-Z]{2,6}$/.test(w), dotted: false }); };
+        const nums = (arr) => arr.forEach((w) => words.push({ text: w, key: w, src, caps: false, dotted: false }));
+        if (/^([A-Za-z]\.)+[A-Za-z]$/.test(core)) words.push({ text: core + '.', key: core.toLowerCase() + '.', src, caps: false, dotted: true });
+        else if (/\d/.test(core)) {
+          const sp = speakNum(core);
+          if (sp) nums(sp);
+          else for (const run of core.match(/[A-Za-z']+|\d+(?:\.\d+)?/g) || []) { if (/\d/.test(run)) nums(speakNum(run) || []); else word(run); }
+        } else word(core);
       }
+    });
+    return { raws, words };
+  }
+
+  // transcript -> practice-sized sentences (speaker labels and stage directions removed)
+  function sentences(raw) {
+    const lines = String(raw).replace(/\r/g, '').replace(/\([^)]*\)|\[[^\]]*\]/g, ' ').split('\n')
+      .map((l) => l.trim().replace(/^(?:[A-Z][a-z]+\.?(?: [A-Z][a-z]+)?|[A-Z][A-Z .,'\-]{2,})\s?:\s+/, '')).filter(Boolean);
+    const t = lines.join(' ').replace(/(^|\s)(?:[A-Z]{2,}[.,']?\s)*[A-Z]{2,}\s?:\s/g, '$1').replace(/\s+/g, ' ').trim();
+    const ABBR = /^(?:mr|mrs|ms|dr|st|sr|jr|gen|sen|rep|gov|prof|vs|etc|no|u\.s|u\.k|u\.n|a\.m|p\.m|e\.g|i\.e|d\.c)\.$/i;
+    const parts = []; let buf = [];
+    for (const tok of t.split(' ')) {
+      buf.push(tok);
+      const bare = tok.replace(/["”’')]+$/, '');
+      if (/[.?!]$/.test(bare) && !ABBR.test(bare) && !/^[A-Z]\.$/.test(bare)) { parts.push(buf); buf = []; }
     }
-    const variants = (w) => {
-      const out = [];
-      for (let i = 1; i <= 4; i++) { const p = dict[i === 1 ? w : `${w}(${i})`]; if (p) out.push(p); }
-      if (!out.length && w.endsWith("'s") && dict[w.slice(0, -2)]) out.push(dict[w.slice(0, -2)] + ' Z');
-      return out;
+    if (buf.length) parts.push(buf);
+    // long sentences: cut at the comma/semicolon/colon nearest the middle
+    const cut = (ws) => {
+      if (ws.length <= 22) return [ws];
+      let best = -1, bd = Infinity;
+      for (let i = 5; i < ws.length - 6; i++) if (/[,;:]$/.test(ws[i]) && Math.abs(i + 1 - ws.length / 2) < bd) { bd = Math.abs(i + 1 - ws.length / 2); best = i; }
+      return best < 0 ? [ws] : [...cut(ws.slice(0, best + 1)), ...cut(ws.slice(best + 1))];
     };
-    const toIds = (p) => p.split(' ').map((x) => { const m = x.match(/^([A-Z]+)(\d?)$/); return { id: id(ARPA[m[1]]), stress: m[2] === '' ? null : Number(m[2]) }; });
+    // very short pieces join their shorter neighbour
+    const out = parts.flatMap(cut).filter((ws) => /[A-Za-z0-9]/.test(ws.join('')));
+    for (let i = 0; i < out.length && out.length > 1;) {
+      if (out[i].length >= 3) { i++; continue; }
+      const prev = out[i - 1], next = out[i + 1];
+      if (next && (!prev || prev.length > next.length)) { out.splice(i, 2, out[i].concat(next)); }
+      else { out.splice(i - 1, 2, prev.concat(out[i])); i = Math.max(0, i - 1); }
+    }
+    return out.map((ws) => ws.join(' '));
+  }
+
+  // words -> expected phonemes (CMU dictionary), choosing per word the variant that best fits the original audio
+  function expected(input, dict, refA) {
+    const words = (Array.isArray(input) ? input : tokens(input).words).map((w) => ({ ...w }));
+    const clean = (p) => p.replace(/\s*#.*$/, '').trim();
+    const spell = (key) => { const out = []; for (const ch of key.replace(/[^a-z]/g, '')) { const p = dict[ch + '.'] || dict[ch]; if (!p) return null; out.push(clean(p)); } return out.length ? out.join(' ') : null; };
+    const variants = (w) => {
+      const key = ALIAS[w.key] || w.key, out = [];
+      for (let i = 1; i <= 4; i++) { const p = dict[i === 1 ? key : `${key}(${i})`]; if (p) out.push(clean(p)); }
+      if (!out.length && w.dotted) { const p = dict[key.replace(/\./g, '')]; out.push(p ? clean(p) : spell(key)); }
+      if (!out.length && key.endsWith("'s") && dict[key.slice(0, -2)]) out.push(clean(dict[key.slice(0, -2)]) + ' Z');
+      if (!out.length && key.endsWith("s'") && dict[key.slice(0, -1)]) out.push(clean(dict[key.slice(0, -1)]));
+      if (!out.length && w.caps) out.push(spell(key));
+      return out.filter(Boolean);
+    };
+    const toIds = (p) => p.split(' ').map((x) => { const m = x.match(/^([A-Z]+)(\d?)$/); return m && ARPA[m[1]] ? { id: id(ARPA[m[1]]), stress: m[2] === '' ? null : Number(m[2]) } : null; }).filter(Boolean);
     let oov = 0;
     for (const w of words) {
-      const vs = variants(w.key);
+      const vs = variants(w).map(toIds).filter((v) => v.length);
       w.oov = !vs.length; if (w.oov) oov++;
-      w.vars = vs.length ? vs.map(toIds) : [naiveG2P(w.key)];
+      w.vars = vs.length ? vs : [naiveG2P(w.key)];
       w.pick = 0;
     }
     const build = () => {
@@ -865,8 +1083,26 @@ const PR = (() => {
   // full check of one take against the original
   function check(refA, takeA, E) {
     const seq = E.seq, n = seq.length;
-    const refBase = logLik(refA, seq), takeBase = logLik(takeA, seq);
-    const refSp = align(refA, seq), takeSp = align(takeA, seq);
+    const refBase = logLik(refA, seq), takeBase0 = logLik(takeA, seq);
+    const refSp = align(refA, seq);
+    // whole words left out: the take is explained better without the word's sounds
+    const wordKs = E.words.map(() => []); E.meta.forEach((x, k) => wordKs[x.word].push(k));
+    const omitted = new Map();
+    if (E.words.length > 1) E.words.forEach((w, wi) => {
+      const ks = wordKs[wi]; if (ks.length < 2 || w.oov) return;
+      const gain = logLik(takeA, seq.slice(0, ks[0]).concat(seq.slice(ks[ks.length - 1] + 1))) - takeBase0;
+      if (gain > 2) omitted.set(wi, gain);
+    });
+    // judge the remaining sounds against the take without the omitted words
+    const keep = []; for (let k = 0; k < n; k++) if (!omitted.has(E.meta[k].word)) keep.push(k);
+    const pos = new Int32Array(n).fill(-1); keep.forEach((k, j) => { pos[k] = j; });
+    const seqT = omitted.size ? keep.map((k) => seq[k]) : seq;
+    const takeBase = omitted.size ? logLik(takeA, seqT) : takeBase0, spT = align(takeA, seqT);
+    const takeSp = { first: new Int32Array(n), last: new Int32Array(n) }; let lastF = 0;
+    for (let k = 0; k < n; k++) {
+      if (pos[k] >= 0) { takeSp.first[k] = spT.first[pos[k]]; takeSp.last[k] = lastF = spT.last[pos[k]]; }
+      else takeSp.first[k] = takeSp.last[k] = lastF;
+    }
     // does the text fit the original at all? (per-frame gap to the free best path)
     const free = (A) => { let s = 0; for (let t = 0; t < A.T; t++) { let m = -Infinity; for (let v = 0; v < A.V; v++) if (A.LP[t * A.V + v] > m) m = A.LP[t * A.V + v]; s += m; } return s; };
     const fit = (refSp.score - free(refA)) / Math.max(1, n);
@@ -876,11 +1112,12 @@ const PR = (() => {
       const ev = evaluable(E, k);
       const ph = { k, id: seq[k], word: E.meta[k].word, ev, ok: true };
       phones.push(ph);
+      if (pos[k] < 0) { ph.ok = false; ph.omit = true; continue; }
       if (!ev) continue;
       const rg = gopAt(refA, seq, k, refBase, refSp);
       ph.refLpr = rg.lpr;
       if (rg.lpr < 0.5) { ph.ev = false; continue; }      // the original itself doesn't clearly say this sound
-      const g = gopAt(takeA, seq, k, takeBase, takeSp, ed.ops[k].r !== undefined ? [ed.ops[k].r] : []);
+      const g = gopAt(takeA, seqT, pos[k], takeBase, spT, ed.ops[k].r !== undefined ? [ed.ops[k].r] : []);
       ph.lpr = g.lpr; ph.alt = g.alt; ph.rec = ed.ops[k];
       const recBad = ed.ops[k].op === 'sub' || ed.ops[k].op === 'del';
       const m = E.meta[k], agree = g.alt !== 'del' && ed.ops[k].op === 'sub' && ed.ops[k].r === g.alt;
@@ -897,10 +1134,10 @@ const PR = (() => {
     // extra vowels after consonants ("bus" -> "bus-eu"), confirmed by likelihood
     for (const x of ed.ins) {
       if (!VOWELS.has(x.r) || x.after < 0 || x.after >= n) continue;
-      const k = x.after; if (VOWELS.has(seq[k]) || E.words[E.meta[k].word].oov) continue;
+      const k = x.after; if (pos[k] < 0 || VOWELS.has(seq[k]) || E.words[E.meta[k].word].oov) continue;
       const nextIsCons = k + 1 >= n || !VOWELS.has(seq[k + 1]);
       if (!(E.meta[k].final || nextIsCons)) continue;
-      const s2 = seq.slice(0, k + 1).concat([x.r], seq.slice(k + 1)), gain = logLik(takeA, s2) - takeBase;
+      const s2 = seqT.slice(0, pos[k] + 1).concat([x.r], seqT.slice(pos[k] + 1)), gain = logLik(takeA, s2) - takeBase;
       if (gain > 1) errors.push({ type: 'ins', k, word: E.meta[k].word, exp: seq[k], heard: x.r, conf: gain });
     }
     // a vowel + r said as one r-coloured vowel ("very" -> v-er-y) is normal
@@ -913,11 +1150,13 @@ const PR = (() => {
       }
     });
     const kept = errors.filter((_, i) => !drop.has(i));
-    for (const ph of phones) ph.ok = !kept.some((e) => e.k === ph.k && e.type !== 'ins');
-    return { errors: kept, phones, refSp, takeSp, fit, recognized: R };
+    for (const ph of phones) ph.ok = !ph.omit && !kept.some((e) => e.k === ph.k && e.type !== 'ins');
+    for (const [wi, gain] of omitted) kept.push({ type: 'omit', word: wi, k: wordKs[wi][0], conf: gain });
+    const multi = E.words.filter((w, wi) => wordKs[wi].length >= 2 && !w.oov).length;
+    return { errors: kept, phones, refSp, takeSp, fit, recognized: R, omitted: [...omitted.keys()], mismatch: omitted.size >= Math.max(2, multi * 0.5) };
   }
 
-  return { VOCAB, SYM, BLANK, VOWELS, id, logProbs, logLik, align, greedy, expected, check, isOkAlt, CONFUSE };
+  return { VOCAB, SYM, BLANK, VOWELS, FUNCTION, id, logProbs, logLik, align, greedy, tokens, sentences, numWords, expected, check, isOkAlt, CONFUSE };
 })();
 
 // ---------- pronunciation check: loading the model and turning errors into instructions ----------
@@ -981,7 +1220,7 @@ async function phonemeLP(t) {
   A.t0 = a; t._lp = A;
   return A;
 }
-const frameTime = (A, f) => A.t0 + (f * 320 + 200) / 16000;
+const frameTime = (A, f) => (A.times ? A.times[f] : A.t0 + (f * 320 + 200) / 16000);
 
 function pronTip(e, E, words, res, rA) {
   const w = words[e.word], wt = esc(w.text), exp = PR.SYM[e.exp], heard = e.heard === 'del' ? null : PR.SYM[e.heard];
@@ -1007,14 +1246,24 @@ function buildPron(r, m, E, res, rA, mA) {
       return [Math.max(0, frameTime(A, f0) - 0.06), Math.min(t.dur, frameTime(A, f1) + 0.1)];
     };
     const checked = ks.some((k) => res.phones[k].ev);
-    return { text: w.text, ks, ref: span(res.refSp, rA, r), mine: span(res.takeSp, mA, m), status: res.errors.some((e) => e.word === wi) ? 'bad' : checked ? 'ok' : 'skip' };
+    const omit = (res.omitted || []).includes(wi);
+    return { text: w.text, ks, ref: span(res.refSp, rA, r), mine: span(res.takeSp, mA, m), status: omit ? 'omit' : res.errors.some((e) => e.word === wi) ? 'bad' : checked ? 'ok' : 'skip' };
   });
-  const tips = res.errors.map((e) => pronTip(e, E, words, res, rA));
+  const tips = res.errors.filter((e) => e.type !== 'omit').map((e) => pronTip(e, E, words, res, rA));
+  // words left out: one instruction per run of neighbouring words
+  const om = [...(res.omitted || [])].sort((x, y) => x - y);
+  for (let i = 0; i < om.length;) {
+    let j = i; while (j + 1 < om.length && om[j + 1] === om[j] + 1) j++;
+    const a = words[om[i]], b = words[om[j]], text = words.slice(om[i], om[j] + 1).map((w) => w.text).join(' ');
+    tips.push({ sev: 5 + Math.min(1.5, (j - i) * 0.4), title: `“${esc(text)}” 부분을 빠뜨렸어요`, why: '이 부분이 녹음에서 들리지 않았어요. 원문을 다시 확인하고, 빼먹지 않고 말해보세요.',
+      at: a.ref[0], ref: [a.ref[0], b.ref[1]], mine: [Math.max(0, a.mine[0] - 0.5), Math.min(m.dur, a.mine[0] + 0.7)], kind: 'pron' });
+    i = j + 1;
+  }
   return { refId: r.id, words, tips, nErr: res.errors.length };
 }
 async function runPron() {
   const r = S.ref, m = mine();
-  if (!pronOn || !r || !m || (m.pron && m.pron.refId === r.id) || pronBusy) return;
+  if (!pronOn || !r || !m || r.clipAll || (m.pron && m.pron.refId === r.id) || pronBusy) return;
   pronBusy = true;
   try {
     setPronStatus('발음 모델 준비 중…');
@@ -1028,7 +1277,8 @@ async function runPron() {
       if (!r._E || r._E.text !== text) r._E = { text, E: PR.expected(text, P.dict, rA) };
       const res = PR.check(rA, mA, r._E.E);
       m.pron = res.fit < -2.5
-        ? { refId: r.id, skip: '위에 적힌 문장이 원본 소리와 맞지 않아 발음 검사를 건너뛰었어요. 입력칸을 원본 내용으로 고쳐주세요.' }
+        ? { refId: r.id, skip: '적어둔 문장이 원본 소리와 맞지 않아 발음 검사를 건너뛰었어요. 문장을 원본 내용으로 고쳐주세요.' }
+        : res.mismatch ? { refId: r.id, skip: '녹음이 이 문장과 많이 달라서 발음 검사를 건너뛰었어요. 문장을 끝까지 말했는지 확인하고 다시 녹음해보세요.' }
         : buildPron(r, m, r._E.E, res, rA, mA);
     }
     setPronStatus('');
@@ -1039,7 +1289,7 @@ async function runPron() {
     pronBusy = false;
     renderCoach();
     const m2 = mine();
-    if (pronOn && S.ref && m2 && !(m2.pron && m2.pron.refId === S.ref.id) && !pronStatus.startsWith('발음 모델을 불러오지')) setTimeout(runPron, 0);
+    if (pronOn && S.ref && !S.ref.clipAll && m2 && !(m2.pron && m2.pron.refId === S.ref.id) && !pronStatus.startsWith('발음 모델을 불러오지')) setTimeout(runPron, 0);
   }
 }
 
@@ -1240,13 +1490,13 @@ function renderCoach() {
   if (tips.length) {
     html += `<ol class="tips">${tips.slice(0, 3).map((t, k) => tipHtml(t, k, k === 0)).join('')}</ol>`;
     if (tips.length > 3) html += `<details><summary>나머지 ${tips.length - 3}개 더 보기</summary><ol class="tips">${tips.slice(3).map((t, k) => tipHtml(t, k + 3, false)).join('')}</ol></details>`;
-  } else html += `<div class="tip-h">억양, 강조, 끊어 읽기, 속도${pr && pr.words ? ', 발음이' : '가'} 원본과 비슷해요.</div><div class="tip-why">${pr && pr.words ? '단어를 눌러 원본과 한 번 더 비교해보세요.' : '발음(모음·자음)까지 보려면 왼쪽의 "발음 검사 켜기"를 누르세요.'}</div>`;
+  } else html += `<div class="tip-h">억양, 강조, 끊어 읽기, 속도${pr && pr.words ? ', 발음이' : '가'} 원본과 비슷해요.</div><div class="tip-why">${pr && pr.words ? '단어를 눌러 원본과 한 번 더 비교해보세요.' : r.clipAll ? '발음(모음·자음)은 통암기 단계에서 문장별로 검사해요.' : pronOn ? '' : '발음(모음·자음)까지 보려면 왼쪽의 "발음 검사 켜기"를 누르세요.'}</div>`;
   const good = [...c.good];
   if (pr && pr.words && !pr.nErr) good.push('검사한 자음·모음이 모두 원본처럼 들렸어요.');
   if (good.length) html += `<div class="good">잘한 점: ${good.join(' ')}</div>`;
   if (pr && pr.words) {
-    html += `<div class="words"><span>단어별 발음</span>${pr.words.map((w, i) => `<button class="w ${w.status}" data-word="${i}" title="${w.status === 'bad' ? '고칠 소리가 있어요' : w.status === 'ok' ? '원본처럼 들렸어요' : '약하게 발음되는 단어라 검사하지 않았어요'}">${esc(w.text)}</button>`).join('')}
-      <div class="tip-why">단어를 누르면 원본, 내 녹음 순서로 들려줘요. 주황색은 고칠 소리가 있는 단어, 흐린 단어는 원래 약하게 발음돼서 검사하지 않은 단어예요. 원어민 녹음으로 학습한 모델이라 가끔 잘못 들을 수 있어요.</div></div>`;
+    html += `<div class="words"><span>단어별 발음</span>${pr.words.map((w, i) => `<button class="w ${w.status}" data-word="${i}" title="${w.status === 'omit' ? '빠뜨린 단어예요' : w.status === 'bad' ? '고칠 소리가 있어요' : w.status === 'ok' ? '원본처럼 들렸어요' : '약하게 발음되는 단어라 검사하지 않았어요'}">${esc(w.text)}</button>`).join('')}
+      <div class="tip-why">단어를 누르면 원본, 내 녹음 순서로 들려줘요. 주황색은 고칠 소리가 있는 단어, 줄이 그어진 단어는 빠뜨린 단어, 흐린 단어는 원래 약하게 발음돼서 검사하지 않은 단어예요. 원어민 녹음으로 학습한 모델이라 가끔 잘못 들을 수 있어요.</div></div>`;
   }
   if (!pr && !pronOn && c.spots.length) {
     html += `<div class="spots"><span>소리 차이가 큰 곳</span>${c.spots.map((sp, k) => `<button data-spot="${k}">▶ ${sp.where} ${Math.max(0, sp.at - v0).toFixed(1)}초</button>`).join('')}
@@ -1508,7 +1758,7 @@ function updateButtons() {
 }
 
 function renderAll() {
-  renderTrack('ref'); renderTrack('mine'); renderIntonation(); renderStats(); renderCoach(); renderTakes(); drawOverlays(); updateButtons();
+  renderTrack('ref'); renderTrack('mine'); renderIntonation(); renderStats(); renderCoach(); renderTakes(); drawOverlays(); updateButtons(); renderSync();
   runPron();
 }
 
@@ -1543,7 +1793,7 @@ function stopAll() {
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   drawOverlays();
 }
-function playRange(kind, a, b) {
+function playRange(kind, a, b, onStart) {
   const t = trackOf(kind); if (!t) return Promise.resolve();
   for (const p of S.playing.filter((q) => q.kind === kind)) { p.el.pause(); p.done(); }
   S.playing = S.playing.filter((q) => q.kind !== kind);
@@ -1552,7 +1802,7 @@ function playRange(kind, a, b) {
     const p = { kind, el, b, fin: false, done: () => { if (!p.fin) { p.fin = true; resolve(); } } };
     el.pause(); el.playbackRate = S.rate; el.preservesPitch = true; el.currentTime = a;
     S.playing.push(p);
-    el.play().then(loop).catch(() => { S.playing = S.playing.filter((q) => q !== p); p.done(); });
+    el.play().then(() => { if (onStart) onStart(); loop(); }).catch(() => { S.playing = S.playing.filter((q) => q !== p); p.done(); });
   });
 }
 function loop() {
@@ -1622,16 +1872,17 @@ async function loadRefFile(file) {
     setStatus(S.ref.dur > 15 ? '긴 파일이에요. 연습할 부분을 드래그한 뒤 "선택 구간만 남기기"를 누르세요.' : '', S.ref.dur > 15 ? 'ok' : '');
   } catch (e) { console.error(e); setStatus('이 파일은 열 수 없어요. mp3, wav, m4a, mp4, webm 파일을 넣어주세요.', 'err'); }
 }
-async function addTakeBlob(blob, label) {
+async function addTakeBlob(blob, label, meta = {}) {
   const play = await decodeBlob(blob);
   if (play.length < PLAY_SR * 0.2) throw new Error('녹음이 너무 짧아요');
   S.takeNo = (S.takeNo || 0) + 1;
-  const t = await makeTrack(play, 'mine', { no: S.takeNo, label: label || `녹음 ${S.takeNo}` });
+  const t = await makeTrack(play, 'mine', { no: S.takeNo, label: label || `녹음 ${S.takeNo}`, ...meta });
   S.takes.push(t);
   while (S.takes.length > 12) disposeTrack(S.takes.shift());
   S.cur = S.takes.length - 1;
   S.sel = null;
   renderAll();
+  studyOnTake(t);
 }
 async function cropRef() {
   const sel = selFor('ref'); if (!S.ref || !sel) return;
@@ -1765,7 +2016,8 @@ async function toggleRecord() {
   beginRecorder(rec);
   if (mode === 'shadow') {
     const r = rangeFor('ref'); rec.refPlaying = true;
-    playRange('ref', r[0], r[1]).then(() => { rec.refPlaying = false; });
+    rec.shadow = { refStart: r[0], rate: S.rate, delay: 0, latency: (S.ac && (S.ac.outputLatency || S.ac.baseLatency)) || 0 };
+    playRange('ref', r[0], r[1], () => { rec.shadow.delay = (performance.now() - rec.t0) / 1000; }).then(() => { rec.refPlaying = false; });
   }
 }
 function beginRecorder(rec) {
@@ -1778,6 +2030,7 @@ function beginRecorder(rec) {
   mr.start(100);
   rec.t0 = performance.now(); rec.speech = false; rec.lastLoud = 0;
   rec.sm = 0; rec.floor = Infinity; rec.peak = 0;
+  rec.maxDur = S.ref ? Math.min(360, Math.max(30, (viewOf(S.ref)[1] - viewOf(S.ref)[0]) * 1.6 + 10)) : 30;
   const auto = $('#autoStop').checked;
   setStatus(rec.mode === 'shadow' ? '원본과 같이 말하세요. 이어폰을 끼면 스피커 소리가 섞이지 않아요.' : auto ? '녹음 중이에요. 다 말하고 잠깐 멈추면 자동으로 끝나요.' : '녹음 중이에요. R을 다시 누르면 끝나요.');
   const buf = new Float32Array(rec.an.fftSize);
@@ -1794,7 +2047,7 @@ function beginRecorder(rec) {
     const thr = Math.max(0.006, floor * 3.5, rec.peak * 0.12);
     if (rec.sm > thr && el > 0.12) { rec.speech = true; rec.lastLoud = el; }
     meter(rms); drawLive(rec);
-    if (el > 30 || ($('#autoStop').checked && rec.speech && !rec.refPlaying && el - rec.lastLoud > 1.1)) { finishRecording(); return; }
+    if (el > rec.maxDur || ($('#autoStop').checked && rec.speech && !rec.refPlaying && el - rec.lastLoud > 1.1)) { finishRecording(); return; }
     rec.raf = requestAnimationFrame(tick);
   };
   rec.raf = requestAnimationFrame(tick);
@@ -1834,7 +2087,7 @@ async function onRecorderStop(rec) {
   const blob = new Blob(rec.chunks || [], { type: (rec.mr && rec.mr.mimeType) || 'audio/webm' });
   if (blob.size < 800) { setStatus('녹음된 소리가 없어요. 마이크를 확인하고 다시 해보세요.', 'err'); renderAll(); return; }
   setStatus('분석 중…');
-  try { await addTakeBlob(blob); setStatus(''); }
+  try { await addTakeBlob(blob, undefined, rec.shadow ? { shadow: rec.shadow } : {}); setStatus(''); }
   catch (e) { console.error(e); setStatus('녹음을 읽지 못했어요. 다시 한 번 녹음해보세요.', 'err'); renderAll(); }
 }
 
@@ -1896,12 +2149,12 @@ for (const kind of ['ref', 'mine']) {
   box.addEventListener('drop', async (e) => {
     e.preventDefault(); e.stopPropagation(); box.classList.remove('drop');
     const f = e.dataTransfer.files[0]; if (!f) return;
-    if (kind === 'ref') loadRefFile(f);
+    if (kind === 'ref') { if (ST.on) { if (!ST.clip) setClipFile(f); } else loadRefFile(f); }
     else { setStatus('파일을 읽는 중…'); try { await addTakeBlob(f, f.name); setStatus(''); } catch { setStatus('이 파일은 열 수 없어요.', 'err'); } }
   });
 }
 document.addEventListener('dragover', (e) => e.preventDefault());
-document.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) loadRefFile(f); });
+document.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer && e.dataTransfer.files[0]; if (!f) return; if (ST.on) { if (!ST.clip) setClipFile(f); } else loadRefFile(f); });
 
 $('#pronBtn').addEventListener('click', () => {
   pronOn = !pronOn;
@@ -1915,6 +2168,470 @@ $('#coachRows').addEventListener('click', (e) => {
   else if (b.dataset.word !== undefined) playTip(Number(b.dataset.word), 'words');
   else playTip(Number(b.dataset.spot), 'spots');
 });
+
+// ---------- clip study mode: dictation -> memorise -> sync with the original ----------
+const SYNC_H = 130;
+const ST = { on: false, clip: null, stage: 'dict', cur: 0, mask: 0, refKey: '', file: null, busy: false, dict: null, loadP: Promise.resolve(), saveWarned: false };
+const userErr = (msg) => Object.assign(new Error(msg), { user: true });
+const WEAK_EXTRA = new Set("than been into its it's i'm you're he's she's we're they're that's there's who which when then just some any did didn't don't doesn't isn't wasn't aren't i've you've we've i'll you'll we'll about up out".split(' '));
+
+// saved clips: 'clips' holds text, sentence times and progress; 'audio' holds the file and the model output
+const sdb = {
+  p: null,
+  open() {
+    if (!this.p) {
+      this.p = new Promise((res, rej) => {
+        const r = indexedDB.open('pc-study', 1);
+        r.onupgradeneeded = () => { r.result.createObjectStore('clips', { keyPath: 'id' }); r.result.createObjectStore('audio'); };
+        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+      });
+      this.p.catch(() => { this.p = null; });
+    }
+    return this.p;
+  },
+  async run(store, mode, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => { const tx = db.transaction(store, mode), rq = fn(tx.objectStore(store)); tx.oncomplete = () => res(rq && rq.result); tx.onerror = tx.onabort = () => rej(tx.error); });
+  },
+};
+const clipMeta = (c) => { const { play, LP, ...meta } = c; return meta; };
+async function saveMeta(c) {
+  try { await sdb.run('clips', 'readwrite', (s) => s.put(clipMeta(c))); }
+  catch (e) { console.warn(e); if (!ST.saveWarned) { ST.saveWarned = true; setStatus('이 브라우저에서는 진도를 저장할 수 없어요. 창을 닫으면 처음부터 다시 해야 해요.', 'err'); } }
+}
+async function saveAudio(c, blob) {
+  try { await sdb.run('audio', 'readwrite', (s) => s.put({ blob, lp: c.LP || null }, c.id)); } catch (e) { console.warn(e); }
+}
+
+function setStudyStatus(msg, kind = '') { const el = $('#studyStatus'); el.textContent = msg || ''; el.className = kind; if (ST.clip) setStatus(msg, kind); }
+function setClipFile(f) { if (!f) return; ST.file = f; $('#clipFileName').textContent = f.name; setStudyStatus(''); }
+
+// run the phoneme model over a long clip in pieces cut at quiet moments
+async function clipLP(P, ana, onProg) {
+  const n = ana.length, maxLen = 12 * ANA_SR, cuts = [0];
+  const energy = (i0) => { let s = 0; for (let i = i0; i < Math.min(n, i0 + 1600); i++) s += ana[i] * ana[i]; return s; };
+  while (n - cuts[cuts.length - 1] > maxLen) {
+    const base = cuts[cuts.length - 1], lo = base + 6 * ANA_SR, hi = Math.min(base + maxLen, n - ANA_SR);
+    let best = hi, be = Infinity;
+    for (let i = lo; i <= hi - 1600; i += 800) { const e = energy(i); if (e < be) { be = e; best = i + 800; } }
+    cuts.push(Math.round(best / 320) * 320);
+  }
+  cuts.push(n);
+  const parts = []; let T = 0, V = 0;
+  for (let c = 0; c + 1 < cuts.length; c++) {
+    const seg = ana.slice(cuts[c], cuts[c + 1]);
+    if (seg.length < 800) continue;
+    const { logits } = await P.model(await P.proc(seg));
+    const A = PR.logProbs(logits.data, logits.dims[1], logits.dims[2]);
+    parts.push({ A, t0: cuts[c] / ANA_SR }); T += A.T; V = A.V;
+    if (onProg) onProg(cuts[c + 1] / n);
+    await sleep(0);
+  }
+  const LP = new Float32Array(T * V), times = new Float32Array(T); let o = 0;
+  for (const { A, t0 } of parts) { LP.set(A.LP, o * V); for (let f = 0; f < A.T; f++) times[o + f] = t0 + (f * 320 + 200) / 16000; o += A.T; }
+  return { LP, T, V, times };
+}
+function sliceLP(A, t0, t1) {
+  let f0 = 0; while (f0 < A.T && A.times[f0] < t0) f0++;
+  let f1 = f0; while (f1 < A.T && A.times[f1] <= t1) f1++;
+  if (f1 - f0 < 5) return null;
+  const times = new Float32Array(f1 - f0); for (let i = 0; i < times.length; i++) times[i] = A.times[f0 + i] - t0;
+  return { LP: A.LP.slice(f0 * A.V, f1 * A.V), T: f1 - f0, V: A.V, times };
+}
+function quietest(ana, t0, t1) {
+  if (t1 - t0 < 0.03) return (t0 + t1) / 2;
+  let best = (t0 + t1) / 2, be = Infinity;
+  for (let t = t0; t <= t1 - 0.02; t += 0.01) {
+    const i0 = Math.floor(t * ANA_SR); let s = 0;
+    for (let i = i0; i < Math.min(ana.length, i0 + 320); i++) s += ana[i] * ana[i];
+    if (s < be) { be = s; best = t + 0.01; }
+  }
+  return best;
+}
+
+// exact sentence and word times: forced alignment of the transcript to the audio
+async function alignClip(c, ana) {
+  setStudyStatus('발음 모델 준비 중…');
+  const P = await getPron((f) => setStudyStatus(`발음 모델 내려받는 중 ${Math.round(f * 100)}% (처음 한 번만, 약 360MB)`));
+  setStudyStatus('문장 위치를 찾는 중…');
+  const A = await clipLP(P, ana, (f) => setStudyStatus(`문장 위치를 찾는 중 ${Math.round(f * 100)}%`));
+  const words = c.sents.flatMap((s, si) => PR.tokens(s.text).words.map((w) => ({ ...w, sent: si })));
+  const E = PR.expected(words, P.dict, null);
+  if (!E.seq.length || E.seq.length * 2 > A.T) throw userErr('원문이 클립 길이에 비해 너무 길어요. 이 클립에 나오는 부분만 붙여넣어 주세요.');
+  const sp = PR.align(A, E.seq);
+  if (!Number.isFinite(sp.score)) throw new Error('alignment failed');
+  let free = 0; for (let t = 0; t < A.T; t++) { let m = -Infinity; for (let v = 0; v < A.V; v++) if (A.LP[t * A.V + v] > m) m = A.LP[t * A.V + v]; free += m; }
+  const fit = (sp.score - free) / E.seq.length;
+  const wt = E.words.map(() => [Infinity, -Infinity]);
+  E.meta.forEach((m, k) => { const w = wt[m.word]; w[0] = Math.min(w[0], A.times[sp.first[k]]); w[1] = Math.max(w[1], A.times[sp.last[k]]); });
+  const span = c.sents.map(() => [Infinity, -Infinity]);
+  c.sents.forEach((s) => { s.words = []; });
+  E.words.forEach((w, i) => {
+    const sp2 = span[w.sent]; sp2[0] = Math.min(sp2[0], wt[i][0]); sp2[1] = Math.max(sp2[1], wt[i][1]);
+    c.sents[w.sent].words.push({ text: w.text, src: w.src, a: Math.max(0, wt[i][0] - 0.08), b: Math.min(c.dur, wt[i][1] + 0.15) });
+  });
+  for (let i = 0; i < span.length; i++) if (!Number.isFinite(span[i][0])) span[i] = i ? [span[i - 1][1], span[i - 1][1] + 0.5] : [0, 0.5];
+  c.sents.forEach((s, i) => { s.a = Math.max(0, span[i][0] - 0.3); s.b = Math.min(c.dur, span[i][1] + 0.45); });
+  for (let i = 0; i + 1 < c.sents.length; i++) {
+    const cut = quietest(ana, span[i][1] + 0.03, span[i + 1][0] - 0.03);
+    c.sents[i].b = Math.min(c.sents[i].b, cut + 0.06);
+    c.sents[i + 1].a = Math.max(c.sents[i + 1].a, cut - 0.06);
+  }
+  c.LP = A; c.aligned = 'model'; c.fit = fit;
+}
+
+// no model: spread sentences over the speech by length and snap to pauses
+function roughSplit(c, ana) {
+  const nf = Math.floor(ana.length / HOP), db = new Float32Array(nf);
+  for (let i = 0; i < nf; i++) { let s = 0; for (let j = i * HOP; j < i * HOP + HOP; j++) s += ana[j] * ana[j]; db[i] = 10 * Math.log10(s / HOP + 1e-10); }
+  const lo = quantile(db, 0.1), hi = quantile(db, 0.9), thr = lo + 0.3 * (hi - lo);
+  let f0 = 0; while (f0 < nf - 1 && db[f0] < thr) f0++;
+  let f1 = nf - 1; while (f1 > f0 && db[f1] < thr) f1--;
+  const pauses = []; let run = -1, loud = 0; const cum = new Float32Array(nf + 1);
+  for (let i = f0; i <= f1; i++) {
+    if (db[i] < thr) { if (run < 0) run = i; } else { if (run >= 0 && i - run >= 15) pauses.push((run + i) / 2 * 0.01); run = -1; loud++; }
+    cum[i + 1] = loud;
+  }
+  const wts = c.sents.map((s) => Math.max(1, s.text.replace(/[^A-Za-z0-9]/g, '').length)), total = wts.reduce((x, y) => x + y, 0);
+  const bounds = []; let acc = 0, prev = f0 * 0.01;
+  for (let i = 0; i + 1 < c.sents.length; i++) {
+    acc += wts[i];
+    const want = (acc / total) * loud; let f = f0; while (f < f1 && cum[f + 1] < want) f++;
+    let t = f * 0.01, best = null;
+    for (const p of pauses) if (p > prev + 0.5 && Math.abs(p - t) < 1.2 && (best === null || Math.abs(p - t) < Math.abs(best - t))) best = p;
+    t = Math.max(prev + 0.5, best === null ? t : best); bounds.push(t); prev = t;
+  }
+  c.sents.forEach((s, i) => {
+    s.a = Math.max(0, (i ? bounds[i - 1] : f0 * 0.01 - 0.1) - 0.05);
+    s.b = Math.min(c.dur, (i < bounds.length ? bounds[i] : f1 * 0.01 + 0.3) + 0.05);
+    s.words = null;
+  });
+  c.aligned = 'rough';
+}
+
+async function createClip(rough) {
+  if (ST.busy) return;
+  const file = ST.file, raw = $('#clipText').value;
+  if (!file) { setStudyStatus('먼저 클립 파일을 고르세요.', 'err'); return; }
+  const texts = PR.sentences(raw);
+  if (!texts.length) { setStudyStatus('이 클립의 영어 원문을 붙여넣으세요.', 'err'); return; }
+  ST.busy = true; $('#clipGo').disabled = $('#clipGoRough').disabled = true;
+  try {
+    setStudyStatus('클립을 읽는 중…');
+    let play; try { play = await decodeBlob(file); } catch { throw userErr('이 파일은 열 수 없어요. mp3, wav, m4a, mp4, webm 파일을 넣어주세요.'); }
+    const dur = play.length / PLAY_SR;
+    if (dur < 3) throw userErr('클립이 너무 짧아요. 3초보다 긴 클립을 넣어주세요.');
+    if (dur > 300) throw userErr('5분보다 긴 클립은 넣을 수 없어요. 1~2분 길이로 잘라서 넣어주세요.');
+    const c = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name.replace(/\.[^.]+$/, ''), added: Date.now(), dur, play, transcript: raw,
+      sents: texts.map((text) => ({ text, a: 0, b: 0, words: null })), aligned: 'rough', prog: { dict: {}, memo: {}, sync: [] } };
+    const ana = await resample(play, PLAY_SR, ANA_SR);
+    let note = '';
+    if (!rough) {
+      try { await alignClip(c, ana); }
+      catch (e) { if (e.user) throw e; console.error(e); note = `발음 모델을 쓰지 못해서 문장을 대략 나눴어요. (원인: ${String((e && e.message) || e).slice(0, 80)}) `; }
+    }
+    if (c.aligned !== 'model') { roughSplit(c, ana); note += '문장 구간이 어긋나면 받아쓰기 화면의 "구간이 어긋났나요?"에서 조정하세요.'; }
+    else if (c.fit < -3.5) note = '원문이 클립 소리와 잘 맞지 않는 것 같아요. 문장 구간이 이상하면 원문을 확인해주세요.';
+    await saveMeta(c); await saveAudio(c, file);
+    ST.file = null; $('#clipFileName').textContent = '1분 안팎의 오디오·영상 파일'; $('#clipText').value = '';
+    setStudyStatus('');
+    await openClip(c);
+    if (note) setStatus(note, c.aligned === 'model' ? 'err' : '');
+  } catch (e) {
+    if (!e.user) console.error(e);
+    setStudyStatus(e.user ? e.message : `클립을 준비하지 못했어요. (원인: ${String((e && e.message) || e).slice(0, 100)})`, 'err');
+  } finally { ST.busy = false; $('#clipGo').disabled = $('#clipGoRough').disabled = false; }
+}
+async function realignClip() {
+  const c = ST.clip; if (!c || ST.busy) return;
+  ST.busy = true; $('#clipRealign').disabled = true;
+  try {
+    const ana = await resample(c.play, PLAY_SR, ANA_SR);
+    await alignClip(c, ana);
+    await saveMeta(c);
+    const rec = await sdb.run('audio', 'readonly', (s) => s.get(c.id)).catch(() => null);
+    if (rec && rec.blob) await saveAudio(c, rec.blob);
+    ST.refKey = ''; setStatus('문장 구간을 정확히 다시 나눴어요.', 'ok');
+  } catch (e) { console.error(e); setStatus(`다시 나누지 못했어요. (원인: ${String((e && e.message) || e).slice(0, 100)})`, 'err'); }
+  finally { ST.busy = false; $('#clipRealign').disabled = false; $('#studyStatus').textContent = ''; renderStudy(); studyLoadRef(); }
+}
+async function openSaved(id) {
+  if (ST.busy) return; ST.busy = true;
+  try {
+    setStudyStatus('클립을 여는 중…');
+    const meta = await sdb.run('clips', 'readonly', (s) => s.get(id)), au = await sdb.run('audio', 'readonly', (s) => s.get(id));
+    if (!meta || !au || !au.blob) throw userErr('저장된 클립 파일을 찾지 못했어요. 지우고 다시 넣어주세요.');
+    const play = await decodeBlob(au.blob);
+    setStudyStatus('');
+    await openClip({ ...meta, play, LP: au.lp || null });
+  } catch (e) { if (!e.user) console.error(e); setStudyStatus(e.user ? e.message : '클립을 열지 못했어요.', 'err'); }
+  finally { ST.busy = false; }
+}
+async function openClip(c) {
+  ST.clip = c; ST.dict = null; ST.refKey = '';
+  const n = c.sents.length, P = c.prog;
+  const allDict = c.sents.every((_, i) => P.dict[i]), allMemo = c.sents.every((_, i) => (P.memo[i] || 0) >= 3);
+  ST.stage = !allDict ? 'dict' : !allMemo ? 'memo' : 'sync';
+  const next = c.sents.findIndex((_, i) => (ST.stage === 'dict' ? !P.dict[i] : (P.memo[i] || 0) < 3));
+  ST.cur = Math.min(n - 1, Math.max(0, next));
+  ST.mask = 0; $('#dictInput').value = '';
+  renderStudy();
+  await studyLoadRef();
+}
+
+// put the current sentence (or the whole clip) on the original track
+function studyLoadRef(thenPlay) {
+  ST.loadP = ST.loadP.then(async () => {
+    const c = ST.clip; if (!c || !ST.on) return;
+    const all = ST.stage === 'sync', s = c.sents[ST.cur];
+    const key = all ? `${c.id}:all` : `${c.id}:${ST.cur}:${s.a.toFixed(2)}:${s.b.toFixed(2)}`;
+    if (key !== ST.refKey || !S.ref || S.ref.clipId !== c.id) {
+      ST.refKey = key;
+      if (all) {
+        setStatus('클립 전체를 분석하는 중…');
+        await setRef(c.play, { label: `${c.name} 전체`, source: 'clip', text: c.sents.map((x) => x.text).join(' '), clipId: c.id, clipAll: true });
+        $('#recMode').value = 'shadow';
+      } else {
+        const i0 = Math.floor(s.a * PLAY_SR), i1 = Math.ceil(s.b * PLAY_SR);
+        await setRef(c.play.slice(i0, i1), { label: `${c.name} ${ST.cur + 1}번 문장`, source: 'clip', text: s.text, clipId: c.id, sent: ST.cur, clipT0: i0 / PLAY_SR });
+        if (c.LP && S.ref) S.ref._lp = sliceLP(c.LP, i0 / PLAY_SR, i1 / PLAY_SR) || undefined;
+        if ($('#recMode').value === 'shadow') $('#recMode').value = 'listen';
+      }
+      setStatus('');
+    }
+    if (thenPlay && ST.stage === 'dict') dictPlay();
+  }).catch((e) => { console.error(e); setStatus('이 구간을 불러오지 못했어요.', 'err'); });
+  return ST.loadP;
+}
+function setStage(stage) { if (!ST.clip || ST.stage === stage) return; stopAll(); ST.stage = stage; ST.dict = null; renderStudy(); studyLoadRef(); }
+function setSent(i, thenPlay) {
+  const c = ST.clip; if (!c) return;
+  stopAll(); ST.cur = (i + c.sents.length) % c.sents.length; ST.dict = null; $('#dictInput').value = '';
+  renderStudy(); studyLoadRef(thenPlay);
+  if (ST.stage === 'dict') $('#dictInput').focus();
+}
+function nudge(which, by) {
+  const c = ST.clip, s = c && c.sents[ST.cur]; if (!s) return;
+  if (which === 'a') s.a = Math.max(0, Math.min(s.b - 0.5, s.a + by)); else s.b = Math.min(c.dur, Math.max(s.a + 0.5, s.b + by));
+  saveMeta(c); studyLoadRef(true);
+}
+
+// ----- dictation -----
+async function dictPlay() {
+  if (!S.ref) return;
+  stopAll(); const seq = S.abSeq;
+  do {
+    const r = rangeFor('ref'); if (!r) return;
+    await playRange('ref', r[0], r[1]); if (seq !== S.abSeq) return;
+    if ($('#dictLoop').checked) await sleep(700);
+  } while ($('#dictLoop').checked && seq === S.abSeq && ST.on && ST.stage === 'dict');
+}
+function dictDiff(orig, typed) {
+  const T = PR.tokens(orig), U = PR.tokens(typed), ck = (w) => w.key.replace(/['.]/g, '');
+  const a = T.words.map(ck), b = U.words.map(ck), n = a.length, m = b.length, W = m + 1;
+  const L = new Uint16Array((n + 1) * W);
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i * W + j] = a[i] === b[j] ? L[(i + 1) * W + j + 1] + 1 : Math.max(L[(i + 1) * W + j], L[i * W + j + 1]);
+  const hitA = new Array(n).fill(false), hitB = new Array(m).fill(false);
+  for (let i = 0, j = 0; i < n && j < m;) { if (a[i] === b[j]) { hitA[i] = hitB[j] = true; i++; j++; } else if (L[(i + 1) * W + j] >= L[i * W + j + 1]) i++; else j++; }
+  const group = (tk, hits) => tk.raws.map((disp, r) => {
+    const idx = []; tk.words.forEach((w, i) => { if (w.src === r) idx.push(i); });
+    return { disp, words: idx, hit: idx.every((i) => hits[i]), key: idx.length ? tk.words[idx[0]].key : '' };
+  });
+  return { raws: group(T, hitA), typed: group(U, hitB), hit: hitA.filter(Boolean).length, total: n };
+}
+function missKinds(d) {
+  const endsCons = (w) => /[^aeiou]$/.test(w) || (/[^aeiou]e$/.test(w) && w.length > 3);
+  const linked = (x, y) => !!x && !!y && ((endsCons(x) && /^[aeiou]/.test(y)) || (/[^aeiou]$/.test(x) && x[x.length - 1] === y[0]) || (/[td]$/.test(x) && /^y/.test(y)));
+  const keys = d.raws.map((r) => r.key.replace(/[^a-z']/g, '')), weak = [], link = [], other = [];
+  d.raws.forEach((r, i) => {
+    if (r.hit || !r.words.length) return;
+    if (PR.FUNCTION.has(keys[i]) || WEAK_EXTRA.has(keys[i])) weak.push(i);
+    else if (linked(keys[i - 1], keys[i]) || linked(keys[i], keys[i + 1])) link.push(i);
+    else other.push(i);
+  });
+  return { weak, link, other };
+}
+function dictCheck(reveal) {
+  const c = ST.clip; if (!c) return;
+  const typed = reveal ? '' : $('#dictInput').value;
+  if (!reveal && !typed.trim()) { setStatus('들리는 대로 먼저 적어보세요. 도저히 안 들리면 "정답 보기"를 누르세요.'); return; }
+  setStatus('');
+  const d = dictDiff(c.sents[ST.cur].text, typed);
+  ST.dict = { i: ST.cur, d, reveal };
+  const p = c.prog.dict[ST.cur] || { best: 0, tries: 0 };
+  if (!reveal) { p.tries++; p.best = Math.max(p.best, d.total ? d.hit / d.total : 0); }
+  c.prog.dict[ST.cur] = p; saveMeta(c);
+  renderStudy();
+}
+function dictPlayWord(r) {
+  const c = ST.clip, s = c && c.sents[ST.cur]; if (!s || !S.ref) return;
+  stopAll();
+  const ws = s.words ? s.words.filter((w) => w.src >= r - 1 && w.src <= r + 1) : [];
+  if (!ws.length || S.ref.clipT0 === undefined) { play('ref'); return; }
+  const a = Math.max(0, Math.min(...ws.map((w) => w.a)) - S.ref.clipT0), b = Math.min(S.ref.dur, Math.max(...ws.map((w) => w.b)) - S.ref.clipT0);
+  S.sel = { src: 'ref', t0: a, t1: b }; drawOverlays(); updateButtons();
+  playRange('ref', a, b);
+}
+function renderDict() {
+  const box = $('#dictResult'), R = ST.dict && ST.dict.i === ST.cur ? ST.dict : null;
+  if (!R) { box.innerHTML = ''; return; }
+  const d = R.d, kinds = missKinds(d), timed = !!(ST.clip.sents[ST.cur].words);
+  const bare = (x) => x.replace(/^[^A-Za-z0-9$]+|[^A-Za-z0-9%]+$/g, '');
+  const tok = (r, i) => (R.reveal || r.hit || !r.words.length ? esc(r.disp) : `<button class="dw" data-play="${i}" title="${timed ? '앞뒤 단어와 함께 다시 듣기' : '문장 다시 듣기'}">${esc(r.disp)}</button>`);
+  const list = (idx) => idx.map((i) => `<button class="dw" data-play="${i}">${esc(bare(d.raws[i].disp))}</button>`).join(' ');
+  let html = '';
+  if (!R.reveal) html += `<div class="tip-h">${d.total}단어 중 ${d.hit}단어를 맞게 들었어요</div>`;
+  html += `<p class="script">${d.raws.map(tok).join(' ')}</p>`;
+  if (!R.reveal) {
+    if (d.typed.some((t) => !t.hit)) html += `<p class="typed">내가 쓴 것: ${d.typed.map((t) => (t.hit ? esc(t.disp) : `<s>${esc(t.disp)}</s>`)).join(' ')}</p>`;
+    if (kinds.weak.length) html += `<div class="why"><b>약하게 발음되는 단어</b> ${list(kinds.weak)}<div class="tip-why">the, to, of 같은 단어는 강세 없이 아주 짧게 지나가요. 단어를 눌러 앞뒤 단어와 한 덩어리로 다시 들어보세요.</div></div>`;
+    if (kinds.link.length) html += `<div class="why"><b>연음으로 이어진 곳</b> ${list(kinds.link)}<div class="tip-why">앞 단어의 끝소리가 다음 단어의 첫소리에 붙어서 한 단어처럼 들려요. 붙은 채로 들리는 소리를 그대로 기억해두세요.</div></div>`;
+    if (kinds.other.length) html += `<div class="why"><b>그 밖에 놓친 단어</b> ${list(kinds.other)}<div class="tip-why">처음 듣는 단어이거나 빠르게 지나간 곳이에요. 재생 속도를 0.75배로 낮춰서 다시 들어보세요.</div></div>`;
+    if (d.hit === d.total) html += '<div class="good">전부 맞게 들었어요.</div>';
+  }
+  box.innerHTML = html;
+}
+
+// ----- memorise / sync -----
+function maskHtml(text, level) {
+  if (!level) return esc(text);
+  return text.split(/\s+/).map((tok) => {
+    const m = tok.match(/^([^A-Za-z0-9]*)(.*?)([^A-Za-z0-9]*)$/);
+    if (!m || !m[2]) return esc(tok);
+    const core = m[2];
+    const body = level === 1 ? `${esc(core[0])}<span class="mk">${'·'.repeat(core.length - 1)}</span>` : `<span class="bar" style="width:${(Math.max(2, core.length) * 0.52).toFixed(2)}em"></span>`;
+    return esc(m[1]) + body + esc(m[3]);
+  }).join(' ');
+}
+function computeSync(r, m) {
+  const al = alignFor(m); if (!al) return null;
+  const sh = m.shadow, rel = !sh;
+  const raw = (t) => r2m(al, t) - (sh ? (t - sh.refStart) / sh.rate + sh.delay + sh.latency : t);
+  const ta = r.on + 0.1, tb = Math.max(ta + 0.5, r.off - 0.15), zero = rel ? raw(ta) : 0;
+  const pts = []; for (let t = ta; t <= tb + 1e-6; t += 0.25) pts.push([t, raw(t) - zero]);
+  const sm = pts.map((p, i) => [p[0], median(pts.slice(Math.max(0, i - 2), i + 3).map((q) => q[1]))]);
+  sm[0][1] = pts[0][1]; sm[sm.length - 1][1] = pts[pts.length - 1][1];
+  const mean = sm.reduce((s, p) => s + Math.abs(p[1]), 0) / sm.length;
+  const c = ST.clip, sents = [];
+  if (c && r.clipId === c.id) c.sents.forEach((s, i) => { const v = sm.filter((p) => p[0] >= s.a && p[0] <= s.b).map((p) => p[1]); if (v.length) sents.push({ i, lag: v.reduce((x, y) => x + y, 0) / v.length }); });
+  const worst = sents.length ? sents.reduce((x, y) => (Math.abs(y.lag) > Math.abs(x.lag) ? y : x)) : null;
+  return { rel, pts: sm, start: sm[0][1], end: sm[sm.length - 1][1], mean, sents, worst };
+}
+const lagWord = (v) => (Math.abs(v) < 0.12 ? '거의 동시에' : `${Math.abs(v).toFixed(1)}초 ${v > 0 ? '늦게' : '빠르게'}`);
+function renderSync() {
+  const box = $('#track-sync'), r = S.ref, m = mine(), sy = ST.on && r && r.clipAll && m && m.sync ? m.sync : null;
+  box.hidden = !sy; if (!sy) return;
+  const cv = box.querySelector('canvas'), dpr = sizeCanvas(cv, SYNC_H), ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
+  const maxAbs = Math.max(0.5, ...sy.pts.map((p) => Math.abs(p[1]))), R = Math.min(5, Math.ceil(maxAbs * 2) / 2 + 0.25);
+  const top = 16 * dpr, y = (v) => top + (H - top - 8 * dpr) * (1 - (Math.max(-R, Math.min(R, v)) + R) / (2 * R));
+  const x = (t) => tToX(r, t, W), step = R > 2.5 ? 1 : 0.5;
+  ctx.font = font(10.5, dpr); ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  for (let v = -Math.floor(R / step) * step; v <= R; v += step) {
+    ctx.fillStyle = Math.abs(v) < 1e-6 ? 'rgba(143,163,189,0.4)' : 'rgba(143,163,189,0.12)'; ctx.fillRect(0, Math.round(y(v)), W, 1);
+    ctx.fillStyle = COLORS.muted; ctx.fillText(Math.abs(v) < 1e-6 ? '동시' : `${Math.abs(v)}초 ${v > 0 ? '늦음' : '빠름'}`, 6 * dpr, y(v) - 7 * dpr);
+  }
+  const c = ST.clip;
+  if (c) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; c.sents.forEach((s, i) => { const xa = x(s.a); if (i) { ctx.fillStyle = 'rgba(143,163,189,0.22)'; ctx.fillRect(Math.round(xa), 0, 1, H); } ctx.fillStyle = COLORS.muted; ctx.fillText(String(i + 1), (xa + x(s.b)) / 2, 3 * dpr); }); }
+  ctx.beginPath(); sy.pts.forEach((p, i) => (i ? ctx.lineTo(x(p[0]), y(p[1])) : ctx.moveTo(x(p[0]), y(p[1]))));
+  ctx.lineTo(x(sy.pts[sy.pts.length - 1][0]), y(0)); ctx.lineTo(x(sy.pts[0][0]), y(0)); ctx.closePath(); ctx.fillStyle = 'rgba(243,182,72,0.14)'; ctx.fill();
+  ctx.beginPath(); sy.pts.forEach((p, i) => (i ? ctx.lineTo(x(p[0]), y(p[1])) : ctx.moveTo(x(p[0]), y(p[1]))));
+  ctx.strokeStyle = COLORS.mine; ctx.lineWidth = 2.2 * dpr; ctx.lineJoin = 'round'; ctx.stroke();
+  const lines = [`시작은 ${lagWord(sy.start)}, 끝은 ${lagWord(sy.end)} 말했어요. 평균 ${sy.mean.toFixed(2)}초 어긋났어요.`];
+  if (sy.worst && Math.abs(sy.worst.lag) >= 0.3) lines.push(`${sy.worst.i + 1}번 문장이 가장 어긋났어요(${Math.abs(sy.worst.lag).toFixed(1)}초 ${sy.worst.lag > 0 ? '늦음' : '빠름'}). 그 문장만 통암기 단계에서 다시 연습해보세요.`);
+  lines.push(sy.rel ? '원본과 동시에 녹음한 게 아니라서, 첫 마디를 맞춘 것으로 보고 계산했어요.' : '블루투스 이어폰은 지연이 있어서 0.1~0.2초 늦게 나올 수 있어요.');
+  $('#syncMeta').innerHTML = lines.map((l) => `<div>${l}</div>`).join('');
+}
+function studyOnTake(t) {
+  const c = ST.clip, r = S.ref; if (!ST.on || !c || !r || r.clipId !== c.id) return;
+  if (ST.stage === 'memo' && r.sent === ST.cur) { c.prog.memo[ST.cur] = Math.max(c.prog.memo[ST.cur] || 0, ST.mask + 1); saveMeta(c); renderStudy(); }
+  else if (ST.stage === 'sync' && r.clipAll) {
+    const sy = computeSync(r, t);
+    if (sy) { t.sync = sy; c.prog.sync = [...c.prog.sync, { at: Date.now(), start: sy.start, end: sy.end, mean: sy.mean, rel: sy.rel, mask: ST.mask }].slice(-30); saveMeta(c); }
+    renderSync(); renderStudy();
+  }
+}
+
+// ----- rendering -----
+async function renderLibrary() {
+  const box = $('#library');
+  let list = []; try { list = await sdb.run('clips', 'readonly', (s) => s.getAll()); } catch { list = []; }
+  if (!list.length) { box.innerHTML = ''; return; }
+  list.sort((x, y) => y.added - x.added);
+  box.innerHTML = `<h2>저장된 클립</h2><ul class="lib">${list.map((c) => {
+    const n = c.sents.length, P = c.prog || { dict: {}, memo: {}, sync: [] };
+    const nd = c.sents.filter((_, i) => P.dict[i]).length, nm = c.sents.filter((_, i) => (P.memo[i] || 0) >= 3).length;
+    const best = P.sync.length ? `, 싱크 최고 평균 ${Math.min(...P.sync.map((x) => x.mean)).toFixed(2)}초` : '';
+    return `<li><div><div class="lib-name">${esc(c.name)}</div><div class="tmeta">${Math.round(c.dur)}초, 문장 ${n}개. 받아쓰기 ${nd}/${n}, 통암기 ${nm}/${n}${best}</div></div>
+      <div class="lib-btns"><button data-open="${c.id}">이어서 하기</button><button data-del="${c.id}">지우기</button></div></li>`;
+  }).join('')}</ul>`;
+}
+function renderStudy() {
+  $('#modeSingle').setAttribute('aria-pressed', String(!ST.on)); $('#modeClip').setAttribute('aria-pressed', String(ST.on));
+  $('#single').hidden = ST.on; $('#study').hidden = !ST.on;
+  renderSync();
+  if (!ST.on) return;
+  const c = ST.clip;
+  $('#studySetup').hidden = !!c; $('#studyClip').hidden = !c;
+  if (!c) { renderLibrary(); return; }
+  const n = c.sents.length, P = c.prog;
+  const nd = c.sents.filter((_, i) => P.dict[i]).length, nm = c.sents.filter((_, i) => (P.memo[i] || 0) >= 3).length;
+  $('#clipName').textContent = c.name;
+  $('#clipRough').hidden = c.aligned === 'model';
+  $('#stDict').textContent = `${nd}/${n}`; $('#stMemo').textContent = `${nm}/${n}`;
+  $('#stSync').textContent = P.sync.length ? `최고 ${Math.min(...P.sync.map((x) => x.mean)).toFixed(2)}초` : '';
+  for (const b of document.querySelectorAll('#steps button')) b.setAttribute('aria-pressed', String(b.dataset.stage === ST.stage));
+  const chips = $('#sentChips'); chips.hidden = ST.stage === 'sync';
+  chips.innerHTML = c.sents.map((_, i) => {
+    const st = ST.stage === 'dict' ? (P.dict[i] ? (P.dict[i].best >= 0.9 ? 'good' : 'part') : '') : ((P.memo[i] || 0) >= 3 ? 'good' : P.memo[i] ? 'part' : '');
+    return `<button class="chip ${st}" data-sent="${i}" aria-pressed="${i === ST.cur}" aria-label="${i + 1}번 문장">${i + 1}</button>`;
+  }).join('');
+  $('#stageDict').hidden = ST.stage !== 'dict'; $('#stageMemo').hidden = ST.stage !== 'memo'; $('#stageSync').hidden = ST.stage !== 'sync';
+  $('#maskBar').hidden = ST.stage === 'dict';
+  for (const b of document.querySelectorAll('#maskBar button[data-mask]')) b.setAttribute('aria-pressed', String(Number(b.dataset.mask) === ST.mask));
+  if (ST.stage === 'dict') renderDict();
+  else if (ST.stage === 'memo') $('#memoText').innerHTML = maskHtml(c.sents[ST.cur].text, ST.mask);
+  else {
+    $('#syncText').innerHTML = c.sents.map((s, i) => `<span class="sn">${i + 1}</span>${maskHtml(s.text, ST.mask)}`).join(' ');
+    const hist = P.sync.slice(-5).reverse();
+    $('#syncHistory').innerHTML = hist.length ? `<div class="tmeta">지난 기록</div>${hist.map((h) => { const dt = new Date(h.at); return `<div class="hist">${dt.getMonth() + 1}/${dt.getDate()} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')} 평균 ${h.mean.toFixed(2)}초 어긋남, 끝은 ${lagWord(h.end)}</div>`; }).join('')}` : '';
+  }
+}
+
+// ----- wiring -----
+function setMode(on) { ST.on = on; stopAll(); renderStudy(); if (on && ST.clip) studyLoadRef(); }
+$('#modeSingle').addEventListener('click', () => setMode(false));
+$('#modeClip').addEventListener('click', () => setMode(true));
+$('#clipFile').addEventListener('change', (e) => { setClipFile(e.target.files[0]); e.target.value = ''; });
+$('#clipFileBtn').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#clipFileBtn').click(); } });
+$('#clipGo').addEventListener('click', () => createClip(false));
+$('#clipGoRough').addEventListener('click', () => createClip(true));
+$('#clipRealign').addEventListener('click', realignClip);
+$('#clipClose').addEventListener('click', () => { stopAll(); ST.clip = null; ST.refKey = ''; renderStudy(); });
+$('#library').addEventListener('click', async (e) => {
+  const o = e.target.closest('button[data-open]'), d = e.target.closest('button[data-del]');
+  if (o) openSaved(o.dataset.open);
+  else if (d) {
+    if (d.dataset.sure) { try { await sdb.run('clips', 'readwrite', (s) => s.delete(d.dataset.del)); await sdb.run('audio', 'readwrite', (s) => s.delete(d.dataset.del)); } catch (err) { console.warn(err); } renderLibrary(); }
+    else { d.dataset.sure = '1'; d.textContent = '한 번 더 누르면 지워져요'; setTimeout(() => { if (d.isConnected) { delete d.dataset.sure; d.textContent = '지우기'; } }, 4000); }
+  }
+});
+$('#steps').addEventListener('click', (e) => { const b = e.target.closest('button[data-stage]'); if (b) setStage(b.dataset.stage); });
+$('#sentChips').addEventListener('click', (e) => { const b = e.target.closest('button[data-sent]'); if (b) setSent(Number(b.dataset.sent), true); });
+$('#maskBar').addEventListener('click', (e) => { const b = e.target.closest('button[data-mask]'); if (b) { ST.mask = Number(b.dataset.mask); renderStudy(); } });
+$('#dictPlay').addEventListener('click', dictPlay);
+$('#dictCheck').addEventListener('click', () => dictCheck(false));
+$('#dictReveal').addEventListener('click', () => dictCheck(true));
+$('#dictNext').addEventListener('click', () => setSent(ST.cur + 1, true));
+$('#memoPlay').addEventListener('click', () => play('ref'));
+$('#memoNext').addEventListener('click', () => setSent(ST.cur + 1, false));
+$('#dictInput').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.isComposing) return;
+  e.preventDefault(); if (e.shiftKey) dictPlay(); else dictCheck(false);
+});
+$('#dictResult').addEventListener('click', (e) => { const b = e.target.closest('button[data-play]'); if (b) dictPlayWord(Number(b.dataset.play)); });
+$('#nudge').addEventListener('click', (e) => { const b = e.target.closest('button[data-nudge]'); if (b) { const [w, by] = b.dataset.nudge.split(':'); nudge(w, Number(by)); } });
+renderStudy();
 
 let rq = 0;
 new ResizeObserver(() => { cancelAnimationFrame(rq); rq = requestAnimationFrame(() => { if (S.rec && S.rec.phase === 'recording') { renderTrack('ref'); renderIntonation(); } else renderAll(); }); }).observe($('#tracks'));
