@@ -1087,17 +1087,26 @@ const PR = (() => {
     const refSp = align(refA, seq);
     // whole words left out: the take is explained better without the word's sounds
     const wordKs = E.words.map(() => []); E.meta.forEach((x, k) => wordKs[x.word].push(k));
-    const omitted = new Map();
-    if (E.words.length > 1) E.words.forEach((w, wi) => {
-      const ks = wordKs[wi]; if (ks.length < 2 || w.oov) return;
-      const gain = logLik(takeA, seq.slice(0, ks[0]).concat(seq.slice(ks[ks.length - 1] + 1))) - takeBase0;
-      if (gain > 2) omitted.set(wi, gain);
-    });
+    // Taken one at a time and greedily: dropping the truly missing word helps most, and once it is gone
+    // its neighbours (which only looked removable because they were squeezed) no longer do.
+    const omitted = new Map(), alive = E.words.map(() => true);
+    const seqAlive = () => { const out = []; for (let k = 0; k < n; k++) if (alive[E.meta[k].word]) out.push(seq[k]); return out; };
+    let takeBase = takeBase0;
+    for (let round = 0; E.words.length > 1 && round < E.words.length - 1; round++) {
+      let best = -1, bg = 2;
+      E.words.forEach((w, wi) => {
+        if (!alive[wi] || wordKs[wi].length < 2 || w.oov) return;
+        alive[wi] = false; const g = logLik(takeA, seqAlive()) - takeBase; alive[wi] = true;
+        if (g > bg) { bg = g; best = wi; }
+      });
+      if (best < 0) break;
+      alive[best] = false; omitted.set(best, bg); takeBase += bg;
+    }
     // judge the remaining sounds against the take without the omitted words
-    const keep = []; for (let k = 0; k < n; k++) if (!omitted.has(E.meta[k].word)) keep.push(k);
+    const keep = []; for (let k = 0; k < n; k++) if (alive[E.meta[k].word]) keep.push(k);
     const pos = new Int32Array(n).fill(-1); keep.forEach((k, j) => { pos[k] = j; });
     const seqT = omitted.size ? keep.map((k) => seq[k]) : seq;
-    const takeBase = omitted.size ? logLik(takeA, seqT) : takeBase0, spT = align(takeA, seqT);
+    const spT = align(takeA, seqT);
     const takeSp = { first: new Int32Array(n), last: new Int32Array(n) }; let lastF = 0;
     for (let k = 0; k < n; k++) {
       if (pos[k] >= 0) { takeSp.first[k] = spT.first[pos[k]]; takeSp.last[k] = lastF = spT.last[pos[k]]; }
@@ -2442,14 +2451,17 @@ function dictDiff(orig, typed) {
 function missKinds(d) {
   const endsCons = (w) => /[^aeiou]$/.test(w) || (/[^aeiou]e$/.test(w) && w.length > 3);
   const linked = (x, y) => !!x && !!y && ((endsCons(x) && /^[aeiou]/.test(y)) || (/[^aeiou]$/.test(x) && x[x.length - 1] === y[0]) || (/[td]$/.test(x) && /^y/.test(y)));
-  const keys = d.raws.map((r) => r.key.replace(/[^a-z']/g, '')), weak = [], link = [], other = [];
+  const keys = d.raws.map((r) => r.key.replace(/[^a-z']/g, '')), weak = [], link = [], other = [], ending = [];
+  const wrong = d.typed.filter((t) => !t.hit && t.words.length).map((t) => t.key.replace(/[^a-z]/g, ''));
+  const near = (k) => wrong.some((t) => t !== k && t.length > 1 && ((k.startsWith(t) && k.length - t.length <= 2) || (t.startsWith(k) && t.length - k.length <= 2)));
   d.raws.forEach((r, i) => {
     if (r.hit || !r.words.length) return;
-    if (PR.FUNCTION.has(keys[i]) || WEAK_EXTRA.has(keys[i])) weak.push(i);
+    if (near(keys[i].replace(/[^a-z]/g, ''))) ending.push(i);
+    else if (PR.FUNCTION.has(keys[i]) || WEAK_EXTRA.has(keys[i])) weak.push(i);
     else if (linked(keys[i - 1], keys[i]) || linked(keys[i], keys[i + 1])) link.push(i);
     else other.push(i);
   });
-  return { weak, link, other };
+  return { weak, link, other, ending };
 }
 function dictCheck(reveal) {
   const c = ST.clip; if (!c) return;
@@ -2484,6 +2496,7 @@ function renderDict() {
   html += `<p class="script">${d.raws.map(tok).join(' ')}</p>`;
   if (!R.reveal) {
     if (d.typed.some((t) => !t.hit)) html += `<p class="typed">내가 쓴 것: ${d.typed.map((t) => (t.hit ? esc(t.disp) : `<s>${esc(t.disp)}</s>`)).join(' ')}</p>`;
+    if (kinds.ending.length) html += `<div class="why"><b>끝소리를 놓친 단어</b> ${list(kinds.ending)}<div class="tip-why">-s, -ed 같은 끝소리는 약하게 나거나 다음 단어에 붙어서 지나가요. 단어를 눌러 끝소리가 어떻게 들리는지 확인해보세요.</div></div>`;
     if (kinds.weak.length) html += `<div class="why"><b>약하게 발음되는 단어</b> ${list(kinds.weak)}<div class="tip-why">the, to, of 같은 단어는 강세 없이 아주 짧게 지나가요. 단어를 눌러 앞뒤 단어와 한 덩어리로 다시 들어보세요.</div></div>`;
     if (kinds.link.length) html += `<div class="why"><b>연음으로 이어진 곳</b> ${list(kinds.link)}<div class="tip-why">앞 단어의 끝소리가 다음 단어의 첫소리에 붙어서 한 단어처럼 들려요. 붙은 채로 들리는 소리를 그대로 기억해두세요.</div></div>`;
     if (kinds.other.length) html += `<div class="why"><b>그 밖에 놓친 단어</b> ${list(kinds.other)}<div class="tip-why">처음 듣는 단어이거나 빠르게 지나간 곳이에요. 재생 속도를 0.75배로 낮춰서 다시 들어보세요.</div></div>`;
