@@ -10,14 +10,15 @@ export const site = {
   name: "Yidu Song",
   url: "https://song2du.github.io",
   description:
-    "Undergraduate in Computer Science and Psychology at Gachon University, exploring human–AI interaction.",
+    "Undergraduate in Computer Engineering and Psychology at Gachon University, exploring human–AI interaction.",
   // The line under your name on the home page. In the statement and bio,
   // *asterisks* mark emphasized words (shown in the accent color).
-  statement: "Exploring *human–AI interaction*, toward *AI for Psychology*.",
-  headline: "Computer Science & Psychology · Gachon University",
+  statement: "A system with a *high score* is not always the *best one for people*.",
+  headline: "Computer Engineering & Psychology · Gachon University",
   affiliation: "Research Assistant, HCI Lab",
   bio: [
-    "I am an undergraduate student at Gachon University majoring in Computer Science and Psychology, broadly interested in human–AI interaction. I am currently a research assistant at the university's HCI Lab, where I focus on the development and study of *negotiation agents*.",
+    "I am an undergraduate student at Gachon University majoring in Computer Engineering and Psychology. I am currently a research assistant at the university's HCI Lab, where I focus on the development and study of *negotiation agents*.",
+    "My question started there. I built a negotiation agent and expected one version to be the best, but it was the one people liked the least. Since then I have been asking why a system with a high score is not always the best one for people.",
     "My research is driven by the vision of AI for Psychology. My ultimate goal is to design and develop AI agents that foster positive feedback loops within human society.",
     "I am always open to collaboration and discussions regarding my research or shared visions. Please feel free to reach out.",
   ],
