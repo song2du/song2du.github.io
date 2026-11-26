@@ -1,0 +1,2880 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>발음 비교</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E1A2B;
+    --panel: #132238;
+    --panel-2: #1A2C47;
+    --line: #263B5A;
+    --text: #E6ECF5;
+    --muted: #8FA3BD;
+    --ref: #5CC6E0;
+    --mine: #F3B648;
+    --rec: #EF5F5B;
+    --radius-s: 6px;
+    --radius-m: 10px;
+    --head-w: 208px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: "IBM Plex Sans KR", "IBM Plex Sans", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 20px 24px 48px; }
+
+  .top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .top h1 { font-size: 16px; font-weight: 600; margin: 0; letter-spacing: 0.01em; }
+  .keys { margin: 0; color: var(--muted); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+  .keys span { white-space: nowrap; }
+  kbd {
+    font-family: "IBM Plex Sans", sans-serif; font-size: 11.5px; font-weight: 500;
+    display: inline-block; min-width: 20px; padding: 0 5px; margin-right: 4px; text-align: center;
+    border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; color: var(--text); background: var(--panel);
+  }
+
+  /* sentence */
+  .source { margin: 20px 0 10px; }
+  .source[hidden], .study[hidden] { display: none; }
+  .modes, .steps, .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .modes { margin-top: 18px; }
+  .modes button, .steps button, .seg button { border: 0; border-radius: 0; background: transparent; color: var(--muted); padding: 7px 14px; }
+  .modes button + button, .steps button + button, .seg button + button { border-left: 1px solid var(--line); }
+  .modes button[aria-pressed="true"], .steps button[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--text); font-weight: 600; }
+  .steps button span { font-weight: 400; color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
+  .seg button { padding: 5px 11px; }
+  .study { margin: 20px 0 10px; }
+  #studySetup, #studyClip, #stageDict, #stageMemo, #stageSync { display: grid; gap: 12px; justify-items: start; }
+  #studySetup[hidden], #studyClip[hidden], #stageDict[hidden], #stageMemo[hidden], #stageSync[hidden], .setup-row[hidden], .chips[hidden] { display: none; }
+  #stageDict, #stageMemo, #stageSync { width: 100%; }
+  .lead { margin: 0; max-width: 62ch; font-size: 15px; }
+  .muted { color: var(--muted); font-size: 13px; }
+  p.muted { margin: 0; max-width: 72ch; }
+  .setup-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  #clipText, #dictInput {
+    width: 100%; max-width: 860px; resize: vertical; font: inherit; color: var(--text);
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 10px 12px; outline: none;
+  }
+  #dictInput { font-family: "IBM Plex Sans", "IBM Plex Sans KR", sans-serif; font-size: 18px; line-height: 1.45; }
+  #clipText:focus, #dictInput:focus { border-color: var(--ref); }
+  #clipText::placeholder, #dictInput::placeholder { color: #4D6380; }
+  #studyStatus { margin: 0; min-height: 21px; color: var(--muted); }
+  #studyStatus.err { color: #F59491; }
+  #library { width: 100%; }
+  #library h2 { font-size: 14px; font-weight: 600; margin: 10px 0 8px; }
+  .lib { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-width: 860px; }
+  .lib li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+  .lib-name { font-weight: 600; word-break: break-all; }
+  .lib-btns { display: flex; gap: 6px; }
+  .clip-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; width: 100%; }
+  .clip-name { font-size: 18px; font-weight: 600; word-break: break-all; }
+  #clipClose { margin-left: auto; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { min-width: 34px; padding: 4px 0; font-family: "IBM Plex Sans", sans-serif; font-variant-numeric: tabular-nums; }
+  .chip.part { border-color: #8A6A2A; }
+  .chip.good { border-color: #3E8E66; color: #9FD8B0; }
+  .chip[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--bg); font-weight: 600; }
+  .script { margin: 0; max-width: 34em; font-family: "IBM Plex Sans", "IBM Plex Sans KR", sans-serif; font-size: clamp(17px, 1.7vw, 21px); line-height: 1.6; }
+  #syncText { max-width: 46em; font-size: 16px; }
+  .script .mk { color: var(--muted); letter-spacing: 0.08em; }
+  .script .bar { display: inline-block; height: 0.62em; border-bottom: 2px solid #3A5478; vertical-align: baseline; }
+  .script .sn { display: inline-block; min-width: 1.5em; margin-right: 4px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .dw { font: inherit; padding: 0 3px; border: 0; border-radius: 4px; background: rgba(243, 182, 72, 0.16); color: var(--mine); border-bottom: 2px solid var(--mine); line-height: inherit; }
+  .dw:hover:not(:disabled) { background: rgba(243, 182, 72, 0.3); }
+  #dictResult { display: grid; gap: 10px; width: 100%; }
+  .typed { margin: 0; color: var(--muted); max-width: 60em; }
+  .typed s { color: #F59491; }
+  .why { font-size: 14px; max-width: 78ch; }
+  .why b { font-weight: 600; margin-right: 6px; }
+  .why .dw { font-size: 14px; }
+  .hist { font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  #nudge summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  #nudge .setup-row { margin-top: 8px; }
+  #nudge button, #clipRealign { font-size: 12.5px; padding: 4px 9px; }
+  .track[hidden] { display: none; }
+  .words .w.omit { background: transparent; border-color: var(--mine); color: var(--mine); text-decoration: line-through; }
+  #picker { display: grid; gap: 10px; width: 100%; max-width: 860px; }
+  #picker[hidden] { display: none; }
+  #pickCv { display: block; width: 100%; border: 1px solid var(--line); border-radius: 8px; cursor: crosshair; touch-action: none; }
+  #pickRange { font-weight: 600; font-size: 13.5px; font-variant-numeric: tabular-nums; margin-right: 6px; }
+  #picker button[data-pick] { font-size: 12.5px; padding: 4px 9px; }
+  #sentence {
+    display: block; width: 100%; resize: none; overflow: hidden;
+    font-family: "IBM Plex Sans", "IBM Plex Sans KR", sans-serif;
+    font-size: clamp(22px, 2.9vw, 34px); font-weight: 500; line-height: 1.3; letter-spacing: -0.005em;
+    color: var(--text); background: transparent; border: 0; border-bottom: 1px solid var(--line);
+    padding: 4px 0 14px; outline: none; max-width: 30em;
+  }
+  #sentence:focus { border-bottom-color: var(--ref); }
+  #sentence::placeholder { color: #4D6380; }
+  .source-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-top: 14px; }
+  .or { color: var(--muted); }
+  #status { min-height: 21px; margin: 0 0 10px; color: var(--muted); }
+  #status.err { color: #F59491; }
+  #status.ok { color: var(--ref); }
+
+  /* controls */
+  button, .btn, select {
+    font: inherit; font-size: 13px; color: var(--text);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius-s);
+    padding: 6px 11px; cursor: pointer; line-height: 1.35;
+  }
+  select { padding-right: 6px; }
+  button:hover:not(:disabled), .btn:hover, select:hover { border-color: #3A5478; }
+  button:disabled { opacity: 0.42; cursor: default; }
+  :focus-visible { outline: 2px solid var(--ref); outline-offset: 2px; }
+  button.primary { background: var(--ref); border-color: var(--ref); color: #062030; font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #7AD3E9; border-color: #7AD3E9; }
+  .field { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+  .check { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; cursor: pointer; }
+  .check input { accent-color: var(--ref); margin: 0; }
+
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px;
+    padding: 10px 12px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius-m) var(--radius-m) 0 0; border-bottom: 0;
+  }
+  .transport, .opts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .opts label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+
+  /* tracks */
+  .tracks { border: 1px solid var(--line); border-radius: 0 0 var(--radius-m) var(--radius-m); overflow: hidden; background: var(--panel); }
+  .track { display: grid; grid-template-columns: var(--head-w) 1fr; border-top: 1px solid var(--line); }
+  .track:first-child { border-top: 0; }
+  .thead {
+    padding: 12px 12px 12px 14px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+    border-right: 1px solid var(--line); position: relative;
+  }
+  .thead::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--c, transparent); }
+  #track-ref { --c: var(--ref); }
+  #track-mine { --c: var(--mine); }
+  .tname { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .tmeta { color: var(--muted); font-size: 12.5px; word-break: break-all; }
+  .tbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tbtns button, .tbtns .btn { padding: 5px 9px; font-size: 12.5px; }
+  .tbody { position: relative; min-width: 0; background: var(--bg); }
+  .tbody canvas { display: block; width: 100%; }
+  .tbody .ov { position: absolute; inset: 0; height: 100%; cursor: crosshair; touch-action: none; }
+  .empty {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+    padding: 0 24px; color: var(--muted); pointer-events: none; font-size: 13.5px;
+  }
+  .empty[hidden] { display: none; }
+  .track.drop .tbody { outline: 2px dashed var(--c, var(--ref)); outline-offset: -6px; }
+
+  button.rec { border-color: var(--rec); color: #FFD9D8; font-weight: 600; padding: 7px 14px; }
+  button.rec .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--rec); margin-right: 7px; vertical-align: 0; }
+  button.rec.on { background: var(--rec); color: #fff; }
+  button.rec.on .dot { background: #fff; animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.25; } }
+  #recMode { font-size: 12.5px; padding: 4px 6px; max-width: 100%; }
+  .meter { width: 100%; height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--mine); transition: width 60ms linear; }
+  .takes { display: flex; flex-wrap: wrap; gap: 4px; }
+  .takes button { padding: 2px 0; min-width: 26px; font-size: 12px; font-family: "IBM Plex Sans", sans-serif; }
+  .takes button[aria-pressed="true"] { background: var(--mine); border-color: var(--mine); color: #2A1B00; font-weight: 600; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: 3px; margin-right: 6px; }
+
+  .stats { display: grid; grid-template-columns: var(--head-w) 1fr; border-top: 1px solid var(--line); }
+  .stats[hidden] { display: none; }
+  .coach { display: grid; grid-template-columns: var(--head-w) 1fr; border-top: 1px solid var(--line); }
+  .coach[hidden] { display: none; }
+  .coach .rows { padding: 14px 16px 16px; display: grid; gap: 12px; min-width: 0; }
+  .notice { color: #F7A7A4; background: rgba(239, 95, 91, 0.1); border-radius: var(--radius-s); padding: 8px 12px; font-size: 13.5px; }
+  .tips { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .tip {
+    display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center;
+    padding: 10px 12px; background: var(--panel-2); border-radius: 8px; border-left: 3px solid var(--line);
+  }
+  .tip.first { border-left-color: var(--mine); }
+  .tip .tag { font-size: 12px; color: var(--mine); font-weight: 600; margin-bottom: 2px; }
+  .tip-h { font-weight: 600; font-size: 14.5px; }
+  .tip-why { color: var(--muted); font-size: 13px; margin-top: 2px; max-width: 78ch; }
+  .tip button { white-space: nowrap; }
+  .coach details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .good { color: #9FD8B0; font-size: 13.5px; }
+  .words { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+  .words > span { color: var(--muted); margin-right: 4px; }
+  .words .w { font-family: "IBM Plex Sans", sans-serif; font-size: 13.5px; padding: 3px 9px; }
+  .words .w.ok { border-color: #3E6B57; }
+  .words .w.bad { background: var(--mine); border-color: var(--mine); color: #2A1B00; font-weight: 600; }
+  .words .w.skip { color: var(--muted); border-style: dashed; }
+  .words .tip-why { flex-basis: 100%; margin: 2px 0 0; }
+  #pronBtn { margin-top: 4px; font-size: 12.5px; }
+  #pronBtn[aria-pressed="true"] { border-color: var(--ref); color: var(--ref); }
+  .spots { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13px; }
+  .spots > span { color: var(--muted); margin-right: 2px; }
+  .spots button { font-size: 12.5px; padding: 4px 9px; }
+  .spots .tip-why { flex-basis: 100%; margin: 0; }
+  .progress { font-size: 13.5px; }
+  .stats .thead { font-size: 13px; color: var(--muted); }
+  .stats .rows { padding: 12px 16px; display: grid; gap: 6px; font-size: 13.5px; }
+  .stats .rows b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stats .ref-c { color: var(--ref); }
+  .stats .mine-c { color: var(--mine); }
+  .stats .hint { color: var(--muted); }
+
+  .note { color: var(--muted); font-size: 13px; max-width: 72ch; margin: 18px 0 0; }
+
+  @media (max-width: 760px) {
+    .wrap { padding: 16px 14px 40px; }
+    .track, .stats, .coach { grid-template-columns: 1fr; }
+    .tip { grid-template-columns: 1fr; }
+    .thead { border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; align-items: center; }
+    .meter { width: 80px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button.rec.on .dot { animation: none; }
+    .meter span { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>발음 비교</h1>
+    <p class="keys" aria-label="단축키">
+      <span><kbd>1</kbd>원본</span><span><kbd>2</kbd>내 녹음</span><span><kbd>3</kbd>동시</span><span><kbd>4</kbd>번갈아</span>
+      <span><kbd>R</kbd>녹음</span><span><kbd>Space</kbd>정지</span><span><kbd>Esc</kbd>선택 해제</span>
+    </p>
+  </header>
+
+  <nav class="modes" aria-label="연습 방식">
+    <button id="modeSingle" aria-pressed="true">한 문장 연습</button>
+    <button id="modeClip" aria-pressed="false">클립 통암기</button>
+  </nav>
+
+  <section class="source" id="single">
+    <textarea id="sentence" rows="1" spellcheck="false" aria-label="연습할 문장" placeholder="연습할 영어 문장을 입력하세요">Could you walk me through how you arrived at that number?</textarea>
+    <div class="source-row">
+      <label class="field">목소리
+        <select id="voice">
+          <optgroup label="미국 영어">
+            <option value="af_heart" selected>Heart (여성)</option>
+            <option value="af_bella">Bella (여성)</option>
+            <option value="af_nicole">Nicole (여성, 차분함)</option>
+            <option value="am_michael">Michael (남성)</option>
+            <option value="am_fenrir">Fenrir (남성)</option>
+            <option value="am_puck">Puck (남성)</option>
+          </optgroup>
+          <optgroup label="영국 영어">
+            <option value="bf_emma">Emma (여성)</option>
+            <option value="bm_george">George (남성)</option>
+            <option value="bm_fable">Fable (남성)</option>
+          </optgroup>
+        </select>
+      </label>
+      <label class="field">말 속도
+        <select id="speed">
+          <option value="0.8">느리게</option>
+          <option value="0.9">조금 느리게</option>
+          <option value="1" selected>보통</option>
+          <option value="1.1">조금 빠르게</option>
+        </select>
+      </label>
+      <button id="gen" class="primary">AI 음성 만들기</button>
+      <span class="or">또는</span>
+      <label class="btn" for="refFile" tabindex="0" id="refFileBtn">원본 파일 넣기</label>
+      <input type="file" id="refFile" accept="audio/*,video/*" hidden>
+      <button id="fallback" hidden>브라우저 기본 음성으로 듣기</button>
+    </div>
+  </section>
+
+  <section class="study" id="study" hidden>
+    <div id="studySetup">
+      <p class="lead">파일을 넣고 공부할 구간을 고른 뒤 대본을 붙여넣으면, 문장별로 받아쓰고, 외우고, 원본과 똑같은 타이밍으로 말하는 연습을 할 수 있어요.</p>
+      <div class="setup-row">
+        <label class="btn" for="clipFile" tabindex="0" id="clipFileBtn">클립 파일 고르기</label>
+        <input type="file" id="clipFile" accept="audio/*,video/*" hidden>
+        <span class="muted" id="clipFileName">길이는 상관없어요. 오디오나 영상 파일</span>
+      </div>
+      <div id="picker" hidden>
+        <canvas id="pickCv" aria-label="파일 전체 파형: 누르면 그 위치부터 재생, 드래그하면 구간 선택"></canvas>
+        <div class="setup-row">
+          <button id="pickPlay">▶ 재생</button>
+          <span class="muted" id="pickTime"></span>
+          <button id="pickIn">여기를 시작으로</button>
+          <button id="pickOut">여기를 끝으로</button>
+          <button id="pickSel">▶ 고른 구간 듣기</button>
+        </div>
+        <div class="setup-row">
+          <b id="pickRange"></b>
+          <span class="muted">시작</span><button data-pick="a:-1">1초 앞으로</button><button data-pick="a:1">1초 뒤로</button>
+          <span class="muted">끝</span><button data-pick="b:-1">1초 앞으로</button><button data-pick="b:1">1초 뒤로</button>
+        </div>
+        <p class="muted">파형을 누르면 그 위치부터 재생돼요. 들으면서 공부할 부분이 시작될 때 "여기를 시작으로", 끝날 때 "여기를 끝으로"를 누르거나, 파형을 드래그해서 고르세요. 30초~1분이 적당해요. 구간은 문장이 시작하고 끝나는 곳에 맞춰 잡는 게 좋아요. 중간에 잘린 문장은 빼고 만들어요. "모델 없이 대략 나누기"를 쓸 때는 구간과 원문을 딱 맞게 넣어주세요.</p>
+      </div>
+      <textarea id="clipText" rows="6" spellcheck="false" aria-label="고른 구간의 영어 원문" placeholder="영어 원문을 붙여넣으세요. 에피소드 전체 대본을 넣어도 고른 구간에 해당하는 부분을 알아서 찾아요."></textarea>
+      <div class="setup-row">
+        <button id="clipGo" class="primary">문장으로 나누기</button>
+        <button id="clipGoRough">모델 없이 대략 나누기</button>
+        <span class="muted">"문장으로 나누기"는 발음 모델을 써요. 처음 한 번 약 360MB를 내려받아요.</span>
+      </div>
+      <p id="studyStatus" role="status" aria-live="polite"></p>
+      <div id="library"></div>
+    </div>
+
+    <div id="studyClip" hidden>
+      <div class="clip-head">
+        <div class="clip-name" id="clipName"></div>
+        <span id="clipRough" class="muted" hidden>문장 구간을 대략 나눈 클립이에요. <button id="clipRealign">정확히 다시 나누기</button></span>
+        <button id="clipClose">클립 목록</button>
+      </div>
+      <div class="steps" id="steps">
+        <button data-stage="dict" aria-pressed="true">1 받아쓰기 <span id="stDict"></span></button>
+        <button data-stage="memo" aria-pressed="false">2 통암기 <span id="stMemo"></span></button>
+        <button data-stage="sync" aria-pressed="false">3 싱크 맞추기 <span id="stSync"></span></button>
+      </div>
+      <div class="chips" id="sentChips" aria-label="문장 고르기"></div>
+      <div class="setup-row" id="maskBar" hidden>
+        <span class="muted">원문</span>
+        <span class="seg"><button data-mask="0" aria-pressed="true">전부 보기</button><button data-mask="1" aria-pressed="false">첫 글자만</button><button data-mask="2" aria-pressed="false">가리기</button></span>
+      </div>
+
+      <div id="stageDict">
+        <div class="setup-row">
+          <button id="dictPlay">▶ 듣기</button>
+          <label class="check"><input type="checkbox" id="dictLoop"> 반복해서 듣기</label>
+          <span class="muted">Enter로 확인, Shift+Enter로 다시 듣기</span>
+        </div>
+        <textarea id="dictInput" rows="2" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="받아쓰기" placeholder="들리는 대로 적으세요"></textarea>
+        <div class="setup-row">
+          <button id="dictCheck" class="primary">확인</button>
+          <button id="dictReveal">정답 보기</button>
+          <button id="dictNext">다음 문장</button>
+          <details id="nudge"><summary>구간이 어긋났나요?</summary>
+            <div class="setup-row">
+              <span class="muted">시작</span><button data-nudge="a:-0.2">0.2초 앞으로</button><button data-nudge="a:0.2">0.2초 뒤로</button>
+              <span class="muted">끝</span><button data-nudge="b:-0.2">0.2초 앞으로</button><button data-nudge="b:0.2">0.2초 뒤로</button>
+            </div>
+          </details>
+        </div>
+        <div id="dictResult" aria-live="polite"></div>
+      </div>
+
+      <div id="stageMemo" hidden>
+        <p class="script" id="memoText"></p>
+        <div class="setup-row"><button id="memoPlay">▶ 듣기</button><button id="memoNext">다음 문장</button></div>
+        <p class="muted">R을 누르면 원본을 한 번 들려준 뒤 녹음해요. "가리기"로 두고 녹음한 문장은 완료로 표시돼요. 녹음 방식을 "바로 녹음"으로 바꾸면 원본을 듣지 않고 외운 대로 말해볼 수 있어요.</p>
+      </div>
+
+      <div id="stageSync" hidden>
+        <p class="script" id="syncText"></p>
+        <p class="muted">이어폰을 끼고 R을 누르면 원본이 재생돼요. 원본과 동시에 시작해서 동시에 끝나게 말하세요. 녹음이 끝나면 어디서 앞서고 뒤처졌는지 보여줘요.</p>
+        <div id="syncHistory"></div>
+      </div>
+    </div>
+  </section>
+
+  <p id="status" role="status" aria-live="polite"></p>
+
+  <section class="toolbar" aria-label="재생과 보기 설정">
+    <div class="transport">
+      <button id="playBoth" title="단축키 3">▶ 동시 재생</button>
+      <button id="playAB" title="단축키 4">번갈아 듣기</button>
+      <button id="stop" title="Space">■ 정지</button>
+    </div>
+    <div class="opts">
+      <label>재생 속도
+        <select id="rate">
+          <option value="0.6">0.6배</option>
+          <option value="0.75">0.75배</option>
+          <option value="0.9">0.9배</option>
+          <option value="1" selected>1배</option>
+        </select>
+      </label>
+      <label>시간축
+        <select id="view">
+          <option value="real">실제 길이</option>
+          <option value="fit">길이 맞춤</option>
+        </select>
+      </label>
+      <label>스펙트로그램
+        <select id="specMode">
+          <option value="broad">발음 보기 (광대역)</option>
+          <option value="narrow">억양 보기 (협대역)</option>
+        </select>
+      </label>
+      <label>최대 주파수
+        <select id="maxF">
+          <option value="5000" selected>5 kHz</option>
+          <option value="8000">8 kHz</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="trim" checked> 앞뒤 무음 자르기</label>
+    </div>
+  </section>
+
+  <section class="tracks" id="tracks">
+    <div class="track" id="track-ref" data-kind="ref">
+      <div class="thead">
+        <div class="tname">원본</div>
+        <div class="tmeta" id="refMeta">비어 있음</div>
+        <div class="tbtns">
+          <button id="playRef" title="단축키 1">▶ 재생</button>
+          <button id="crop" disabled title="원본에서 드래그로 구간을 고른 뒤 누르세요">선택 구간만 남기기</button>
+        </div>
+      </div>
+      <div class="tbody">
+        <canvas class="cv"></canvas>
+        <canvas class="ov" aria-label="원본 트랙: 클릭하면 그 지점부터 재생, 드래그하면 구간 선택"></canvas>
+        <div class="empty">위에서 AI 음성을 만들거나, 오디오·영상 파일을 넣거나 여기로 끌어다 놓으세요.</div>
+      </div>
+    </div>
+
+    <div class="track" id="track-mine" data-kind="mine">
+      <div class="thead">
+        <div class="tname">내 녹음</div>
+        <button id="rec" class="rec" title="단축키 R"><span class="dot"></span><span class="label">녹음</span></button>
+        <select id="recMode" aria-label="녹음 방식">
+          <option value="listen">원본 듣고 따라 말하기</option>
+          <option value="shadow">원본과 동시에 말하기 (쉐도잉)</option>
+          <option value="plain">바로 녹음</option>
+        </select>
+        <label class="check"><input type="checkbox" id="autoStop" checked> 말 끝나면 자동 정지</label>
+        <label class="check" title="주변 소음을 줄여서 녹음해요. 조용한 방이면 꺼도 돼요."><input type="checkbox" id="noiseSup" checked> 잡음 줄이기</label>
+        <div class="meter" aria-hidden="true"><span id="meterBar"></span></div>
+        <div class="takes" id="takes" aria-label="녹음 목록"></div>
+        <div class="tbtns">
+          <button id="playMine" title="단축키 2">▶ 재생</button>
+          <label class="btn" for="mineFile" tabindex="0" id="mineFileBtn">파일 넣기</label>
+          <input type="file" id="mineFile" accept="audio/*,video/*" hidden>
+          <button id="delTake">지우기</button>
+        </div>
+      </div>
+      <div class="tbody">
+        <canvas class="cv"></canvas>
+        <canvas class="ov" aria-label="내 녹음 트랙: 클릭하면 그 지점부터 재생, 드래그하면 구간 선택"></canvas>
+        <div class="empty">R 키나 녹음 버튼을 누르고 따라 말해보세요.</div>
+      </div>
+    </div>
+
+    <div class="track" id="track-sync" hidden>
+      <div class="thead">
+        <div class="tname">싱크</div>
+        <div class="tmeta" id="syncMeta"></div>
+      </div>
+      <div class="tbody"><canvas class="cv"></canvas></div>
+    </div>
+
+    <div class="track" id="track-into">
+      <div class="thead">
+        <div class="tname">억양 겹쳐보기</div>
+        <div class="tmeta" id="intoMeta">각자 평균 음높이를 0으로 맞춘 반음 단위라서 목소리 높이가 달라도 모양만 비교돼요.</div>
+        <div class="legend"><span><i style="background:var(--ref)"></i>원본</span><span><i style="background:var(--mine)"></i>내 녹음</span></div>
+      </div>
+      <div class="tbody">
+        <canvas class="cv"></canvas>
+        <div class="empty">원본과 내 녹음의 억양 곡선을 여기에 겹쳐 보여줘요.</div>
+      </div>
+    </div>
+
+    <div class="stats" id="stats" hidden>
+      <div class="thead">비교</div>
+      <div class="rows" id="statRows"></div>
+    </div>
+
+    <div class="coach" id="coach" hidden>
+      <div class="thead">
+        <div class="tname">이렇게 고쳐보세요</div><div class="tmeta" id="coachMeta"></div>
+        <button id="pronBtn" aria-pressed="false" title="모음·자음까지 검사해요. 처음 한 번 약 360MB를 내려받아요.">발음 검사 켜기</button>
+        <div class="tmeta" id="pronStatus" aria-live="polite"></div>
+      </div>
+      <div class="rows" id="coachRows" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <p class="note">녹음하면 아래 "이렇게 고쳐보세요"에 먼저 고칠 점이 나오고, 버튼을 누르면 그 부분을 원본과 내 녹음 순서로 들려줘요. 스펙트로그램의 진한 가로 띠(포먼트) 높이가 모음 소리를 결정해요. 원본과 띠의 높이나 모양이 다르면 모음이 다르게 난 거예요. 위아래 색 선은 음높이(억양)이고 오른쪽 색 눈금으로 읽어요. 트랙을 드래그하면 같은 부분이 다른 트랙에도 표시되고, 그 구간만 재생돼요.</p>
+</div>
+
+<script type="module">
+// ---------- constants ----------
+const ANA_SR = 16000;      // analysis sample rate
+const PLAY_SR = 32000;     // playback sample rate
+const HOP = 160;           // 10 ms at 16 kHz
+const PMIN = 60, PMAX = 500;
+const KOKORO_URL = 'https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js';
+const MODEL_ID = 'onnx-community/Kokoro-82M-v1.0-ONNX';
+const COLORS = { ref: '#5CC6E0', mine: '#F3B648', rec: '#EF5F5B', bg: '#0E1A2B', blank: '#0B1524', muted: '#8FA3BD', grid: '#263B5A' };
+const LAYOUT = { wave: 46, gap: 6, spec: 200, axis: 20 };   // css px
+const TRACK_H = LAYOUT.wave + LAYOUT.gap + LAYOUT.spec + LAYOUT.axis;
+const INTO_H = 170;
+
+const $ = (s) => document.querySelector(s);
+// true when the page is shown inside another app's preview frame (e.g. a chat file preview), where mic and downloads are blocked
+const EMBEDDED = (() => { try { return window.top !== window.self; } catch { return true; } })();
+const S = {
+  ref: null, takes: [], cur: -1,
+  view: 'real', trim: true, maxF: 5000, spec: 'broad', rate: 1,
+  sel: null, playing: [], abSeq: 0, rec: null, ac: null, raf: 0,
+};
+const mine = () => (S.cur >= 0 ? S.takes[S.cur] : null);
+const trackOf = (k) => (k === 'ref' ? S.ref : mine());
+
+// ---------- status ----------
+function setStatus(msg, kind = '') { const el = $('#status'); el.textContent = msg || ''; el.className = kind; }
+
+// ---------- audio utils ----------
+function mixdown(buf) {
+  const n = buf.length, ch = buf.numberOfChannels;
+  if (ch === 1) return new Float32Array(buf.getChannelData(0));
+  const out = new Float32Array(n);
+  for (let c = 0; c < ch; c++) { const d = buf.getChannelData(c); for (let i = 0; i < n; i++) out[i] += d[i] / ch; }
+  return out;
+}
+async function decodeBlob(blob) {
+  const ab = await blob.arrayBuffer();
+  const ctx = new OfflineAudioContext(1, 1, PLAY_SR);
+  const buf = await ctx.decodeAudioData(ab);
+  return mixdown(buf);
+}
+async function resample(x, srIn, srOut) {
+  if (srIn === srOut) return new Float32Array(x);
+  const len = Math.max(1, Math.round(x.length * srOut / srIn));
+  const oc = new OfflineAudioContext(1, len, srOut);
+  const b = oc.createBuffer(1, x.length, srIn);
+  b.copyToChannel(x instanceof Float32Array ? x : new Float32Array(x), 0);
+  const src = oc.createBufferSource(); src.buffer = b; src.connect(oc.destination); src.start();
+  const r = await oc.startRendering();
+  return new Float32Array(r.getChannelData(0));
+}
+function wavBlob(x, sr) {
+  const n = x.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, 'data'); v.setUint32(40, n * 2, true);
+  let peak = 0; for (let i = 0; i < n; i++) { const a = Math.abs(x[i]); if (a > peak) peak = a; }
+  const g = peak > 0 ? Math.min(0.89 / peak, 20) : 1;   // loudness-match both tracks for fair A/B
+  for (let i = 0; i < n; i++) { const s = Math.max(-1, Math.min(1, x[i] * g)); v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true); }
+  return new Blob([buf], { type: 'audio/wav' });
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function median(arr) { if (!arr.length) return 0; const a = Array.from(arr).sort((x, y) => x - y); return a[a.length >> 1]; }
+function quantile(arr, q) { if (!arr.length) return 0; const a = Array.from(arr).sort((x, y) => x - y); return a[Math.min(a.length - 1, Math.max(0, Math.floor(q * (a.length - 1))))]; }
+
+// ---------- analysis ----------
+async function analyze(t) {
+  const x = t.ana, n = x.length;
+  // pre-emphasis for spectrogram (+6 dB/oct, as in Praat)
+  const emph = new Float32Array(n); emph[0] = x[0] || 0;
+  for (let i = 1; i < n; i++) emph[i] = x[i] - 0.97 * x[i - 1];
+  t.emph = emph;
+  let peak = 0; for (let i = 0; i < n; i++) { const a = Math.abs(x[i]); if (a > peak) peak = a; }
+  t.peak = peak || 1;
+
+  // frame RMS
+  const nf = Math.max(1, Math.floor(n / HOP));
+  const rms = new Float32Array(nf); let mx = 0;
+  for (let i = 0; i < nf; i++) {
+    let s = 0; const a = i * HOP, b = Math.min(n, a + 320);
+    for (let j = a; j < b; j++) s += x[j] * x[j];
+    rms[i] = Math.sqrt(s / Math.max(1, b - a)); if (rms[i] > mx) mx = rms[i];
+  }
+  t.rms = rms;
+  const floor = quantile(rms, 0.1);
+  const thr = Math.max(mx * 0.035, floor * 3, 1e-5);
+  let first = -1, last = -1;
+  for (let i = 0; i + 2 < nf; i++) if (rms[i] > thr && rms[i + 1] > thr && rms[i + 2] > thr) { first = i; break; }
+  for (let i = nf - 1; i >= 2; i--) if (rms[i] > thr && rms[i - 1] > thr && rms[i - 2] > thr) { last = i; break; }
+  t.dur = n / ANA_SR;
+  if (first < 0 || last <= first) { t.on = 0; t.off = t.dur; }
+  else {
+    t.on = Math.max(0, first * HOP / ANA_SR - 0.1);
+    t.off = Math.min(t.dur, (last * HOP + 320) / ANA_SR + 0.15);
+  }
+
+  // pitch (YIN)
+  const W = 480, tauMin = Math.floor(ANA_SR / 600), tauMax = Math.ceil(ANA_SR / 70);
+  const pf = Math.max(0, Math.floor((n - W - tauMax) / HOP));
+  const f0 = new Float32Array(pf);
+  const d = new Float32Array(tauMax + 2);
+  const vthr = Math.max(mx * 0.05, floor * 3);
+  for (let i = 0; i < pf; i++) {
+    if (i % 300 === 299) await sleep(0);
+    const off = i * HOP;
+    const ri = Math.min(nf - 1, Math.round((off + W / 2) / HOP));
+    if (rms[ri] < vthr) continue;
+    for (let tau = 1; tau <= tauMax; tau++) {
+      let s = 0;
+      for (let j = 0; j < W; j++) { const v = x[off + j] - x[off + j + tau]; s += v * v; }
+      d[tau] = s;
+    }
+    d[0] = 1; let run = 0;
+    for (let tau = 1; tau <= tauMax; tau++) { run += d[tau]; d[tau] = run > 0 ? d[tau] * tau / run : 1; }
+    let tau = -1;
+    for (let k = tauMin; k <= tauMax; k++) {
+      if (d[k] < 0.15) { while (k + 1 <= tauMax && d[k + 1] < d[k]) k++; tau = k; break; }
+    }
+    if (tau < 0) continue;
+    let better = tau;
+    if (tau > 1 && tau < tauMax) { const a = d[tau - 1], b = d[tau], c = d[tau + 1]; const den = a + c - 2 * b; if (den > 0) better = tau + (a - c) / (2 * den); }
+    f0[i] = ANA_SR / better;
+  }
+  cleanPitch(f0);
+  t.f0 = f0;
+  t.f0t0 = (W / 2) / ANA_SR;   // time of frame 0 centre
+}
+function cleanPitch(f) {
+  const n = f.length;
+  // octave-jump fix against local median
+  const fixed = new Float32Array(f);
+  for (let i = 0; i < n; i++) {
+    if (!f[i]) continue;
+    const nb = [];
+    for (let k = Math.max(0, i - 15); k <= Math.min(n - 1, i + 15); k++) if (f[k] && k !== i) nb.push(f[k]);
+    if (nb.length < 6) continue;
+    const m = median(nb), r = f[i] / m;
+    if (r > 1.8 && r < 2.25) fixed[i] = f[i] / 2;
+    else if (r < 0.56 && r > 0.44) fixed[i] = f[i] * 2;
+  }
+  // median filter (5) within voiced runs
+  for (let i = 0; i < n; i++) {
+    if (!fixed[i]) { f[i] = 0; continue; }
+    const w = [];
+    for (let k = i - 2; k <= i + 2; k++) if (k >= 0 && k < n && fixed[k]) w.push(fixed[k]);
+    f[i] = median(w);
+  }
+  // drop very short voiced blips (< 40 ms)
+  let i = 0;
+  while (i < n) {
+    if (!f[i]) { i++; continue; }
+    let j = i; while (j < n && f[j]) j++;
+    if (j - i < 4) for (let k = i; k < j; k++) f[k] = 0;
+    i = j;
+  }
+}
+
+let trackSeq = 0;
+async function makeTrack(play, kind, meta = {}) {
+  const ana = await resample(play, PLAY_SR, ANA_SR);
+  const t = { kind, play, ana, ...meta, id: ++trackSeq };
+  await analyze(t);
+  t.url = URL.createObjectURL(wavBlob(play, PLAY_SR));
+  t.el = new Audio(t.url);
+  t.el.preload = 'auto';
+  t.el.preservesPitch = true;
+  return t;
+}
+function disposeTrack(t) { if (!t) return; try { t.el.pause(); } catch {} URL.revokeObjectURL(t.url); }
+
+// ---------- view mapping ----------
+const viewOf = (t) => (S.trim ? [t.on, t.off] : [0, t.dur]);
+function maxSpan() {
+  const sp = [S.ref, mine()].filter(Boolean).map((t) => { const [a, b] = viewOf(t); return b - a; });
+  return sp.length ? Math.max(...sp) : 1;
+}
+function tToX(t, time, W) { const [a, b] = viewOf(t); return S.view === 'fit' ? (time - a) / (b - a) * W : (time - a) / maxSpan() * W; }
+function xToT(t, x, W) { const [a, b] = viewOf(t); return S.view === 'fit' ? a + x / W * (b - a) : a + x / W * maxSpan(); }
+function selFor(kind) {
+  if (!S.sel) return null;
+  const src = trackOf(S.sel.src), dst = trackOf(kind);
+  if (!src || !dst) return null;
+  if (kind === S.sel.src) return [S.sel.t0, S.sel.t1];
+  if (kind === 'mine' && S.sel.mine) return S.sel.mine;
+  const [sa, sb] = viewOf(src), [da, db] = viewOf(dst);
+  const al = alignFor(mine());
+  const m = al ? (S.sel.src === 'ref' ? (tt) => r2m(al, tt) : (tt) => m2r(al, tt))
+    : S.view === 'fit' ? (tt) => da + (tt - sa) / (sb - sa) * (db - da) : (tt) => da + (tt - sa);
+  const a = Math.max(da, Math.min(db, m(S.sel.t0))), b = Math.max(da, Math.min(db, m(S.sel.t1)));
+  return b - a < 0.02 ? null : [a, b];
+}
+function rangeFor(kind) { const t = trackOf(kind); if (!t) return null; return selFor(kind) || viewOf(t); }
+
+// ---------- FFT ----------
+const fftCache = new Map();
+function getFFT(N) {
+  if (fftCache.has(N)) return fftCache.get(N);
+  const bits = Math.log2(N), rev = new Uint32Array(N);
+  for (let i = 0; i < N; i++) { let r = 0; for (let b = 0; b < bits; b++) r |= ((i >> b) & 1) << (bits - 1 - b); rev[i] = r; }
+  const cos = new Float32Array(N / 2), sin = new Float32Array(N / 2);
+  for (let i = 0; i < N / 2; i++) { cos[i] = Math.cos(2 * Math.PI * i / N); sin[i] = -Math.sin(2 * Math.PI * i / N); }
+  const o = { N, rev, cos, sin }; fftCache.set(N, o); return o;
+}
+function fft(re, im, F) {
+  const { N, rev, cos, sin } = F;
+  for (let i = 0; i < N; i++) { const j = rev[i]; if (j > i) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+  for (let size = 2; size <= N; size <<= 1) {
+    const half = size >> 1, step = N / size;
+    for (let i = 0; i < N; i += size) {
+      for (let j = 0; j < half; j++) {
+        const k = j * step, wr = cos[k], wi = sin[k], a = i + j, b = a + half;
+        const tr = re[b] * wr - im[b] * wi, ti = re[b] * wi + im[b] * wr;
+        re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+      }
+    }
+  }
+}
+const winCache = new Map();
+function hann(L) { if (winCache.has(L)) return winCache.get(L); const w = new Float32Array(L); for (let i = 0; i < L; i++) w[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (L - 1)); winCache.set(L, w); return w; }
+
+// spectrogram colour map: ink blue -> white, so the coloured pitch lines stay readable
+const LUT = (() => {
+  const stops = [[0, [14, 26, 43]], [0.3, [30, 52, 86]], [0.55, [70, 104, 150]], [0.78, [150, 180, 214]], [1, [246, 250, 255]]];
+  const lut = new Uint8ClampedArray(256 * 3);
+  for (let i = 0; i < 256; i++) {
+    const v = i / 255; let k = 0; while (k < stops.length - 2 && v > stops[k + 1][0]) k++;
+    const [p0, c0] = stops[k], [p1, c1] = stops[k + 1], f = (v - p0) / (p1 - p0);
+    for (let c = 0; c < 3; c++) lut[i * 3 + c] = c0[c] + (c1[c] - c0[c]) * f;
+  }
+  return lut;
+})();
+
+// ---------- alignment: MFCC + DTW, so each moment of the original maps to the same moment of a take ----------
+const MELB = (() => {
+  const N = 512, nb = N / 2 + 1, nf = 26, fmin = 80, fmax = 7600;
+  const mel = (f) => 2595 * Math.log10(1 + f / 700), inv = (m) => 700 * (10 ** (m / 2595) - 1);
+  const bins = [];
+  for (let i = 0; i < nf + 2; i++) bins.push(inv(mel(fmin) + (mel(fmax) - mel(fmin)) * i / (nf + 1)) / (ANA_SR / N));
+  const fb = [];
+  for (let k = 1; k <= nf; k++) {
+    const l = bins[k - 1], c = bins[k], r = bins[k + 1], w = new Float32Array(nb);
+    for (let b = 0; b < nb; b++) { if (b > l && b <= c) w[b] = (b - l) / (c - l); else if (b > c && b < r) w[b] = (r - b) / (r - c); }
+    fb.push(w);
+  }
+  const dct = [];
+  for (let c = 1; c <= 12; c++) { const row = new Float32Array(nf); for (let k = 0; k < nf; k++) row[k] = Math.cos(Math.PI * c * (k + 0.5) / nf); dct.push(row); }
+  return { N, nb, nf, fb, dct };
+})();
+const FEAT_T0 = 200 / ANA_SR;   // centre of feature frame 0 (25 ms window)
+function featsOf(t) {
+  if (t.mfcc) return t.mfcc;
+  const { N, nb, nf, fb, dct } = MELB, F = getFFT(N), L = 400, win = hann(L), x = t.ana;
+  const n = Math.max(0, Math.floor((x.length - L) / HOP) + 1);
+  const out = new Float32Array(n * 12), re = new Float32Array(N), im = new Float32Array(N), pw = new Float32Array(nb), lm = new Float32Array(nf);
+  for (let i = 0; i < n; i++) {
+    re.fill(0); im.fill(0);
+    const off = i * HOP;
+    for (let k = 0; k < L; k++) re[k] = (x[off + k] - 0.97 * (off + k > 0 ? x[off + k - 1] : 0)) * win[k];
+    fft(re, im, F);
+    for (let b = 0; b < nb; b++) pw[b] = re[b] * re[b] + im[b] * im[b];
+    for (let f = 0; f < nf; f++) { let s = 0; const w = fb[f]; for (let b = 0; b < nb; b++) s += w[b] * pw[b]; lm[f] = Math.log(s + 1e-10); }
+    for (let c = 0; c < 12; c++) { let s = 0; const row = dct[c]; for (let k = 0; k < nf; k++) s += row[k] * lm[k]; out[i * 12 + c] = s; }
+  }
+  t.mfcc = { F: out, n };
+  return t.mfcc;
+}
+function cmvn(F, start, step, n) {
+  const X = new Float32Array(n * 12), mu = new Float32Array(12), sd = new Float32Array(12);
+  for (let i = 0; i < n; i++) for (let c = 0; c < 12; c++) mu[c] += F[(start + i * step) * 12 + c] / n;
+  for (let i = 0; i < n; i++) for (let c = 0; c < 12; c++) { const v = F[(start + i * step) * 12 + c] - mu[c]; sd[c] += v * v / n; }
+  for (let c = 0; c < 12; c++) sd[c] = Math.sqrt(sd[c]) || 1;
+  for (let i = 0; i < n; i++) for (let c = 0; c < 12; c++) X[i * 12 + c] = (F[(start + i * step) * 12 + c] - mu[c]) / sd[c];
+  return X;
+}
+function computeAlign(r, m) {
+  const A = featsOf(r), B = featsOf(m);
+  const fi = (t, nmax) => Math.max(0, Math.min(nmax - 1, Math.round((t - FEAT_T0) / (HOP / ANA_SR))));
+  const ra = fi(r.on, A.n), rb = fi(r.off, A.n), ma = fi(m.on, B.n), mb = fi(m.off, B.n);
+  const step = Math.max(1, Math.ceil(Math.max(rb - ra, mb - ma) / 1400));
+  const n = Math.floor((rb - ra) / step) + 1, mm = Math.floor((mb - ma) / step) + 1;
+  if (n < 6 || mm < 6) return null;
+  const X = cmvn(A.F, ra, step, n), Y = cmvn(B.F, ma, step, mm);
+  const dist = (i, j) => { let s = 0; for (let c = 0; c < 12; c++) { const v = X[i * 12 + c] - Y[j * 12 + c]; s += v * v; } return Math.sqrt(s); };
+  const w = Math.max(Math.round(0.3 * Math.max(n, mm)), 25);
+  const D = new Float32Array(n * mm).fill(Infinity);
+  for (let i = 0; i < n; i++) {
+    const c = n > 1 ? i * (mm - 1) / (n - 1) : 0;
+    const j0 = Math.max(0, Math.floor(c - w)), j1 = Math.min(mm - 1, Math.ceil(c + w));
+    for (let j = j0; j <= j1; j++) {
+      let best = 0;
+      if (i || j) {
+        best = Infinity;
+        if (i > 0 && D[(i - 1) * mm + j] < best) best = D[(i - 1) * mm + j];
+        if (j > 0 && D[i * mm + j - 1] < best) best = D[i * mm + j - 1];
+        if (i > 0 && j > 0 && D[(i - 1) * mm + j - 1] < best) best = D[(i - 1) * mm + j - 1];
+      }
+      D[i * mm + j] = dist(i, j) + best;
+    }
+  }
+  if (!Number.isFinite(D[n * mm - 1])) return null;
+  const sumJ = new Float32Array(n), cntI = new Float32Array(n), sumI = new Float32Array(mm), cntJ = new Float32Array(mm), dl = new Float32Array(n);
+  let i = n - 1, j = mm - 1;
+  for (;;) {
+    sumJ[i] += j; cntI[i]++; sumI[j] += i; cntJ[j]++; dl[i] += dist(i, j);
+    if (i === 0 && j === 0) break;
+    if (i === 0) { j--; continue; }
+    if (j === 0) { i--; continue; }
+    const dg = D[(i - 1) * mm + j - 1], up = D[(i - 1) * mm + j], lf = D[i * mm + j - 1];
+    if (dg <= up && dg <= lf) { i--; j--; } else if (up < lf) i--; else j--;
+  }
+  const mapR = new Float32Array(n), mapM = new Float32Array(mm), dloc = new Float32Array(n);
+  for (let k = 0; k < n; k++) { mapR[k] = sumJ[k] / cntI[k]; dloc[k] = dl[k] / cntI[k]; }
+  for (let k = 0; k < mm; k++) mapM[k] = sumI[k] / cntJ[k];
+  const hop = step * HOP / ANA_SR;
+  return { refId: r.id, rT0: FEAT_T0 + ra * HOP / ANA_SR, mT0: FEAT_T0 + ma * HOP / ANA_SR, hop, mapR, mapM, dloc };
+}
+function alignFor(m) {
+  const r = S.ref; if (!r || !m) return null;
+  if (!m.align || m.align.refId !== r.id) m.align = computeAlign(r, m) || { refId: r.id, none: true };
+  return m.align.none ? null : m.align;
+}
+function mapThrough(map, srcT0, dstT0, hop, t) {
+  const n = map.length, x = (t - srcT0) / hop;
+  if (x <= 0) return dstT0 + map[0] * hop + x * hop;
+  if (x >= n - 1) return dstT0 + map[n - 1] * hop + (x - (n - 1)) * hop;
+  const i0 = Math.floor(x), f = x - i0;
+  return dstT0 + (map[i0] * (1 - f) + map[i0 + 1] * f) * hop;
+}
+const r2m = (al, t) => (al ? mapThrough(al.mapR, al.rT0, al.mT0, al.hop, t) : t);
+const m2r = (al, t) => (al ? mapThrough(al.mapM, al.mT0, al.rT0, al.hop, t) : t);
+
+// ---------- pronunciation check: CTC GOP + phoneme recognition (no DOM; shared by page and tests) ----------
+const PR = (() => {
+  // vocabulary of robg/speako-phoneme-recognizer (TIMIT-39 IPA); 41 = [PAD] = CTC blank, 0 '|' and 16 ' ' = word gaps
+  const VOCAB = { 'ɑ': 1, 'æ': 2, 'ə': 3, 'aʊ': 4, 'aɪ': 5, 'b': 6, 'ʧ': 7, 'd': 8, 'ð': 9, 'ɾ': 10, 'ɛ': 11, 'ɝ': 12, 'eɪ': 13, 'f': 14, 'g': 15, 'h': 17, 'ɪ': 18, 'i': 19, 'ʤ': 20, 'k': 21, 'l': 22, 'm': 23, 'n': 24, 'ŋ': 25, 'oʊ': 26, 'ɔɪ': 27, 'p': 28, 'ɹ': 29, 's': 30, 'ʃ': 31, 't': 32, 'θ': 33, 'ʊ': 34, 'u': 35, 'v': 36, 'w': 37, 'j': 38, 'z': 39 };
+  const SYM = {}; for (const [k, v] of Object.entries(VOCAB)) SYM[v] = k;
+  const BLANK = 41, SEPS = [0, 16], SKIP = new Set([0, 16, 40, 41, 42, 43]);
+  const ARPA = { AA: 'ɑ', AE: 'æ', AH: 'ə', AO: 'ɑ', AW: 'aʊ', AY: 'aɪ', B: 'b', CH: 'ʧ', D: 'd', DH: 'ð', EH: 'ɛ', ER: 'ɝ', EY: 'eɪ', F: 'f', G: 'g', HH: 'h', IH: 'ɪ', IY: 'i', JH: 'ʤ', K: 'k', L: 'l', M: 'm', N: 'n', NG: 'ŋ', OW: 'oʊ', OY: 'ɔɪ', P: 'p', R: 'ɹ', S: 's', SH: 'ʃ', T: 't', TH: 'θ', UH: 'ʊ', UW: 'u', V: 'v', W: 'w', Y: 'j', Z: 'z', ZH: 'ʃ' };
+  const VOWELS = new Set(['ɑ', 'æ', 'ə', 'aʊ', 'aɪ', 'ɛ', 'ɝ', 'eɪ', 'ɪ', 'i', 'oʊ', 'ɔɪ', 'ʊ', 'u'].map((s) => VOCAB[s]));
+  const id = (s) => VOCAB[s];
+  // sounds Korean speakers often swap for the expected one (always tried as alternatives)
+  const CONFUSE = { 'θ': ['s', 't', 'ʃ', 'f'], 'ð': ['d', 'z'], 'f': ['p', 'h'], 'v': ['b', 'f'], 'ɹ': ['l'], 'l': ['ɹ'], 'z': ['ʤ', 's'], 'ʃ': ['s'], 's': ['ʃ', 'θ'], 'ʤ': ['z'], 'p': ['f'], 'b': ['v'],
+    'æ': ['ɛ'], 'ɛ': ['æ'], 'i': ['ɪ'], 'ɪ': ['i'], 'u': ['ʊ'], 'ʊ': ['u'], 'ɝ': ['ə', 'ɑ'], 'eɪ': ['ɛ'], 'oʊ': ['ɑ', 'ə'], 'ɑ': ['oʊ', 'ə'], 'ŋ': ['n'], 'w': ['u'], 'j': ['i'] };
+  // realisations that are fine in fluent American English, never reported as errors
+  const OK_ALT = { 't': ['ɾ', 'd'], 'd': ['ɾ', 't'] };
+  const REDUCED = new Set(['ə', 'ɪ', 'ʊ', 'i', 'ɝ'].map(id));
+  const STOPS = new Set(['p', 't', 'k', 'b', 'd', 'g'].map(id));
+  const FUNCTION = new Set('a an the to of and for you your he him his her them that at as is it in on be was were are am can have has had do does i me my we us our or but so if from with by this these those there their they what will would could should not no'.split(' '));
+
+  const lse = (a, b) => (a === -Infinity ? b : b === -Infinity ? a : a > b ? a + Math.log1p(Math.exp(b - a)) : b + Math.log1p(Math.exp(a - b)));
+
+  // logits [T,V] -> log-probs with the word-gap tokens folded into the blank
+  function logProbs(data, T, V) {
+    const LP = new Float32Array(T * V);
+    for (let t = 0; t < T; t++) {
+      let m = -Infinity; for (let v = 0; v < V; v++) if (data[t * V + v] > m) m = data[t * V + v];
+      let s = 0; for (let v = 0; v < V; v++) s += Math.exp(data[t * V + v] - m);
+      const z = m + Math.log(s);
+      for (let v = 0; v < V; v++) LP[t * V + v] = data[t * V + v] - z;
+      let b = LP[t * V + BLANK]; for (const sp of SEPS) { b = lse(b, LP[t * V + sp]); LP[t * V + sp] = -Infinity; }
+      LP[t * V + BLANK] = b;
+    }
+    return { LP, T, V };
+  }
+
+  // CTC log-likelihood of a label sequence
+  function logLik(A, seq) {
+    const { LP, T, V } = A, n = seq.length, S = 2 * n + 1;
+    if (!n) { let s = 0; for (let t = 0; t < T; t++) s += LP[t * V + BLANK]; return s; }
+    const lab = (s) => (s & 1 ? seq[s >> 1] : BLANK);
+    let a = new Float64Array(S).fill(-Infinity), b = new Float64Array(S);
+    a[0] = LP[BLANK]; a[1] = LP[lab(1)];
+    for (let t = 1; t < T; t++) {
+      const o = t * V;
+      for (let s = 0; s < S; s++) {
+        let v = a[s];
+        if (s >= 1) v = lse(v, a[s - 1]);
+        if (s >= 2 && (s & 1) && seq[s >> 1] !== seq[(s >> 1) - 1]) v = lse(v, a[s - 2]);
+        b[s] = v + LP[o + lab(s)];
+      }
+      const tmp = a; a = b; b = tmp;
+    }
+    return lse(a[S - 1], a[S - 2]);
+  }
+
+  // Viterbi forced alignment: first/last frame of every label.
+  // With { star: true } a free "anything" label sits before and after the sequence, so speech outside the
+  // transcript (a range chosen wider than the text) is skipped instead of being forced onto the first/last words.
+  function align(A, seq0, opts) {
+    const star = !!(opts && opts.star), STAR = -1;
+    const seq = star ? [STAR, ...seq0, STAR] : seq0;
+    const { LP, T, V } = A, n = seq.length, S = 2 * n + 1;
+    const em = (o, s) => (s & 1 ? (seq[s >> 1] === STAR ? 0 : LP[o + seq[s >> 1]]) : LP[o + BLANK]);
+    const bp = new Int8Array(T * S);
+    let a = new Float64Array(S).fill(-Infinity), b = new Float64Array(S);
+    a[0] = em(0, 0); if (S > 1) a[1] = em(0, 1);
+    for (let t = 1; t < T; t++) {
+      const o = t * V;
+      for (let s = 0; s < S; s++) {
+        let v = a[s], k = 0;
+        if (s >= 1 && a[s - 1] > v) { v = a[s - 1]; k = 1; }
+        if (s >= 2 && (s & 1) && seq[s >> 1] !== seq[(s >> 1) - 1] && a[s - 2] > v) { v = a[s - 2]; k = 2; }
+        b[s] = v + em(o, s); bp[t * S + s] = k;
+      }
+      const tmp = a; a = b; b = tmp;
+    }
+    let s = S > 1 && a[S - 2] > a[S - 1] ? S - 2 : S - 1;
+    const first = new Int32Array(n).fill(-1), last = new Int32Array(n).fill(-1);
+    for (let t = T - 1; t >= 0; t--) {
+      if (s & 1) { const k = s >> 1; if (last[k] < 0) last[k] = t; first[k] = t; }
+      if (t > 0) s -= bp[t * S + s];
+    }
+    const score = Math.max(a[S - 1], S > 1 ? a[S - 2] : -Infinity);
+    return star ? { first: first.slice(1, n - 1), last: last.slice(1, n - 1), score } : { first, last, score };
+  }
+
+  // Where in a long expected sequence does the recognised audio belong? Local alignment, linear memory.
+  function locate(rec, seq) {
+    const n = rec.length, m = seq.length;
+    let pS = new Int32Array(m + 1), cS = new Int32Array(m + 1), pJ = new Int32Array(m + 1), cJ = new Int32Array(m + 1), pI = new Int32Array(m + 1), cI = new Int32Array(m + 1);
+    for (let j = 0; j <= m; j++) pJ[j] = j;
+    let best = 0, bj = 0, bi = 0, bj0 = 0, bi0 = 0;
+    for (let i = 1; i <= n; i++) {
+      cS[0] = 0; cJ[0] = 0; cI[0] = i;
+      const r = rec[i - 1];
+      for (let j = 1; j <= m; j++) {
+        let sc = pS[j - 1] + (r === seq[j - 1] ? 2 : -1), oj = pJ[j - 1], oi = pI[j - 1];
+        if (pS[j] - 1 > sc) { sc = pS[j] - 1; oj = pJ[j]; oi = pI[j]; }
+        if (cS[j - 1] - 1 > sc) { sc = cS[j - 1] - 1; oj = cJ[j - 1]; oi = cI[j - 1]; }
+        if (sc <= 0) { sc = 0; oj = j; oi = i; }
+        cS[j] = sc; cJ[j] = oj; cI[j] = oi;
+        if (sc > best) { best = sc; bj = j; bi = i; bj0 = oj; bi0 = oi; }
+      }
+      let t = pS; pS = cS; cS = t; t = pJ; pJ = cJ; cJ = t; t = pI; pI = cI; cI = t;
+    }
+    return { score: best, j0: bj0, j1: bj - 1, i0: bi0, i1: bi - 1 };
+  }
+
+  // Which sentences of a (possibly much longer) transcript are spoken in this audio?
+  // E.words[i].sent gives each word's sentence. Returns { lo, hi } (inclusive) or null when nothing matches.
+  function findSentences(A, E, nSent) {
+    const kr = Array.from({ length: nSent }, () => [Infinity, -Infinity]);
+    E.meta.forEach((x, k) => { const r = kr[E.words[x.word].sent]; if (k < r[0]) r[0] = k; if (k > r[1]) r[1] = k; });
+    const has = (si) => Number.isFinite(kr[si][0]);
+    const loc = locate(greedy(A).map((r) => r.id), E.seq);
+    if (loc.score < 30) return null;
+    let lo = -1, hi = -1, bestOv = 0, bestS = -1;
+    for (let si = 0; si < nSent; si++) {
+      if (!has(si)) continue;
+      const ov = Math.max(0, Math.min(kr[si][1], loc.j1) - Math.max(kr[si][0], loc.j0) + 1);
+      if (ov > bestOv) { bestOv = ov; bestS = si; }
+      if (ov >= 0.5 * (kr[si][1] - kr[si][0] + 1)) { if (lo < 0) lo = si; hi = si; }
+    }
+    if (lo < 0) { if (bestS < 0) return null; lo = hi = bestS; }
+    // Force-align sentences a..b (speech outside them is skipped) and see, per sentence, what share of its
+    // sounds landed on frames where the model really hears that sound. A sentence that is not in the audio,
+    // or only partly, gets squeezed onto the wrong frames and scores low.
+    const score = (a, b) => {
+      while (a <= b && !has(a)) a++; while (b >= a && !has(b)) b--;
+      if (a > b) return null;
+      const k0 = kr[a][0], k1 = kr[b][1];
+      if ((k1 - k0 + 1) * 2 > A.T) return null;
+      const sp = align(A, E.seq.slice(k0, k1 + 1), { star: true });
+      if (!Number.isFinite(sp.score)) return null;
+      const out = [];
+      for (let si = a; si <= b; si++) {
+        if (!has(si)) { out.push(1); continue; }
+        let hit = 0, cnt = 0;
+        for (let k = kr[si][0]; k <= kr[si][1]; k++) { if (A.LP[sp.first[k - k0] * A.V + E.seq[k]] > -3.5) hit++; cnt++; }
+        out.push(hit / cnt);
+      }
+      return out;
+    };
+    const IN = 0.65;
+    for (let guard = 0; guard < 2 * nSent + 4; guard++) {
+      const sc = score(lo, hi);
+      if (!sc) { if (hi > lo) { hi--; continue; } return null; }
+      const f = sc[0], l = sc[sc.length - 1];
+      if (lo < hi && f < IN && f <= l) { lo++; continue; }
+      if (lo < hi && l < IN) { hi--; continue; }
+      if (lo === hi && f < IN) return null;
+      break;
+    }
+    // the matched stretch can stop short at a noisy patch: add neighbours while they are really there
+    for (let g = 0; g < 80 && lo > 0; g++) { const sc = score(lo - 1, hi); if (sc && sc[0] >= IN && sc[1] >= IN - 0.1) lo--; else break; }
+    for (let g = 0; g < 80 && hi < nSent - 1; g++) { const sc = score(lo, hi + 1); if (sc && sc[sc.length - 1] >= IN && sc[sc.length - 2] >= IN - 0.1) hi++; else break; }
+    return { lo, hi };
+  }
+
+  // best-path (greedy) decoding: ids with their centre frame
+  function greedy(A) {
+    const { LP, T, V } = A, out = []; let prev = -1, start = 0;
+    for (let t = 0; t <= T; t++) {
+      let bi = -1;
+      if (t < T) { let bv = -Infinity; for (let v = 0; v < V; v++) if (LP[t * V + v] > bv) { bv = LP[t * V + v]; bi = v; } }
+      if (bi !== prev) {
+        if (prev >= 0 && prev !== BLANK && !SKIP.has(prev)) out.push({ id: prev, f: (start + t - 1) / 2 });
+        prev = bi; start = t;
+      }
+    }
+    return out;
+  }
+
+  // ---- spoken-form tokens: digits, money, percents, acronyms -> the words actually said ----
+  const ONES = 'zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split(' ');
+  const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  const ORD = { one: 'first', two: 'second', three: 'third', five: 'fifth', eight: 'eighth', nine: 'ninth', twelve: 'twelfth' };
+  const ALIAS = { dr: 'doctor', vs: 'versus', mrs: 'missus', ok: 'okay' };
+  function numWords(n) {
+    n = Math.floor(n);
+    if (!(n >= 0) || n >= 1e15) return String(n).replace(/\D/g, '').split('').map((d) => ONES[+d]);
+    if (n < 20) return [ONES[n]];
+    if (n < 100) return [TENS[Math.floor(n / 10)], ...(n % 10 ? [ONES[n % 10]] : [])];
+    if (n < 1000) return [ONES[Math.floor(n / 100)], 'hundred', ...(n % 100 ? numWords(n % 100) : [])];
+    for (const [v, name] of [[1e12, 'trillion'], [1e9, 'billion'], [1e6, 'million'], [1e3, 'thousand']]) if (n >= v) return [...numWords(Math.floor(n / v)), name, ...(n % v ? numWords(n % v) : [])];
+  }
+  const plural = (w) => { const l = w[w.length - 1]; w[w.length - 1] = l.endsWith('y') ? l.slice(0, -1) + 'ies' : l === 'six' ? 'sixes' : l + 's'; return w; };
+  function ordWords(n) { const w = numWords(n), l = w[w.length - 1]; w[w.length - 1] = ORD[l] || (l.endsWith('y') ? l.slice(0, -1) + 'ieth' : l + 'th'); return w; }
+  function yearWords(n) { if (n >= 2000 && n <= 2009) return numWords(n); const a = Math.floor(n / 100), b = n % 100; return [...numWords(a), ...(b === 0 ? ['hundred'] : b < 10 ? ['oh', ONES[b]] : numWords(b))]; }
+  function speakNum(s) {
+    let m;
+    if ((m = s.match(/^(\d{1,2}):(\d{2})$/))) { const mi = +m[2]; return [...numWords(+m[1]), ...(mi === 0 ? [] : mi < 10 ? ['oh', ONES[mi]] : numWords(mi))]; }
+    if ((m = s.match(/^(\d{4})(s?)$/)) && +m[1] >= 1100 && +m[1] <= 2099) { const w = yearWords(+m[1]); return m[2] ? plural(w) : w; }
+    if ((m = s.match(/^(\d[\d,]*)(st|nd|rd|th)$/i))) return ordWords(+m[1].replace(/,/g, ''));
+    if ((m = s.match(/^(\d[\d,]*)(?:\.(\d+))?(s?)$/))) { const w = numWords(+m[1].replace(/,/g, '')); if (m[2]) { w.push('point'); for (const d of m[2]) w.push(ONES[+d]); } return m[3] ? plural(w) : w; }
+    return null;
+  }
+  // -> { raws: display tokens, words: [{ text, key, src (index into raws), caps, dotted }] }
+  function tokens(text) {
+    let t = String(text).replace(/[“”"()\[\]]/g, ' ').replace(/[—–]/g, ' ').replace(/[’‘]/g, "'").replace(/&/g, ' and ').replace(/%/g, ' percent ');
+    t = t.replace(/\$\s?(\d[\d,]*(?:\.\d+)?)(\s(?:hundred|thousand|million|billion|trillion))?/gi, (m, num, mag) => `${num}${mag || ''} dollars`);
+    const raws = t.split(/\s+/).filter(Boolean), words = [];
+    raws.forEach((raw, src) => {
+      for (const part of raw.split(/(?<=[A-Za-z0-9])-(?=[A-Za-z0-9])|\//)) {
+        const core = part.replace(/^[^A-Za-z0-9']+|[^A-Za-z0-9']+$/g, '').replace(/^'+(?=[^a-z])|'+$/gi, '');
+        if (!core) continue;
+        const word = (w) => { const key = w.toLowerCase().replace(/^'+|'+$/g, ''); if (/[a-z]/.test(key)) words.push({ text: w, key, src, caps: /^[A-Z]{2,6}$/.test(w), dotted: false }); };
+        const nums = (arr) => arr.forEach((w) => words.push({ text: w, key: w, src, caps: false, dotted: false }));
+        if (/^([A-Za-z]\.)+[A-Za-z]$/.test(core)) words.push({ text: core + '.', key: core.toLowerCase() + '.', src, caps: false, dotted: true });
+        else if (/\d/.test(core)) {
+          const sp = speakNum(core);
+          if (sp) nums(sp);
+          else for (const run of core.match(/[A-Za-z']+|\d+(?:\.\d+)?/g) || []) { if (/\d/.test(run)) nums(speakNum(run) || []); else word(run); }
+        } else word(core);
+      }
+    });
+    return { raws, words };
+  }
+
+  // transcript -> practice-sized sentences (speaker labels and stage directions removed)
+  function sentences(raw) {
+    const lines = String(raw).replace(/\r/g, '').replace(/\([^)]*\)|\[[^\]]*\]/g, ' ').split('\n')
+      .map((l) => l.trim().replace(/^(?:[A-Z][a-z]+\.?(?: [A-Z][a-z]+)?|[A-Z][A-Z .,'\-]{2,})\s?:\s+/, '')).filter(Boolean);
+    const t = lines.join(' ').replace(/(^|\s)(?:[A-Z]{2,}[.,']?\s)*[A-Z]{2,}\s?:\s/g, '$1').replace(/\s+/g, ' ').trim();
+    const ABBR = /^(?:mr|mrs|ms|dr|st|sr|jr|gen|sen|rep|gov|prof|vs|etc|no|u\.s|u\.k|u\.n|a\.m|p\.m|e\.g|i\.e|d\.c)\.$/i;
+    const parts = []; let buf = [];
+    for (const tok of t.split(' ')) {
+      buf.push(tok);
+      const bare = tok.replace(/["”’')]+$/, '');
+      if (/[.?!]$/.test(bare) && !ABBR.test(bare) && !/^[A-Z]\.$/.test(bare)) { parts.push(buf); buf = []; }
+    }
+    if (buf.length) parts.push(buf);
+    // long sentences: cut at the comma/semicolon/colon nearest the middle
+    const cut = (ws) => {
+      if (ws.length <= 22) return [ws];
+      let best = -1, bd = Infinity;
+      for (let i = 5; i < ws.length - 6; i++) if (/[,;:]$/.test(ws[i]) && Math.abs(i + 1 - ws.length / 2) < bd) { bd = Math.abs(i + 1 - ws.length / 2); best = i; }
+      return best < 0 ? [ws] : [...cut(ws.slice(0, best + 1)), ...cut(ws.slice(best + 1))];
+    };
+    // very short pieces join their shorter neighbour
+    const out = parts.flatMap(cut).filter((ws) => /[A-Za-z0-9]/.test(ws.join('')));
+    for (let i = 0; i < out.length && out.length > 1;) {
+      if (out[i].length >= 3) { i++; continue; }
+      const prev = out[i - 1], next = out[i + 1];
+      if (next && (!prev || prev.length > next.length)) { out.splice(i, 2, out[i].concat(next)); }
+      else { out.splice(i - 1, 2, prev.concat(out[i])); i = Math.max(0, i - 1); }
+    }
+    return out.map((ws) => ws.join(' '));
+  }
+
+  // words -> expected phonemes (CMU dictionary), choosing per word the variant that best fits the original audio
+  function expected(input, dict, refA) {
+    const words = (Array.isArray(input) ? input : tokens(input).words).map((w) => ({ ...w }));
+    const clean = (p) => p.replace(/\s*#.*$/, '').trim();
+    const spell = (key) => { const out = []; for (const ch of key.replace(/[^a-z]/g, '')) { const p = dict[ch + '.'] || dict[ch]; if (!p) return null; out.push(clean(p)); } return out.length ? out.join(' ') : null; };
+    const variants = (w) => {
+      const key = ALIAS[w.key] || w.key, out = [];
+      for (let i = 1; i <= 4; i++) { const p = dict[i === 1 ? key : `${key}(${i})`]; if (p) out.push(clean(p)); }
+      if (!out.length && w.dotted) { const p = dict[key.replace(/\./g, '')]; out.push(p ? clean(p) : spell(key)); }
+      if (!out.length && key.endsWith("'s") && dict[key.slice(0, -2)]) out.push(clean(dict[key.slice(0, -2)]) + ' Z');
+      if (!out.length && key.endsWith("s'") && dict[key.slice(0, -1)]) out.push(clean(dict[key.slice(0, -1)]));
+      if (!out.length && w.caps) out.push(spell(key));
+      return out.filter(Boolean);
+    };
+    const toIds = (p) => p.split(' ').map((x) => { const m = x.match(/^([A-Z]+)(\d?)$/); return m && ARPA[m[1]] ? { id: id(ARPA[m[1]]), stress: m[2] === '' ? null : Number(m[2]) } : null; }).filter(Boolean);
+    let oov = 0;
+    for (const w of words) {
+      const vs = variants(w).map(toIds).filter((v) => v.length);
+      w.oov = !vs.length; if (w.oov) oov++;
+      w.vars = vs.length ? vs : [naiveG2P(w.key)];
+      w.pick = 0;
+    }
+    const build = () => {
+      const seq = [], meta = [];
+      words.forEach((w, wi) => w.vars[w.pick].forEach((p, pi, arr) => {
+        seq.push(p.id);
+        meta.push({ word: wi, stress: p.stress, final: pi === arr.length - 1, first: pi === 0 });
+      }));
+      return { seq, meta };
+    };
+    // pick variants against the original
+    if (refA) for (const w of words) {
+      if (w.vars.length < 2) continue;
+      let best = -Infinity, bi = 0;
+      for (let i = 0; i < w.vars.length; i++) { w.pick = i; const ll = logLik(refA, build().seq); if (ll > best) { best = ll; bi = i; } }
+      w.pick = bi;
+    }
+    const { seq, meta } = build();
+    return { words, seq, meta, oov };
+  }
+  function naiveG2P(w) {
+    const map = { a: 'æ', b: 'b', c: 'k', d: 'd', e: 'ɛ', f: 'f', g: 'g', h: 'h', i: 'ɪ', j: 'ʤ', k: 'k', l: 'l', m: 'm', n: 'n', o: 'ɑ', p: 'p', q: 'k', r: 'ɹ', s: 's', t: 't', u: 'ə', v: 'v', w: 'w', x: 'k', y: 'j', z: 'z' };
+    const out = []; for (const ch of w) if (map[ch]) out.push({ id: id(map[ch]), stress: null });
+    return out.length ? out : [{ id: id('ə'), stress: null }];
+  }
+
+  const isOkAlt = (exp, alt, meta) => {
+    if (alt === exp) return true;
+    const o = OK_ALT[SYM[exp]]; if (o && o.includes(SYM[alt])) return true;
+    if (meta && meta.stress === 0 && REDUCED.has(exp) && REDUCED.has(alt)) return true;
+    return false;
+  };
+  function evaluable(E, k) {
+    const m = E.meta[k], w = E.words[m.word], p = E.seq[k];
+    if (w.oov) return false;
+    if (VOWELS.has(p) && (m.stress === 0 || FUNCTION.has(w.key))) return false;   // reduced vowels vary freely
+    if (FUNCTION.has(w.key) && p === id('h')) return false;                       // "him", "her": h is often dropped
+    return true;
+  }
+
+  // GOP: how much better the expected sequence explains the audio than the best substitution/deletion at k
+  function gopAt(A, seq, k, base, spans, extraAlts) {
+    const cand = new Set(), p = seq[k];
+    (CONFUSE[SYM[p]] || []).forEach((s) => cand.add(id(s)));
+    (extraAlts || []).forEach((q) => cand.add(q));
+    if (spans) {
+      const { LP, T, V } = A, f0 = Math.max(0, spans.first[k] - 2), f1 = Math.min(T - 1, spans.last[k] + 2), best = new Float32Array(V).fill(-Infinity);
+      for (let t = f0; t <= f1; t++) for (let v = 0; v < V; v++) if (LP[t * V + v] > best[v]) best[v] = LP[t * V + v];
+      Array.from(best.keys()).filter((v) => !SKIP.has(v) && v !== p).sort((x, y) => best[y] - best[x]).slice(0, 5).forEach((v) => cand.add(v));
+    }
+    cand.delete(p);
+    let bestLL = -Infinity, alt = null;
+    for (const q of cand) {
+      if (SKIP.has(q)) continue;
+      const s2 = seq.slice(); s2[k] = q;
+      const ll = logLik(A, s2); if (ll > bestLL) { bestLL = ll; alt = q; }
+    }
+    const s3 = seq.slice(0, k).concat(seq.slice(k + 1)), ld = logLik(A, s3);
+    if (ld > bestLL) { bestLL = ld; alt = 'del'; }
+    return { lpr: base - bestLL, alt };
+  }
+
+  // edit-distance alignment of expected vs recognised
+  function editAlign(E, R) {
+    const n = E.seq.length, m = R.length, D = new Float32Array((n + 1) * (m + 1)), W = m + 1;
+    for (let i = 0; i <= n; i++) D[i * W] = i; for (let j = 0; j <= m; j++) D[j] = j;
+    const sub = (i, j) => (isOkAlt(E.seq[i], R[j].id, E.meta[i]) ? 0 : 1);
+    for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++)
+      D[i * W + j] = Math.min(D[(i - 1) * W + j - 1] + sub(i - 1, j - 1), D[(i - 1) * W + j] + 1, D[i * W + j - 1] + 1);
+    const ops = new Array(n), ins = [];
+    let i = n, j = m;
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && D[i * W + j] === D[(i - 1) * W + j - 1] + sub(i - 1, j - 1)) { ops[i - 1] = { op: sub(i - 1, j - 1) ? 'sub' : 'match', r: R[j - 1].id }; i--; j--; }
+      else if (i > 0 && D[i * W + j] === D[(i - 1) * W + j] + 1) { ops[i - 1] = { op: 'del' }; i--; }
+      else { ins.push({ after: i - 1, r: R[j - 1].id }); j--; }
+    }
+    return { ops, ins };
+  }
+
+  // full check of one take against the original
+  function check(refA, takeA, E) {
+    const seq = E.seq, n = seq.length;
+    const refBase = logLik(refA, seq), takeBase0 = logLik(takeA, seq);
+    const refSp = align(refA, seq);
+    // whole words left out: the take is explained better without the word's sounds
+    const wordKs = E.words.map(() => []); E.meta.forEach((x, k) => wordKs[x.word].push(k));
+    // Taken one at a time and greedily: dropping the truly missing word helps most, and once it is gone
+    // its neighbours (which only looked removable because they were squeezed) no longer do.
+    const omitted = new Map(), alive = E.words.map(() => true);
+    const seqAlive = () => { const out = []; for (let k = 0; k < n; k++) if (alive[E.meta[k].word]) out.push(seq[k]); return out; };
+    let takeBase = takeBase0;
+    for (let round = 0; E.words.length > 1 && round < E.words.length - 1; round++) {
+      let best = -1, bg = 2;
+      E.words.forEach((w, wi) => {
+        if (!alive[wi] || wordKs[wi].length < 2 || w.oov) return;
+        alive[wi] = false; const g = logLik(takeA, seqAlive()) - takeBase; alive[wi] = true;
+        if (g > bg) { bg = g; best = wi; }
+      });
+      if (best < 0) break;
+      alive[best] = false; omitted.set(best, bg); takeBase += bg;
+    }
+    // judge the remaining sounds against the take without the omitted words
+    const keep = []; for (let k = 0; k < n; k++) if (alive[E.meta[k].word]) keep.push(k);
+    const pos = new Int32Array(n).fill(-1); keep.forEach((k, j) => { pos[k] = j; });
+    const seqT = omitted.size ? keep.map((k) => seq[k]) : seq;
+    const spT = align(takeA, seqT);
+    const takeSp = { first: new Int32Array(n), last: new Int32Array(n) }; let lastF = 0;
+    for (let k = 0; k < n; k++) {
+      if (pos[k] >= 0) { takeSp.first[k] = spT.first[pos[k]]; takeSp.last[k] = lastF = spT.last[pos[k]]; }
+      else takeSp.first[k] = takeSp.last[k] = lastF;
+    }
+    // does the text fit the original at all? (per-frame gap to the free best path)
+    const free = (A) => { let s = 0; for (let t = 0; t < A.T; t++) { let m = -Infinity; for (let v = 0; v < A.V; v++) if (A.LP[t * A.V + v] > m) m = A.LP[t * A.V + v]; s += m; } return s; };
+    const fit = (refSp.score - free(refA)) / Math.max(1, n);
+    const R = greedy(takeA), ed = editAlign(E, R);
+    const errors = [], phones = [];
+    for (let k = 0; k < n; k++) {
+      const ev = evaluable(E, k);
+      const ph = { k, id: seq[k], word: E.meta[k].word, ev, ok: true };
+      phones.push(ph);
+      if (pos[k] < 0) { ph.ok = false; ph.omit = true; continue; }
+      if (!ev) continue;
+      const rg = gopAt(refA, seq, k, refBase, refSp);
+      ph.refLpr = rg.lpr;
+      if (rg.lpr < 0.5) { ph.ev = false; continue; }      // the original itself doesn't clearly say this sound
+      const g = gopAt(takeA, seqT, pos[k], takeBase, spT, ed.ops[k].r !== undefined ? [ed.ops[k].r] : []);
+      ph.lpr = g.lpr; ph.alt = g.alt; ph.rec = ed.ops[k];
+      const recBad = ed.ops[k].op === 'sub' || ed.ops[k].op === 'del';
+      const m = E.meta[k], agree = g.alt !== 'del' && ed.ops[k].op === 'sub' && ed.ops[k].r === g.alt;
+      let thr = agree ? (VOWELS.has(seq[k]) ? -0.7 : 0) : -1;   // both methods heard the same wrong sound: a small margin is enough (vowels need a bit more)
+      if (g.alt === 'del' && STOPS.has(seq[k]) && m.final) thr = k + 1 < n && !VOWELS.has(seq[k + 1]) ? -3.5 : -2;   // unreleased final stops are normal
+      const gopBad = g.lpr < thr && !(g.alt !== 'del' && isOkAlt(seq[k], g.alt, m));
+      if ((gopBad && recBad) || (g.lpr < -5 && gopBad)) {
+        let heard = g.alt;
+        if (ed.ops[k].op === 'sub' && g.alt !== 'del' && g.alt !== ed.ops[k].r && (CONFUSE[SYM[seq[k]]] || []).includes(SYM[ed.ops[k].r])) heard = ed.ops[k].r;
+        ph.ok = false;
+        errors.push({ type: heard === 'del' ? 'del' : 'sub', k, word: E.meta[k].word, exp: seq[k], heard, conf: -g.lpr });
+      }
+    }
+    // extra vowels after consonants ("bus" -> "bus-eu"), confirmed by likelihood
+    for (const x of ed.ins) {
+      if (!VOWELS.has(x.r) || x.after < 0 || x.after >= n) continue;
+      const k = x.after; if (pos[k] < 0 || VOWELS.has(seq[k]) || E.words[E.meta[k].word].oov) continue;
+      const nextIsCons = k + 1 >= n || !VOWELS.has(seq[k + 1]);
+      if (!(E.meta[k].final || nextIsCons)) continue;
+      const s2 = seqT.slice(0, pos[k] + 1).concat([x.r], seqT.slice(pos[k] + 1)), gain = logLik(takeA, s2) - takeBase;
+      if (gain > 1) errors.push({ type: 'ins', k, word: E.meta[k].word, exp: seq[k], heard: x.r, conf: gain });
+    }
+    // a vowel + r said as one r-coloured vowel ("very" -> v-er-y) is normal
+    const rIdx = id('ɹ'), erIdx = id('ɝ'), drop = new Set();
+    errors.forEach((e, i) => {
+      if (e.type === 'sub' && e.heard === erIdx && seq[e.k + 1] === rIdx) { drop.add(i); errors.forEach((f, j) => { if (f.k === e.k + 1 && f.type === 'del') drop.add(j); }); }
+      if (e.type === 'del' && seq[e.k] === rIdx && e.k > 0 && VOWELS.has(seq[e.k - 1])) {
+        const prev = phones[e.k - 1];
+        if (prev && (prev.alt === erIdx || (prev.rec && prev.rec.r === erIdx) || (ed.ops[e.k - 1] && ed.ops[e.k - 1].r === erIdx))) drop.add(i);
+      }
+    });
+    const kept = errors.filter((_, i) => !drop.has(i));
+    for (const ph of phones) ph.ok = !ph.omit && !kept.some((e) => e.k === ph.k && e.type !== 'ins');
+    for (const [wi, gain] of omitted) kept.push({ type: 'omit', word: wi, k: wordKs[wi][0], conf: gain });
+    const multi = E.words.filter((w, wi) => wordKs[wi].length >= 2 && !w.oov).length;
+    return { errors: kept, phones, refSp, takeSp, fit, recognized: R, omitted: [...omitted.keys()], mismatch: omitted.size >= Math.max(2, multi * 0.5) };
+  }
+
+  return { VOCAB, SYM, BLANK, VOWELS, FUNCTION, id, logProbs, logLik, align, greedy, tokens, sentences, numWords, expected, check, isOkAlt, CONFUSE, locate, findSentences };
+})();
+
+// ---------- pronunciation check: loading the model and turning errors into instructions ----------
+const TF_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/+esm';
+const PHON_MODEL = 'robg/speako-phoneme-recognizer', PHON_REV = 'ad0f63cd58fc1bb1e9c261a3b4135997a31c2e58';
+const CMU_URL = 'https://cdn.jsdelivr.net/npm/cmu-pronouncing-dictionary@3.0.0/index.js';
+const PH_NAME = { 'θ': 'th', 'ð': '울리는 th', 'ɹ': 'r', 'l': 'l', 'f': 'f', 'v': 'v', 'p': 'p', 'b': 'b', 's': 's', 'z': 'z', 'ʃ': 'sh', 'ʧ': 'ch', 'ʤ': 'j', 'ŋ': 'ng', 'h': 'h', 'w': 'w', 'j': 'y', 't': 't', 'd': 'd', 'k': 'k', 'g': 'g', 'm': 'm', 'n': 'n', 'ɾ': '튕기는 t',
+  'i': '긴 "이"(ee)', 'ɪ': '짧은 "이"(i)', 'ɛ': '"에"(e)', 'æ': '"애"(æ)', 'ɑ': '"아"', 'ə': '약한 "어"', 'ʊ': '짧은 "우"', 'u': '긴 "우"(oo)', 'ɝ': '"어r"(er)', 'eɪ': '"에이"', 'aɪ': '"아이"', 'ɔɪ': '"오이"', 'aʊ': '"아우"', 'oʊ': '"오우"' };
+const PH_TIP = {
+  'θ': '혀끝을 윗니와 아랫니 사이로 살짝 내밀고, 그 틈으로 바람만 내보내세요. s나 t처럼 혀를 잇몸에 대지 마세요.',
+  'ð': '혀끝을 이 사이에 두고 목을 울리며 소리를 내세요. d처럼 혀를 잇몸에 붙이면 안 돼요.',
+  'f': '윗니를 아랫입술 안쪽에 살짝 대고 그 틈으로 바람을 내보내세요. 두 입술을 붙이면 p가 돼요.',
+  'v': '윗니를 아랫입술에 대고 목을 울리며 바람을 내세요. 두 입술을 붙이면 b가 돼요.',
+  'ɹ': '혀끝을 어디에도 닿지 않게 살짝 뒤로 말고, 입술을 조금 둥글게 내미세요.',
+  'l': '혀끝을 윗니 뒤 잇몸에 확실히 붙였다가 떼세요. 단어 끝의 l은 혀를 붙인 채로 끝내요.',
+  'z': 's처럼 혀를 붙이지 않고 바람을 내면서 목을 울리세요. "즈"처럼 혀를 붙이면 j가 돼요.',
+  'ʃ': '입술을 앞으로 둥글게 내밀고 "쉬" 하듯 바람을 내세요.',
+  's': '혀끝을 윗잇몸 가까이 두고 바람만 "스" 내세요.',
+  'ʤ': '혀를 입천장에 붙였다 떼며 "쥐"처럼 터뜨리세요.',
+  'p': '두 입술을 붙였다가 터뜨리세요.', 'b': '두 입술을 붙였다가 목을 울리며 터뜨리세요.',
+  'ŋ': '혀 뒤쪽을 입천장에 붙인 채 코로 소리를 내세요. 끝에 g를 따로 터뜨리지 않아요.',
+  'æ': '"애"보다 턱을 훨씬 아래로 내리고 입을 옆으로 벌리세요.',
+  'ɛ': '"에"처럼 턱을 조금만 내리세요. æ처럼 크게 벌리지 마세요.',
+  'i': '입꼬리를 옆으로 당기고 "이—" 하고 길고 팽팽하게 내세요.',
+  'ɪ': '힘을 빼고 "이"와 "에" 사이로 짧게 내세요.',
+  'u': '입술을 동그랗게 내밀고 "우—" 길게 내세요.', 'ʊ': '입술에 힘을 빼고 "우"와 "어" 사이로 짧게 내세요.',
+  'ɝ': '혀를 뒤로 말아 r 소리를 섞어서 "어r"처럼 내세요.', 'ɑ': '입을 크게 벌리고 목 안쪽에서 "아" 하세요.',
+  'eɪ': '"에"에서 시작해 "이"로 미끄러지세요.', 'oʊ': '"오"에서 시작해 "우"로 입술을 모으세요.',
+  'w': '입술을 "우"처럼 동그랗게 모았다가 펴면서 다음 소리로 넘어가세요.',
+};
+const PRON_KEY = 'pc-pron';
+let pronOn = (() => { try { return localStorage.getItem(PRON_KEY) === '1'; } catch { return false; } })();
+let pronP = null, pronBusy = false, pronStatus = '';
+function setPronStatus(msg) { pronStatus = msg; const el = $('#pronStatus'); if (el) el.textContent = msg; }
+function getPron(onProgress) {
+  if (!pronP) {
+    pronP = (async () => {
+      await ensureModelCache();
+      const [T, cmu] = await Promise.all([import(TF_URL), import(CMU_URL)]);
+      const opts = { revision: PHON_REV };
+      const files = {};
+      const [proc, model] = await Promise.all([
+        T.AutoProcessor.from_pretrained(PHON_MODEL, opts),
+        T.AutoModelForCTC.from_pretrained(PHON_MODEL, { ...opts, dtype: 'q8', device: 'wasm', progress_callback: (p) => {
+          if (p.status === 'progress' && p.total) { files[p.file] = [p.loaded, p.total]; const v = Object.values(files); onProgress && onProgress(v.reduce((s, f) => s + f[0], 0) / v.reduce((s, f) => s + f[1], 0)); }
+        } }),
+      ]);
+      return { proc, model, dict: cmu.dictionary };
+    })();
+    pronP.catch(() => { pronP = null; });
+  }
+  return pronP;
+}
+async function phonemeLP(t) {
+  if (t._lp) return t._lp;
+  const P = await getPron();
+  const a = Math.max(0, t.on - 0.25), b = Math.min(t.dur, t.off + 0.25);
+  const inp = await P.proc(t.ana.slice(Math.floor(a * ANA_SR), Math.ceil(b * ANA_SR)));
+  const { logits } = await P.model(inp);
+  const A = PR.logProbs(logits.data, logits.dims[1], logits.dims[2]);
+  A.t0 = a; t._lp = A;
+  return A;
+}
+const frameTime = (A, f) => (A.times ? A.times[f] : A.t0 + (f * 320 + 200) / 16000);
+
+function pronTip(e, E, words, res, rA) {
+  const w = words[e.word], wt = esc(w.text), exp = PR.SYM[e.exp], heard = e.heard === 'del' ? null : PR.SYM[e.heard];
+  const N = (x) => PH_NAME[x] || x;
+  const ipaExp = w.ks.map((k) => PR.SYM[E.seq[k]]).join('');
+  const ipaHeard = e.type === 'sub' ? w.ks.map((k) => (k === e.k ? heard : PR.SYM[E.seq[k]])).join('')
+    : e.type === 'del' ? w.ks.filter((k) => k !== e.k).map((k) => PR.SYM[E.seq[k]]).join('')
+    : w.ks.map((k) => PR.SYM[E.seq[k]] + (k === e.k ? heard : '')).join('');
+  const final = E.meta[e.k].final;
+  let title, why;
+  if (e.type === 'sub') { title = `“${wt}”에서 ${N(exp)} 소리가 ${N(heard)}처럼 들렸어요`; why = PH_TIP[exp] || '원본을 0.75배로 들으며 입 모양을 따라 해보세요.'; }
+  else if (e.type === 'del') { title = `“${wt}”에서 ${final ? '끝 ' : ''}${N(exp)} 소리가 빠졌어요`; why = `${N(exp)} 소리를 짧게라도 끝까지 내세요. ` + (PH_TIP[exp] || ''); }
+  else { title = `“${wt}”에서 ${N(exp)} 뒤에 모음을 붙였어요`; why = '자음으로 끝내고, 뒤에 "으" 같은 모음을 붙이지 마세요. 다음 단어로 바로 이어 말해보세요.'; }
+  why += ` 발음기호로는 원본 /${ipaExp}/, 내 녹음은 /${ipaHeard}/처럼 들렸어요.`;
+  const sev = e.type === 'ins' ? 3.4 + Math.min(1.5, e.conf * 0.15) : 3.2 + Math.min(2.5, e.conf * 0.25);
+  return { sev, title, why, at: frameTime(rA, res.refSp.first[e.k]), ref: w.ref, mine: w.mine, kind: 'pron' };
+}
+function buildPron(r, m, E, res, rA, mA) {
+  const words = E.words.map((w, wi) => {
+    const ks = []; E.meta.forEach((x, k) => { if (x.word === wi) ks.push(k); });
+    const span = (sp, A, t) => {
+      const f0 = Math.min(...ks.map((k) => sp.first[k])), f1 = Math.max(...ks.map((k) => sp.last[k]));
+      return [Math.max(0, frameTime(A, f0) - 0.06), Math.min(t.dur, frameTime(A, f1) + 0.1)];
+    };
+    const checked = ks.some((k) => res.phones[k].ev);
+    const omit = (res.omitted || []).includes(wi);
+    return { text: w.text, ks, ref: span(res.refSp, rA, r), mine: span(res.takeSp, mA, m), status: omit ? 'omit' : res.errors.some((e) => e.word === wi) ? 'bad' : checked ? 'ok' : 'skip' };
+  });
+  const tips = res.errors.filter((e) => e.type !== 'omit').map((e) => pronTip(e, E, words, res, rA));
+  // words left out: one instruction per run of neighbouring words
+  const om = [...(res.omitted || [])].sort((x, y) => x - y);
+  for (let i = 0; i < om.length;) {
+    let j = i; while (j + 1 < om.length && om[j + 1] === om[j] + 1) j++;
+    const a = words[om[i]], b = words[om[j]], text = words.slice(om[i], om[j] + 1).map((w) => w.text).join(' ');
+    tips.push({ sev: 5 + Math.min(1.5, (j - i) * 0.4), title: `“${esc(text)}” 부분을 빠뜨렸어요`, why: '이 부분이 녹음에서 들리지 않았어요. 원문을 다시 확인하고, 빼먹지 않고 말해보세요.',
+      at: a.ref[0], ref: [a.ref[0], b.ref[1]], mine: [Math.max(0, a.mine[0] - 0.5), Math.min(m.dur, a.mine[0] + 0.7)], kind: 'pron' });
+    i = j + 1;
+  }
+  return { refId: r.id, words, tips, nErr: res.errors.length };
+}
+async function runPron() {
+  const r = S.ref, m = mine();
+  if (!pronOn || !r || !m || r.clipAll || (m.pron && m.pron.refId === r.id) || pronBusy) return;
+  pronBusy = true;
+  try {
+    setPronStatus('발음 모델 준비 중…');
+    const P = await getPron((f) => setPronStatus(`발음 모델 내려받는 중 ${Math.round(f * 100)}% (처음 한 번만, 약 360MB)`));
+    const text = ((r.text || (r.source === 'file' ? $('#sentence').value : '')) || '').trim();
+    if (!text) m.pron = { refId: r.id, skip: '원본 문장을 몰라서 발음 검사를 못 했어요. 위 입력칸에 이 클립의 문장을 적어주세요.' };
+    else if (r.off - r.on > 30 || m.off - m.on > 30) m.pron = { refId: r.id, skip: '발음 검사는 30초 이하 구간에서만 해요. 원본에서 구간을 골라 "선택 구간만 남기기"를 눌러주세요.' };
+    else {
+      setPronStatus('발음 분석 중…');
+      const rA = await phonemeLP(r), mA = await phonemeLP(m);
+      if (!r._E || r._E.text !== text) r._E = { text, E: PR.expected(text, P.dict, rA) };
+      const res = PR.check(rA, mA, r._E.E);
+      m.pron = res.fit < -2.5
+        ? { refId: r.id, skip: '적어둔 문장이 원본 소리와 맞지 않아 발음 검사를 건너뛰었어요. 문장을 원본 내용으로 고쳐주세요.' }
+        : res.mismatch ? { refId: r.id, skip: '녹음이 이 문장과 많이 달라서 발음 검사를 건너뛰었어요. 문장을 끝까지 말했는지 확인하고 다시 녹음해보세요.' }
+        : buildPron(r, m, r._E.E, res, rA, mA);
+    }
+    setPronStatus('');
+  } catch (e) {
+    console.error(e);
+    setPronStatus(`발음 모델을 불러오지 못했어요. 인터넷 연결을 확인해주세요. (원인: ${String((e && e.message) || e).slice(0, 100)})`);
+  } finally {
+    pronBusy = false;
+    renderCoach();
+    const m2 = mine();
+    if (pronOn && S.ref && !S.ref.clipAll && m2 && !(m2.pron && m2.pron.refId === S.ref.id) && !pronStatus.startsWith('발음 모델을 불러오지')) setTimeout(runPron, 0);
+  }
+}
+
+// ---------- coaching: turn the measurements into a short list of things to fix ----------
+function pitchPts(t) {
+  if (t._pp) return t._pp;
+  const step = HOP / ANA_SR, raw = [];
+  for (let i = 0; i < t.f0.length; i++) { const time = t.f0t0 + i * step; if (t.f0[i] && time >= t.on && time <= t.off) raw.push([time, t.f0[i]]); }
+  const med = median(raw.map((p) => p[1]));
+  t._pp = { med, pts: raw.map(([time, f]) => [time, 12 * Math.log2(f / med)]) };
+  return t._pp;
+}
+const stIn = (pp, a, b) => pp.pts.filter((p) => p[0] >= a && p[0] <= b).map((p) => p[1]);
+function pausesOf(t, minDur) {
+  const db = Array.from(t.rms, (v) => 20 * Math.log10(v + 1e-6));
+  const i0 = Math.max(0, Math.floor(t.on / 0.01)), i1 = Math.min(db.length - 1, Math.ceil(t.off / 0.01));
+  const lo = quantile(db, 0.1), hi = quantile(db.slice(i0, i1 + 1), 0.9), thr = lo + 0.3 * (hi - lo);
+  const list = []; let s = -1;
+  for (let i = i0; i <= i1; i++) {
+    const quiet = db[i] < thr;
+    if (quiet && s < 0) s = i;
+    if ((!quiet || i === i1) && s >= 0) {
+      const a = s * 0.01 + 0.01, b = (quiet ? i : i - 1) * 0.01 + 0.01;
+      if (b - a >= minDur && a > t.on + 0.12 && b < t.off - 0.12) list.push({ a, b });
+      s = -1;
+    }
+  }
+  return { list, snr: hi - lo };
+}
+const fmtSt = (x) => `${x > 0 ? '+' : ''}${x.toFixed(1)}반음`;
+const shortText = (s) => (s.length > 26 ? s.slice(0, 24).trimEnd() + '…' : s);
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function coachFor(m) {
+  const r = S.ref; if (!r || !m) return null;
+  if (m.coach && m.coach.refId === r.id) return m.coach;
+  const al = alignFor(m);
+  const R2M = (t) => r2m(al, t), M2R = (t) => m2r(al, t);
+  const tips = [], good = [], quality = [], spots = [];
+  const pr = pitchPts(r), pm = pitchPts(m);
+  const rangeOf = (pp) => (pp.pts.length > 5 ? quantile(pp.pts.map((p) => p[1]), 0.9) - quantile(pp.pts.map((p) => p[1]), 0.1) : 0);
+  const gr = rangeOf(pr), gm = rangeOf(pm);
+  const rP = pausesOf(r, 0.18), mP = pausesOf(m, 0.25), snr = mP.snr;
+
+  // recording quality first: bad input makes every other number unreliable
+  let clip = 0; for (let k = 0; k < m.play.length; k++) if (Math.abs(m.play[k]) > 0.985) clip++;
+  if (snr < 15) quality.push('주변 잡음이 커서 분석이 부정확할 수 있어요. 조용한 곳에서 마이크를 입 가까이 두고, "잡음 줄이기"를 켠 채 다시 녹음해보세요.');
+  if (clip > m.play.length * 0.0005) quality.push('소리가 너무 커서 찢어졌어요. 마이크에서 조금 떨어져서 녹음하세요.');
+  if (m.peak < 0.03) quality.push('녹음 소리가 너무 작아요. 마이크에 더 가까이 대고 말하세요.');
+  if (m.off - m.on < 0.45 * (r.off - r.on)) quality.push('원본보다 훨씬 짧아요. 문장을 끝까지 말했는지 확인하세요.');
+
+  // phrases of the original, split at its pauses
+  const phrases = []; let a0 = r.on;
+  for (const p of rP.list) { phrases.push({ a: a0, b: p.a }); a0 = p.b; }
+  phrases.push({ a: a0, b: r.off });
+  let labels = null;
+  if (r.text) {
+    for (const re of [/(?<=[.?!])\s+/, /(?<=[.?!,;:])\s+/]) {
+      const parts = r.text.trim().split(re).filter(Boolean);
+      if (parts.length === phrases.length) { labels = parts; break; }
+    }
+  }
+  const label = (i) => (labels ? `“${esc(shortText(labels[i]))}”` : phrases.length > 1 ? `${i + 1}번째 구간` : '문장');
+  const phraseAt = (t) => { const k = phrases.findIndex((p) => t >= p.a - 0.05 && t <= p.b + 0.05); return k < 0 ? 0 : k; };
+  const clampR = (x, y) => [Math.max(r.on, x), Math.min(r.off, y)];
+  const pair = (ra, rb) => { const [x, y] = clampR(ra, rb); return { ref: [x, y], mine: [Math.max(0, R2M(x)), Math.min(m.dur, R2M(y))] }; };
+
+  // stressed words: the pitch peak of each phrase of the original
+  const hits = [], misses = [];
+  phrases.forEach((ph, i) => {
+    const rpts = pr.pts.filter((p) => p[0] >= ph.a && p[0] <= ph.b); if (rpts.length < 8) return;
+    const rmed = median(rpts.map((p) => p[1]));
+    // the last ~0.35 s is the phrase-final rise/fall, handled separately below
+    const body = rpts.filter((p) => p[0] <= ph.b - 0.35); if (body.length < 5) return;
+    let pk = body[0]; for (const p of body) if (p[1] > pk[1]) pk = p;
+    const promR = pk[1] - rmed; if (promR < 3) return;
+    const ma = R2M(ph.a), mb = R2M(ph.b);
+    const mpts = pm.pts.filter((p) => p[0] >= ma && p[0] <= mb); if (mpts.length < 5) return;
+    const mmed = median(mpts.map((p) => p[1])), tc = R2M(pk[0]);
+    const near = mpts.filter((p) => Math.abs(p[0] - tc) <= 0.15).map((p) => p[1]);
+    const promM = near.length ? Math.max(...near) - mmed : 0;
+    const rec = { i, at: pk[0], promR, promM, ...pair(Math.max(ph.a, pk[0] - 0.4), Math.min(ph.b, pk[0] + 0.4)) };
+    (promM >= Math.max(1.5, 0.5 * promR) ? hits : misses).push(rec);
+  });
+  misses.sort((x, y) => (y.promR - y.promM) - (x.promR - x.promM));
+
+  // overall intonation range
+  let usedMiss = null;
+  if (gr >= 4 && gm < 0.65 * gr) {
+    usedMiss = misses[0] || null;
+    tips.push({ sev: 3 + (gr - gm) * 0.6, title: '억양을 더 크게 움직이세요',
+      why: `원본은 음높이가 ${gr.toFixed(1)}반음 폭으로 오르내리는데 내 녹음은 ${gm.toFixed(1)}반음이에요. 한국어처럼 평평하게 들릴 수 있어요. 강조할 단어에서 음을 확 올렸다가 문장 끝에서 내려보세요.`
+        + (usedMiss ? ` 가장 차이 나는 곳은 ${label(usedMiss.i)} @T 부근이에요.` : ''),
+      at: usedMiss ? usedMiss.at : r.on, ...(usedMiss ? { ref: usedMiss.ref, mine: usedMiss.mine } : pair(r.on, r.off)) });
+  } else if (gr >= 3 && gm > 1.7 * gr) {
+    tips.push({ sev: 2, title: '억양을 조금 차분하게', why: `원본은 ${gr.toFixed(1)}반음 폭인데 내 녹음은 ${gm.toFixed(1)}반음으로 오르내림이 커요.`, at: r.on, ...pair(r.on, r.off) });
+  } else if (gr >= 3) good.push('억양 폭이 원본과 비슷해요.');
+
+  for (const x of misses) {
+    if (x === usedMiss) continue;
+    tips.push({ sev: 2.5 + (x.promR - x.promM) * 0.5, title: '이 단어를 더 강조하세요',
+      why: `${label(x.i)} @T 부근에서 원본은 음을 ${fmtSt(x.promR)} 올려 강조하는데 내 녹음은 ${fmtSt(x.promM)}이에요. 이 단어를 더 높고, 길고, 크게 말해보세요.`, at: x.at, ref: x.ref, mine: x.mine });
+  }
+  if (hits.length && !misses.length) good.push('강조하는 단어가 원본과 같아요.');
+
+  // rise or fall at the end of each phrase
+  const dirOf = (v) => { if (v.length < 6) return null; const k = Math.max(2, Math.floor(v.length / 3)); return median(v.slice(-k)) - median(v.slice(0, k)); };
+  let endsOk = 0;
+  phrases.forEach((ph, i) => {
+    const dr = dirOf(stIn(pr, ph.b - 0.4, ph.b)); if (dr === null) return;
+    const me = R2M(ph.b), dm = dirOf(stIn(pm, me - 0.45, me + 0.05)); if (dm === null) return;
+    const where = pair(Math.max(ph.a, ph.b - 0.9), ph.b);
+    if (dr >= 2 && dm < 1) tips.push({ sev: 4 + Math.min(3, (dr - dm) * 0.3), title: '문장 끝을 올리세요',
+      why: `${label(i)} 끝(@T)에서 원본은 ${fmtSt(dr)} 올라가는데 내 녹음은 ${fmtSt(dm)}이에요. 질문이거나 말이 이어질 때는 끝을 올려요.`, at: ph.b - 0.2, ...where });
+    else if (dr <= -2.5 && dm > 1) tips.push({ sev: 4 + Math.min(3, (dm - dr) * 0.3), title: '문장 끝을 내리세요',
+      why: `${label(i)} 끝(@T)에서 원본은 ${fmtSt(dr)} 내려가며 마무리하는데 내 녹음은 ${fmtSt(dm)} 올라가요.`, at: ph.b - 0.2, ...where });
+    else endsOk++;
+  });
+  if (endsOk >= 2 && !tips.some((x) => x.title.startsWith('문장 끝'))) good.push('문장 끝 억양(올림·내림)이 원본과 같아요.');
+
+  // pauses (skipped when the recording is too noisy to tell silence from speech)
+  if (snr >= 12) {
+    const matched = new Set(); let pausesOk = 0;
+    rP.list.forEach((p, k) => {
+      const c = (p.a + p.b) / 2, mc = R2M(c);
+      const hit = mP.list.findIndex((q) => q.a - 0.2 <= mc && mc <= q.b + 0.2);
+      if (hit >= 0) { matched.add(hit); pausesOk++; return; }
+      tips.push({ sev: 3 + Math.min(2, (p.b - p.a) * 3), title: '여기서 잠깐 끊어 읽으세요',
+        why: `원본은 ${label(k)} 다음(@T)에 ${(p.b - p.a).toFixed(1)}초 쉬는데, 내 녹음은 쉬지 않고 이어 말했어요.`, at: c, ...pair(p.a - 0.8, p.b + 0.8) });
+    });
+    mP.list.forEach((q, k) => {
+      if (matched.has(k)) return;
+      const d = q.b - q.a, rc = M2R((q.a + q.b) / 2);
+      if (d < 0.3 || rc < r.on + 0.3 || rc > r.off - 0.3 || rP.list.some((p) => Math.abs((p.a + p.b) / 2 - rc) < 0.35)) return;
+      const ra = M2R(Math.max(m.on, q.a - 0.8)), rb = M2R(Math.min(m.off, q.b + 0.8));
+      tips.push({ sev: 2.5 + Math.min(2, d * 2), title: '여기서는 멈추지 말고 이어 말하세요',
+        why: `내 녹음은 ${label(phraseAt(rc))} 중간(@T 부근)에서 ${d.toFixed(1)}초 멈췄는데, 원본은 이어서 말해요.`, at: rc,
+        ref: clampR(ra, rb), mine: [Math.max(m.on, q.a - 0.8), Math.min(m.off, q.b + 0.8)] });
+    });
+    if (rP.list.length && pausesOk === rP.list.length) good.push('끊어 읽는 위치가 원본과 같아요.');
+  }
+
+  // speed
+  const ratio = (m.off - m.on) / (r.off - r.on);
+  if (ratio > 1.2) tips.push({ sev: Math.min(5, (ratio - 1) * 8), title: '조금 더 빠르게, 단어를 이어서 말하세요',
+    why: `원본보다 ${Math.round((ratio - 1) * 100)}% 길게 말했어요. 단어마다 끊지 말고 묶어서 흘려 말해보세요.`, at: r.on, ...pair(r.on, r.off) });
+  else if (ratio < 0.83) tips.push({ sev: Math.min(4, (1 - ratio) * 8), title: '조금 더 천천히 또박또박 말하세요',
+    why: `원본보다 ${Math.round((1 - ratio) * 100)}% 짧게 말했어요. 서두르면 강세와 끝소리가 뭉개져요.`, at: r.on, ...pair(r.on, r.off) });
+  else good.push('말 속도가 원본과 비슷해요.');
+
+  // the moments whose sound differs most from the original (vowels / consonants)
+  if (al && snr >= 15) {
+    const d = al.dloc, n = d.length, sm = new Float32Array(n), W2 = Math.max(1, Math.round(0.045 / al.hop));
+    for (let k = 0; k < n; k++) { let s = 0, c = 0; for (let q = Math.max(0, k - W2); q <= Math.min(n - 1, k + W2); q++) { s += d[q]; c++; } sm[k] = s / c; }
+    let mu = 0; for (let k = 0; k < n; k++) mu += sm[k] / n;
+    let sd = 0; for (let k = 0; k < n; k++) sd += (sm[k] - mu) ** 2 / n; sd = Math.sqrt(sd) || 1;
+    const order = Array.from(sm.keys()).sort((x, y) => sm[y] - sm[x]), picked = [];
+    for (const k of order) {
+      const z = (sm[k] - mu) / sd; if (z < 1.8 || sm[k] < mu * 1.3 || picked.length >= 2) break;
+      const t = al.rT0 + k * al.hop;
+      if (t < r.on + 0.1 || t > r.off - 0.1 || picked.some((p) => Math.abs(p.t - t) < 0.6)) continue;
+      picked.push({ t, z });
+    }
+    // voices differ, so these are listening suggestions, not instructions
+    picked.sort((x, y) => x.t - y.t);
+    for (const p of picked) spots.push({ at: p.t, where: label(phraseAt(p.t)), ...pair(p.t - 0.35, p.t + 0.35) });
+  }
+
+  // strongest issue first, and never two tips about the same moment
+  tips.sort((x, y) => y.sev - x.sev);
+  const out = [];
+  for (const tip of tips) { if (!out.some((o) => Math.abs(o.at - tip.at) < 0.4 && o.title === tip.title)) out.push(tip); if (out.length >= 8) break; }
+  m.coach = { refId: r.id, tips: out, good, quality, spots, metrics: { gr, gm, hits: hits.length, stressTotal: hits.length + misses.length, ratio } };
+  return m.coach;
+}
+
+function allTips(m) {
+  const c = coachFor(m); if (!c) return [];
+  const p = pronOn && m.pron && m.pron.refId === S.ref.id && m.pron.tips ? m.pron.tips : [];
+  return [...c.tips, ...p].sort((x, y) => y.sev - x.sev);
+}
+function renderCoach() {
+  const box = $('#coach'), rows = $('#coachRows'), r = S.ref, m = mine();
+  const c = r && m ? coachFor(m) : null;
+  $('#pronBtn').textContent = pronOn ? '발음 검사 끄기' : '발음 검사 켜기';
+  $('#pronBtn').setAttribute('aria-pressed', String(pronOn));
+  if (!c) { box.hidden = true; return; }
+  box.hidden = false;
+  const tips = allTips(m), pr = pronOn && m.pron && m.pron.refId === r.id ? m.pron : null;
+  const v0 = viewOf(r)[0];
+  const T = (tip) => tip.why.replace('@T', `${Math.max(0, tip.at - v0).toFixed(1)}초`);
+  const tipHtml = (tip, k, first) => `<li class="tip${first ? ' first' : ''}">
+      <div>${first ? '<div class="tag">다음 녹음에서는 이것 하나만 신경 쓰세요</div>' : ''}<div class="tip-h">${tip.title}</div><div class="tip-why">${T(tip)}</div></div>
+      <button data-tip="${k}" title="이 부분을 원본, 내 녹음 순서로 들려줘요">▶ 원본 → 내 녹음</button></li>`;
+  let html = '';
+  for (const q of c.quality) html += `<div class="notice">${q}</div>`;
+  if (pr && pr.skip) html += `<div class="notice">${pr.skip}</div>`;
+  if (tips.length) {
+    html += `<ol class="tips">${tips.slice(0, 3).map((t, k) => tipHtml(t, k, k === 0)).join('')}</ol>`;
+    if (tips.length > 3) html += `<details><summary>나머지 ${tips.length - 3}개 더 보기</summary><ol class="tips">${tips.slice(3).map((t, k) => tipHtml(t, k + 3, false)).join('')}</ol></details>`;
+  } else html += `<div class="tip-h">억양, 강조, 끊어 읽기, 속도${pr && pr.words ? ', 발음이' : '가'} 원본과 비슷해요.</div><div class="tip-why">${pr && pr.words ? '단어를 눌러 원본과 한 번 더 비교해보세요.' : r.clipAll ? '발음(모음·자음)은 통암기 단계에서 문장별로 검사해요.' : pronOn ? '' : '발음(모음·자음)까지 보려면 왼쪽의 "발음 검사 켜기"를 누르세요.'}</div>`;
+  const good = [...c.good];
+  if (pr && pr.words && !pr.nErr) good.push('검사한 자음·모음이 모두 원본처럼 들렸어요.');
+  if (good.length) html += `<div class="good">잘한 점: ${good.join(' ')}</div>`;
+  if (pr && pr.words) {
+    html += `<div class="words"><span>단어별 발음</span>${pr.words.map((w, i) => `<button class="w ${w.status}" data-word="${i}" title="${w.status === 'omit' ? '빠뜨린 단어예요' : w.status === 'bad' ? '고칠 소리가 있어요' : w.status === 'ok' ? '원본처럼 들렸어요' : '약하게 발음되는 단어라 검사하지 않았어요'}">${esc(w.text)}</button>`).join('')}
+      <div class="tip-why">단어를 누르면 원본, 내 녹음 순서로 들려줘요. 주황색은 고칠 소리가 있는 단어, 줄이 그어진 단어는 빠뜨린 단어, 흐린 단어는 원래 약하게 발음돼서 검사하지 않은 단어예요. 원어민 녹음으로 학습한 모델이라 가끔 잘못 들을 수 있어요.</div></div>`;
+  }
+  if (!pr && !pronOn && c.spots.length) {
+    html += `<div class="spots"><span>소리 차이가 큰 곳</span>${c.spots.map((sp, k) => `<button data-spot="${k}">▶ ${sp.where} ${Math.max(0, sp.at - v0).toFixed(1)}초</button>`).join('')}
+      <div class="tip-why">목소리 자체의 차이도 섞여 있어서 참고만 하세요. 들어보고 모음이나 자음이 다르게 들리면 그 부분을 따라 해보세요.</div></div>`;
+  }
+  const prevIdx = S.cur - 1, prev = prevIdx >= 0 ? S.takes[prevIdx] : null, pc = prev ? coachFor(prev) : null;
+  if (pc) {
+    const a = pc.metrics, b = c.metrics, parts = [];
+    if (Math.abs(b.gm - a.gm) >= 0.8) parts.push(`억양 폭 ${a.gm.toFixed(1)} → ${b.gm.toFixed(1)}반음`);
+    if (b.stressTotal && (a.hits !== b.hits)) parts.push(`강조 맞춘 곳 ${a.hits}/${a.stressTotal} → ${b.hits}/${b.stressTotal}`);
+    if (Math.abs(b.ratio - a.ratio) >= 0.08) parts.push(`말한 길이 원본의 ${a.ratio.toFixed(2)}배 → ${b.ratio.toFixed(2)}배`);
+    if (parts.length) html += `<div class="progress">직전 녹음(${prev.no}번)과 비교: ${parts.join(', ')}</div>`;
+  }
+  rows.innerHTML = html;
+  $('#coachMeta').textContent = `녹음 ${m.no} 기준`;
+}
+function playTip(k, list = 'tips') {
+  const m = mine(), c = m && coachFor(m); if (!c) return;
+  const arr = list === 'tips' ? allTips(m) : list === 'words' ? (m.pron && m.pron.words) || [] : c[list];
+  const tip = arr[k]; if (!tip) return;
+  S.sel = { src: 'ref', t0: tip.ref[0], t1: tip.ref[1], mine: tip.mine };
+  drawOverlays(); updateButtons(); playAB();
+}
+
+// ---------- canvases ----------
+const els = {
+  ref: { box: $('#track-ref'), cv: $('#track-ref .cv'), ov: $('#track-ref .ov'), empty: $('#track-ref .empty') },
+  mine: { box: $('#track-mine'), cv: $('#track-mine .cv'), ov: $('#track-mine .ov'), empty: $('#track-mine .empty') },
+  into: { box: $('#track-into'), cv: $('#track-into .cv'), empty: $('#track-into .empty') },
+};
+function sizeCanvas(cv, cssH) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.max(10, Math.round(cv.clientWidth * dpr)), h = Math.round(cssH * dpr);
+  if (cv.width !== w) cv.width = w;
+  if (cv.height !== h) cv.height = h;
+  cv.style.height = cssH + 'px';
+  return dpr;
+}
+function niceStep(span, W, dpr) {
+  const target = span * (90 * dpr) / W;
+  const steps = [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10, 15, 30, 60, 120];
+  return steps.find((s) => s >= target) || 300;
+}
+function font(px, dpr, w = 400) { return `${w} ${Math.round(px * dpr)}px "IBM Plex Sans", "IBM Plex Sans KR", sans-serif`; }
+
+function noiseFloor(t, N, winLen) {
+  const key = N + ':' + winLen; t._nf = t._nf || {};
+  if (t._nf[key]) return t._nf[key];
+  const F = getFFT(N), win = hann(winLen), x = t.emph, n = x.length, nb = N / 2;
+  const step = Math.max(160, Math.floor(n / 600)), cols = [];
+  const re = new Float32Array(N), im = new Float32Array(N);
+  for (let s0 = 0; s0 + winLen < n; s0 += step) {
+    re.fill(0); im.fill(0);
+    for (let i = 0; i < winLen; i++) re[i] = x[s0 + i] * win[i];
+    fft(re, im, F);
+    const row = new Float32Array(nb);
+    for (let b = 0; b < nb; b++) row[b] = 10 * Math.log10(re[b] * re[b] + im[b] * im[b] + 1e-14);
+    cols.push(row);
+  }
+  // noise spectrum = typical level of the quietest 30% of frames (lead-in, gaps, tail)
+  const fl = new Float32Array(nb).fill(-200);
+  if (cols.length > 4) {
+    const energy = cols.map((row) => { let e = 0; for (let b = 2; b < nb; b++) e += 10 ** (row[b] / 10); return e; });
+    const cut = quantile(energy, 0.3), quiet = cols.filter((_, k) => energy[k] <= cut), tmp = new Array(quiet.length);
+    for (let b = 0; b < nb; b++) { for (let k = 0; k < quiet.length; k++) tmp[k] = quiet[k][b]; fl[b] = quantile(tmp, 0.5); }
+  }
+  t._nf[key] = fl;
+  return fl;
+}
+
+function renderTrack(kind) {
+  const e = els[kind], t = trackOf(kind);
+  const dpr = sizeCanvas(e.cv, TRACK_H); sizeCanvas(e.ov, TRACK_H);
+  const ctx = e.cv.getContext('2d'), W = e.cv.width, H = e.cv.height;
+  const waveH = LAYOUT.wave * dpr, specY = (LAYOUT.wave + LAYOUT.gap) * dpr, specH = LAYOUT.spec * dpr, axisY = specY + specH;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
+  e.empty.hidden = !!t || (kind === 'mine' && !!S.rec);
+  if (!t) {
+    ctx.fillStyle = COLORS.blank; ctx.fillRect(0, specY, W, specH);
+    return;
+  }
+  const color = COLORS[kind];
+  const cols = W, map = (c) => xToT(t, c, W);
+
+  // waveform
+  const x = t.ana, n = x.length, mid = waveH / 2;
+  ctx.fillStyle = color; ctx.globalAlpha = 0.85;
+  for (let c = 0; c < cols; c++) {
+    const a = Math.floor(map(c) * ANA_SR), b = Math.max(a + 1, Math.floor(map(c + 1) * ANA_SR));
+    if (b <= 0 || a >= n) continue;
+    let lo = 0, hi = 0;
+    for (let i = Math.max(0, a); i < Math.min(n, b); i++) { const v = x[i]; if (v < lo) lo = v; if (v > hi) hi = v; }
+    const y0 = mid - (hi / t.peak) * (mid - 2), y1 = mid - (lo / t.peak) * (mid - 2);
+    ctx.fillRect(c, y0, 1, Math.max(1, y1 - y0));
+  }
+  ctx.globalAlpha = 1;
+
+  // spectrogram
+  const broad = S.spec === 'broad';
+  const winLen = broad ? 96 : 512, N = broad ? 512 : 1024;   // 6 ms vs 32 ms window
+  const F = getFFT(N), win = hann(winLen), binHz = ANA_SR / N;
+  const nb = Math.min(N / 2, Math.ceil(S.maxF / binHz) + 2);
+  const mag = new Float32Array(cols * nb), valid = new Uint8Array(cols);
+  const re = new Float32Array(N), im = new Float32Array(N), em = t.emph;
+  let mx = -Infinity;
+  for (let c = 0; c < cols; c++) {
+    const tm = map(c + 0.5);
+    if (tm < 0 || tm > t.dur) continue;
+    valid[c] = 1;
+    const start = Math.round(tm * ANA_SR) - (winLen >> 1);
+    re.fill(0); im.fill(0);
+    for (let i = 0; i < winLen; i++) { const k = start + i; if (k >= 0 && k < n) re[i] = em[k] * win[i]; }
+    fft(re, im, F);
+    for (let b = 0; b < nb; b++) { const db = 10 * Math.log10(re[b] * re[b] + im[b] * im[b] + 1e-14); mag[c * nb + b] = db; if (db > mx) mx = db; }
+  }
+  const range = broad ? 55 : 62, lo = mx - range;
+  const floor = noiseFloor(t, N, winLen);   // hide steady background noise so speech stands out
+  const rows = Math.round(specH), img = ctx.createImageData(cols, rows), d = img.data;
+  for (let r = 0; r < rows; r++) {
+    const f = S.maxF * (1 - (r + 0.5) / rows), fb = f / binHz, b0 = Math.min(nb - 2, Math.floor(fb)), fr = fb - b0;
+    const L = Math.min(mx - 15, Math.max(lo, floor[b0] + 9)), span = mx - L;
+    for (let c = 0; c < cols; c++) {
+      const o = (r * cols + c) * 4;
+      if (!valid[c]) { d[o] = 11; d[o + 1] = 21; d[o + 2] = 36; d[o + 3] = 255; continue; }
+      const v0 = mag[c * nb + b0], v1 = mag[c * nb + b0 + 1];
+      let v = (v0 + (v1 - v0) * fr - L) / span; v = v < 0 ? 0 : v > 1 ? 1 : v;
+      const li = (v * 255) | 0;
+      d[o] = LUT[li * 3]; d[o + 1] = LUT[li * 3 + 1]; d[o + 2] = LUT[li * 3 + 2]; d[o + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, Math.round(specY));
+
+  // frequency labels (left)
+  ctx.font = font(10.5, dpr); ctx.textBaseline = 'middle';
+  const stepF = S.maxF > 6000 ? 2000 : 1000;
+  for (let f = stepF; f < S.maxF; f += stepF) {
+    const y = specY + specH * (1 - f / S.maxF);
+    ctx.fillStyle = 'rgba(230,236,245,0.14)'; ctx.fillRect(0, Math.round(y), 6 * dpr, 1);
+    ctx.fillStyle = 'rgba(14,26,43,0.75)'; ctx.fillRect(7 * dpr, y - 7 * dpr, 26 * dpr, 14 * dpr);
+    ctx.fillStyle = COLORS.muted; ctx.textAlign = 'left'; ctx.fillText(`${f / 1000}k`, 9 * dpr, y);
+  }
+
+  // pitch contour on spectrogram (log scale, right axis)
+  const py = (f) => specY + specH * (1 - Math.log(f / PMIN) / Math.log(PMAX / PMIN));
+  drawPitchPath(ctx, t, (time) => tToX(t, time, W), py, color, dpr, [specY, specY + specH]);
+  ctx.textAlign = 'right';
+  for (const f of [100, 200, 300, 400]) {
+    const y = py(f);
+    ctx.fillStyle = 'rgba(14,26,43,0.75)'; ctx.fillRect(W - 34 * dpr, y - 7 * dpr, 32 * dpr, 14 * dpr);
+    ctx.fillStyle = color; ctx.fillText(String(f), W - 5 * dpr, y);
+  }
+
+  // time axis
+  const [va, vb] = viewOf(t);
+  const span = S.view === 'fit' ? vb - va : maxSpan();
+  const step = niceStep(span, W, dpr);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = font(10.5, dpr);
+  for (let s = 0; s <= span + 1e-6; s += step) {
+    const xx = tToX(t, va + s, W);
+    if (xx < 0 || xx > W) continue;
+    ctx.fillStyle = COLORS.grid; ctx.fillRect(Math.round(xx), axisY, 1, 4 * dpr);
+    ctx.fillStyle = COLORS.muted;
+    const label = (step < 1 ? s.toFixed(step < 0.1 ? 2 : 1) : String(Math.round(s))) + 's';
+    ctx.fillText(label, Math.min(W - 14 * dpr, Math.max(12 * dpr, xx)), axisY + 5 * dpr);
+  }
+}
+
+function drawPitchPath(ctx, t, xOf, yOf, color, dpr, clip, valueOf = (f) => f) {
+  const f0 = t.f0, step = HOP / ANA_SR;
+  const segs = []; let seg = null;
+  for (let i = 0; i < f0.length; i++) {
+    const time = t.f0t0 + i * step;
+    if (!f0[i] || (S.trim && (time < t.on || time > t.off))) { seg = null; continue; }
+    const v = valueOf(f0[i]); if (v === null) { seg = null; continue; }
+    if (!seg) { seg = []; segs.push(seg); }
+    seg.push([xOf(time), yOf(v)]);
+  }
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, clip[0], ctx.canvas.width, clip[1] - clip[0]); ctx.clip();
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  for (const pass of [[COLORS.bg, 5.5], [color, 2.4]]) {
+    ctx.strokeStyle = pass[0]; ctx.lineWidth = pass[1] * dpr;
+    for (const s of segs) {
+      ctx.beginPath();
+      s.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      if (s.length === 1) ctx.lineTo(s[0][0] + 0.5, s[0][1]);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function voicedSemis(t) {
+  const [a, b] = viewOf(t), step = HOP / ANA_SR, vals = [];
+  for (let i = 0; i < t.f0.length; i++) { const time = t.f0t0 + i * step; if (t.f0[i] && time >= a && time <= b) vals.push(t.f0[i]); }
+  const med = median(vals);
+  return { med, semis: vals.map((f) => 12 * Math.log2(f / med)) };
+}
+
+function renderIntonation() {
+  const e = els.into, dpr = sizeCanvas(e.cv, INTO_H);
+  const ctx = e.cv.getContext('2d'), W = e.cv.width, H = e.cv.height;
+  ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
+  const tracks = [S.ref, mine()].filter(Boolean);
+  e.empty.hidden = tracks.length > 0;
+  if (!tracks.length) return;
+  const top = 12 * dpr, bot = H - 12 * dpr, R = 12;
+  const y = (s) => top + (bot - top) * (1 - (s + R) / (2 * R));
+  ctx.font = font(10.5, dpr); ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  for (const s of [-10, -5, 0, 5, 10]) {
+    ctx.fillStyle = s === 0 ? 'rgba(143,163,189,0.35)' : 'rgba(143,163,189,0.12)';
+    ctx.fillRect(0, Math.round(y(s)), W, 1);
+    ctx.fillStyle = COLORS.muted; ctx.fillText((s > 0 ? '+' : '') + s, 6 * dpr, y(s) - 7 * dpr);
+  }
+  const al = S.ref ? alignFor(mine()) : null;
+  $('#intoMeta').textContent = al
+    ? '내 녹음을 원본 타이밍에 맞춰 겹쳤어요. 각자 평균 음높이를 0으로 맞춘 반음 단위라 목소리 높이가 달라도 모양만 비교돼요.'
+    : '각자 평균 음높이를 0으로 맞춘 반음 단위라서 목소리 높이가 달라도 모양만 비교돼요.';
+  for (const t of tracks) {
+    const { med } = voicedSemis(t);
+    if (!med) continue;
+    const xOf = t.kind === 'mine' && al ? (time) => tToX(S.ref, m2r(al, time), W) : (time) => tToX(t, time, W);
+    drawPitchPath(ctx, t, xOf, y, COLORS[t.kind], dpr, [0, H], (f) => Math.max(-R, Math.min(R, 12 * Math.log2(f / med))));
+  }
+}
+
+function renderStats() {
+  const box = $('#stats'), rows = $('#statRows'), r = S.ref, m = mine();
+  if (!r || !m) { box.hidden = true; return; }
+  box.hidden = false;
+  const lr = r.off - r.on, lm = m.off - m.on, ratio = lm / lr;
+  const sr = voicedSemis(r), sm = voicedSemis(m);
+  const rangeOf = (s) => (s.semis.length > 5 ? quantile(s.semis, 0.9) - quantile(s.semis, 0.1) : 0);
+  const gr = rangeOf(sr), gm = rangeOf(sm);
+  rows.innerHTML = `
+    <div>말한 길이 <b class="ref-c">원본 ${lr.toFixed(2)}초</b>, <b class="mine-c">내 녹음 ${lm.toFixed(2)}초</b> <span class="hint">(원본의 ${ratio.toFixed(2)}배)</span></div>
+    <div>음높이 폭 <b class="ref-c">원본 ${gr.toFixed(1)}반음</b>, <b class="mine-c">내 녹음 ${gm.toFixed(1)}반음</b></div>`;
+}
+
+function renderTakes() {
+  const box = $('#takes'); box.innerHTML = '';
+  S.takes.forEach((tk, i) => {
+    const b = document.createElement('button');
+    b.textContent = String(tk.no); b.setAttribute('aria-pressed', String(i === S.cur)); b.setAttribute('aria-label', `녹음 ${tk.no}`);
+    b.addEventListener('click', () => { S.cur = i; S.sel = null; renderAll(); });
+    box.appendChild(b);
+  });
+}
+
+function updateButtons() {
+  const r = !!S.ref, m = !!mine(), rec = !!S.rec;
+  $('#playRef').disabled = !r; $('#playMine').disabled = !m; $('#delTake').disabled = !m || rec;
+  $('#playBoth').disabled = !(r && m); $('#playAB').disabled = !(r && m);
+  $('#crop').disabled = !(r && S.sel && selFor('ref'));
+  const rb = $('#rec'); rb.classList.toggle('on', rec);
+  rb.querySelector('.label').textContent = !rec ? '녹음' : S.rec.phase === 'listening' ? '취소' : '정지';
+  $('#refMeta').textContent = r ? `${S.ref.label}, ${(S.ref.dur).toFixed(1)}초` : '비어 있음';
+}
+
+function renderAll() {
+  renderTrack('ref'); renderTrack('mine'); renderIntonation(); renderStats(); renderCoach(); renderTakes(); drawOverlays(); updateButtons(); renderSync();
+  runPron();
+}
+
+// ---------- overlays: selection + playheads ----------
+function drawOverlays() {
+  for (const kind of ['ref', 'mine']) {
+    const e = els[kind], t = trackOf(kind), ctx = e.ov.getContext('2d');
+    sizeCanvas(e.ov, TRACK_H);
+    const W = e.ov.width, H = e.ov.height, dpr = W / Math.max(1, e.ov.clientWidth);
+    ctx.clearRect(0, 0, W, H);
+    if (!t) continue;
+    const hgt = (LAYOUT.wave + LAYOUT.gap + LAYOUT.spec) * dpr;
+    const sel = selFor(kind);
+    if (sel) {
+      const x0 = tToX(t, sel[0], W), x1 = tToX(t, sel[1], W);
+      ctx.fillStyle = 'rgba(230,236,245,0.10)'; ctx.fillRect(x0, 0, x1 - x0, hgt);
+      ctx.fillStyle = COLORS[kind]; ctx.fillRect(Math.round(x0), 0, Math.max(1, dpr), hgt); ctx.fillRect(Math.round(x1), 0, Math.max(1, dpr), hgt);
+    }
+    for (const p of S.playing) {
+      if (p.kind !== kind) continue;
+      const x = tToX(t, p.el.currentTime, W);
+      ctx.fillStyle = '#FFFFFF'; ctx.fillRect(Math.round(x), 0, Math.max(1.5 * dpr, 1), hgt);
+    }
+  }
+}
+
+// ---------- playback ----------
+function stopAll() {
+  S.abSeq++;
+  for (const p of S.playing) { p.el.pause(); p.done(); }
+  S.playing = [];
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  drawOverlays();
+}
+function playRange(kind, a, b, onStart) {
+  const t = trackOf(kind); if (!t) return Promise.resolve();
+  for (const p of S.playing.filter((q) => q.kind === kind)) { p.el.pause(); p.done(); }
+  S.playing = S.playing.filter((q) => q.kind !== kind);
+  return new Promise((resolve) => {
+    const el = t.el;
+    const p = { kind, el, b, fin: false, done: () => { if (!p.fin) { p.fin = true; resolve(); } } };
+    el.pause(); el.playbackRate = S.rate; el.preservesPitch = true; el.currentTime = a;
+    S.playing.push(p);
+    el.play().then(() => { if (onStart) onStart(); loop(); }).catch(() => { S.playing = S.playing.filter((q) => q !== p); p.done(); });
+  });
+}
+function loop() {
+  if (S.raf) return;
+  const tick = () => {
+    for (const p of [...S.playing]) {
+      if (p.el.ended || p.el.currentTime >= p.b - 0.005) { p.el.pause(); S.playing = S.playing.filter((q) => q !== p); p.done(); }
+    }
+    drawOverlays();
+    if (S.playing.length) S.raf = requestAnimationFrame(tick); else S.raf = 0;
+  };
+  S.raf = requestAnimationFrame(tick);
+}
+function play(kind) { const r = rangeFor(kind); if (!r) return; stopAll(); playRange(kind, r[0], r[1]); }
+function playBoth() { const a = rangeFor('ref'), b = rangeFor('mine'); if (!a || !b) return; stopAll(); playRange('ref', a[0], a[1]); playRange('mine', b[0], b[1]); }
+async function playAB() {
+  const a = rangeFor('ref'), b = rangeFor('mine'); if (!a || !b) return;
+  stopAll(); const seq = S.abSeq;
+  await playRange('ref', a[0], a[1]); if (seq !== S.abSeq) return;
+  await sleep(300); if (seq !== S.abSeq) return;
+  await playRange('mine', b[0], b[1]);
+}
+
+// ---------- pointer: click to play, drag to select ----------
+for (const kind of ['ref', 'mine']) {
+  const ov = els[kind].ov; let down = null;
+  ov.addEventListener('pointerdown', (ev) => {
+    if (!trackOf(kind) || ev.button !== 0) return;
+    ov.setPointerCapture(ev.pointerId);
+    down = { x: ev.offsetX, drag: false };
+  });
+  ov.addEventListener('pointermove', (ev) => {
+    if (!down) return; const t = trackOf(kind); if (!t) return;
+    if (Math.abs(ev.offsetX - down.x) > 4) down.drag = true;
+    if (!down.drag) return;
+    const W = ov.clientWidth, [va, vb] = viewOf(t);
+    const a = xToT(t, Math.min(down.x, ev.offsetX), W), b = xToT(t, Math.max(down.x, ev.offsetX), W);
+    S.sel = { src: kind, t0: Math.max(va, a), t1: Math.min(vb, b) };
+    drawOverlays(); updateButtons();
+  });
+  ov.addEventListener('pointerup', (ev) => {
+    if (!down) return; const t = trackOf(kind); const wasDrag = down.drag; down = null;
+    if (!t) return;
+    if (wasDrag) { if (S.sel && S.sel.t1 - S.sel.t0 < 0.03) S.sel = null; drawOverlays(); updateButtons(); return; }
+    const time = xToT(t, ev.offsetX, ov.clientWidth);
+    const sel = selFor(kind);
+    stopAll();
+    if (sel && time >= sel[0] && time <= sel[1]) playRange(kind, sel[0], sel[1]);
+    else { S.sel = null; drawOverlays(); updateButtons(); const end = viewOf(t)[1]; if (time < end) playRange(kind, Math.max(0, time), end); }
+  });
+}
+
+// ---------- loading sources ----------
+async function setRef(play, meta, keepTakes = false) {
+  const t = await makeTrack(play, 'ref', meta);
+  stopAll(); disposeTrack(S.ref); S.ref = t; S.sel = null;
+  if (!keepTakes) { S.takes.forEach(disposeTrack); S.takes = []; S.cur = -1; S.takeNo = 0; }
+  renderAll();
+}
+async function loadRefFile(file) {
+  if (!file) return;
+  setStatus('파일을 읽는 중…');
+  try {
+    const play = await decodeBlob(file);
+    if (play.length < PLAY_SR * 0.2) throw new Error('short');
+    await setRef(play, { label: file.name, source: 'file' });
+    setStatus(S.ref.dur > 15 ? '긴 파일이에요. 연습할 부분을 드래그한 뒤 "선택 구간만 남기기"를 누르세요.' : '', S.ref.dur > 15 ? 'ok' : '');
+  } catch (e) { console.error(e); setStatus('이 파일은 열 수 없어요. mp3, wav, m4a, mp4, webm 파일을 넣어주세요.', 'err'); }
+}
+async function addTakeBlob(blob, label, meta = {}) {
+  const play = await decodeBlob(blob);
+  if (play.length < PLAY_SR * 0.2) throw new Error('녹음이 너무 짧아요');
+  S.takeNo = (S.takeNo || 0) + 1;
+  const t = await makeTrack(play, 'mine', { no: S.takeNo, label: label || `녹음 ${S.takeNo}`, ...meta });
+  S.takes.push(t);
+  while (S.takes.length > 12) disposeTrack(S.takes.shift());
+  S.cur = S.takes.length - 1;
+  S.sel = null;
+  renderAll();
+  studyOnTake(t);
+}
+async function cropRef() {
+  const sel = selFor('ref'); if (!S.ref || !sel) return;
+  const a = Math.floor(sel[0] * PLAY_SR), b = Math.ceil(sel[1] * PLAY_SR);
+  const slice = S.ref.play.slice(a, b);
+  setStatus('구간을 자르는 중…');
+  const base = S.ref.label.replace(/ \([\d.]+–[\d.]+초\)$/, '');
+  await setRef(slice, { label: `${base} (${sel[0].toFixed(1)}–${sel[1].toFixed(1)}초)`, source: S.ref.source }, true);
+  setStatus('');
+}
+
+// ---------- AI voice (Kokoro, runs in the browser) ----------
+// Pages opened from a local file have no CacheStorage, so the ~90 MB model would be re-downloaded every visit.
+// This small IndexedDB-backed stand-in lets the model library keep its files between visits.
+async function ensureModelCache() {
+  try { const c = await self.caches.open('pc-probe'); await self.caches.delete('pc-probe'); if (c) return; } catch {}
+  installModelCache();
+}
+function installModelCache() {
+  const dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('pronunciation-compare-cache', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('files');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+  dbp.catch(() => {});
+  const run = (mode, fn) => dbp.then((db) => new Promise((res, rej) => {
+    const tx = db.transaction('files', mode), req = fn(tx.objectStore('files'));
+    tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
+  }));
+  const keyOf = (name, k) => name + '|' + (typeof k === 'string' ? k : k.url);
+  const store = (name) => ({
+    async match(k) {
+      try { const v = await run('readonly', (st) => st.get(keyOf(name, k))); return v ? new Response(v.body, { headers: v.headers }) : undefined; }
+      catch { return undefined; }
+    },
+    async put(k, resp) {
+      try { const body = await resp.arrayBuffer(); await run('readwrite', (st) => st.put({ body, headers: [...resp.headers.entries()] }, keyOf(name, k))); }
+      catch (e) { console.warn('model cache write failed', e); }
+    },
+  });
+  try { Object.defineProperty(self, 'caches', { configurable: true, value: { open: async (name) => store(name) } }); } catch {}
+}
+
+let ttsP = null;
+function getTTS(onProgress) {
+  if (!ttsP) {
+    ttsP = (async () => {
+      await ensureModelCache();
+      const mod = await import(KOKORO_URL);
+      const files = {};
+      return mod.KokoroTTS.from_pretrained(MODEL_ID, {
+        dtype: 'q8', device: 'wasm',
+        progress_callback: (p) => {
+          if (p.status === 'progress' && p.total) {
+            files[p.file] = { l: p.loaded, t: p.total };
+            const v = Object.values(files), L = v.reduce((s, f) => s + f.l, 0), T = v.reduce((s, f) => s + f.t, 0);
+            onProgress(L / T, T);
+          }
+        },
+      });
+    })();
+    ttsP.catch(() => { ttsP = null; });
+  }
+  return ttsP;
+}
+async function generate() {
+  const text = $('#sentence').value.trim();
+  if (!text) { setStatus('먼저 연습할 문장을 입력하세요.', 'err'); $('#sentence').focus(); return; }
+  if (text.length > 500) { setStatus('문장이 너무 길어요. 500자 이하로 줄여주세요.', 'err'); return; }
+  const btn = $('#gen'); btn.disabled = true;
+  const voiceSel = $('#voice'), voice = voiceSel.value, vname = voiceSel.selectedOptions[0].textContent.split(' ')[0];
+  try {
+    setStatus('AI 음성 모델을 준비하는 중…');
+    const tts = await getTTS((frac, total) => setStatus(`AI 음성 모델 불러오는 중 ${Math.round(frac * 100)}% (처음 한 번만 약 ${Math.round(total / 1e6)}MB를 내려받아요)`));
+    setStatus('음성 만드는 중…');
+    const out = await tts.generate(text, { voice, speed: Number($('#speed').value) });
+    const play = await resample(out.audio, out.sampling_rate, PLAY_SR);
+    const same = S.ref && S.ref.text === text;
+    await setRef(play, { label: `AI 음성 (${vname})`, source: 'tts', text }, same);
+    setStatus('');
+    $('#fallback').hidden = true;
+  } catch (e) {
+    console.error(e);
+    const detail = String((e && e.message) || e).replace(/\s+/g, ' ').slice(0, 160);
+    setStatus(EMBEDDED
+      ? `지금은 미리보기 화면 안이라 AI 음성이 막혀 있어요. 파일을 내려받아 Chrome이나 Edge에서 직접 여세요. (원인: ${detail})`
+      : `AI 음성을 만들지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요. 그동안 브라우저 기본 음성으로 들을 수는 있어요(분석은 안 돼요). (원인: ${detail})`, 'err');
+    $('#fallback').hidden = !('speechSynthesis' in window);
+  } finally { btn.disabled = false; }
+}
+function speakFallback() {
+  const text = $('#sentence').value.trim(); if (!text || !('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text); u.lang = $('#voice').value.startsWith('b') ? 'en-GB' : 'en-US'; u.rate = Number($('#speed').value);
+  speechSynthesis.speak(u);
+}
+
+// ---------- recording ----------
+function meter(v) { $('#meterBar').style.width = Math.min(100, Math.sqrt(v) * 260) + '%'; }
+async function toggleRecord() {
+  if (S.rec) { finishRecording(); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+    setStatus('이 브라우저에서는 마이크를 쓸 수 없어요. 이 파일을 Chrome이나 Edge에서 열어주세요.', 'err'); return;
+  }
+  stopAll();
+  const ac = S.ac || (S.ac = new AudioContext());
+  if (ac.state === 'suspended') ac.resume();
+  const rec = { phase: 'starting', levels: [], noise: [], cancelled: false };
+  S.rec = rec; updateButtons();
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: $('#noiseSup').checked, autoGainControl: false } });
+  } catch (e) {
+    S.rec = null; updateButtons();
+    setStatus(EMBEDDED
+      ? '지금은 미리보기 화면 안이라 마이크가 막혀 있어요. 파일을 내려받아 Chrome이나 Edge에서 직접 여세요.'
+      : '마이크를 쓸 수 없어요. 주소창 왼쪽 아이콘에서 마이크를 허용한 뒤 다시 눌러주세요.', 'err'); return;
+  }
+  if (rec.cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
+  rec.stream = stream;
+  rec.src = ac.createMediaStreamSource(stream); rec.an = ac.createAnalyser(); rec.an.fftSize = 1024; rec.src.connect(rec.an);
+  const mode = S.ref ? $('#recMode').value : 'plain';
+  rec.mode = mode;
+  if (mode === 'listen') {
+    rec.phase = 'listening'; updateButtons(); renderTrack('mine'); drawLive(rec);
+    setStatus('원본을 듣고, 끝나면 바로 따라 말하세요.');
+    const r = rangeFor('ref');
+    await playRange('ref', r[0], r[1]);
+    if (rec.cancelled || S.rec !== rec) return;
+  }
+  beginRecorder(rec);
+  if (mode === 'shadow') {
+    const r = rangeFor('ref'); rec.refPlaying = true;
+    rec.shadow = { refStart: r[0], rate: S.rate, delay: 0, latency: (S.ac && (S.ac.outputLatency || S.ac.baseLatency)) || 0 };
+    playRange('ref', r[0], r[1], () => { rec.shadow.delay = (performance.now() - rec.t0) / 1000; }).then(() => { rec.refPlaying = false; });
+  }
+}
+function beginRecorder(rec) {
+  rec.phase = 'recording'; updateButtons(); renderTrack('mine');
+  const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((m) => MediaRecorder.isTypeSupported(m));
+  const mr = new MediaRecorder(rec.stream, mime ? { mimeType: mime } : undefined);
+  rec.mr = mr; rec.chunks = [];
+  mr.ondataavailable = (e) => { if (e.data && e.data.size) rec.chunks.push(e.data); };
+  mr.onstop = () => onRecorderStop(rec);
+  mr.start(100);
+  rec.t0 = performance.now(); rec.speech = false; rec.lastLoud = 0;
+  rec.sm = 0; rec.floor = Infinity; rec.peak = 0;
+  rec.maxDur = S.ref ? Math.min(360, Math.max(30, (viewOf(S.ref)[1] - viewOf(S.ref)[0]) * 1.6 + 10)) : 30;
+  const auto = $('#autoStop').checked;
+  setStatus(rec.mode === 'shadow' ? '원본과 같이 말하세요. 이어폰을 끼면 스피커 소리가 섞이지 않아요.' : auto ? '녹음 중이에요. 다 말하고 잠깐 멈추면 자동으로 끝나요.' : '녹음 중이에요. R을 다시 누르면 끝나요.');
+  const buf = new Float32Array(rec.an.fftSize);
+  const tick = () => {
+    if (S.rec !== rec || rec.phase !== 'recording') return;
+    rec.an.getFloatTimeDomainData(buf);
+    let s = 0; for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+    const rms = Math.sqrt(s / buf.length), el = (performance.now() - rec.t0) / 1000;
+    rec.levels.push([el, rms]);
+    // robust to speaking right away: floor = running minimum of smoothed level, threshold also follows the loudest part so far
+    rec.sm = rec.sm ? rec.sm * 0.7 + rms * 0.3 : rms;
+    if (el > 0.1) { rec.floor = Math.min(rec.floor, rec.sm); rec.peak = Math.max(rec.peak, rec.sm); }
+    const floor = Number.isFinite(rec.floor) ? rec.floor : 0.002;
+    const thr = Math.max(0.006, floor * 3.5, rec.peak * 0.12);
+    if (rec.sm > thr && el > 0.12) { rec.speech = true; rec.lastLoud = el; }
+    meter(rms); drawLive(rec);
+    if (el > rec.maxDur || ($('#autoStop').checked && rec.speech && !rec.refPlaying && el - rec.lastLoud > 1.1)) { finishRecording(); return; }
+    rec.raf = requestAnimationFrame(tick);
+  };
+  rec.raf = requestAnimationFrame(tick);
+}
+function drawLive(rec) {
+  const e = els.mine, dpr = sizeCanvas(e.cv, TRACK_H), ctx = e.cv.getContext('2d'), W = e.cv.width, H = e.cv.height;
+  const specY = (LAYOUT.wave + LAYOUT.gap) * dpr, specH = LAYOUT.spec * dpr;
+  ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = COLORS.blank; ctx.fillRect(0, specY, W, specH);
+  ctx.font = font(13, dpr, 500); ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+  if (rec.phase === 'listening') { ctx.fillStyle = COLORS.ref; ctx.fillText('원본 듣는 중… 끝나면 바로 따라 말하세요', 14 * dpr, specY + 12 * dpr); return; }
+  const last = rec.levels.length ? rec.levels[rec.levels.length - 1][0] : 0;
+  ctx.fillStyle = COLORS.rec; ctx.fillText(`녹음 중 ${last.toFixed(1)}초`, 14 * dpr, specY + 12 * dpr);
+  const refSpan = S.ref ? viewOf(S.ref)[1] - viewOf(S.ref)[0] : 0;
+  const pps = W / Math.max(4, refSpan + 1.5);
+  let peak = 0.02; for (const [, v] of rec.levels) if (v > peak) peak = v;
+  const mid = specY + specH / 2;
+  for (const [tm, v] of rec.levels) {
+    const x = tm * pps; if (x > W) break;
+    const h = Math.max(dpr, Math.sqrt(v / peak) * specH * 0.42);
+    ctx.fillRect(x, mid - h, Math.max(dpr, 2 * dpr), h * 2);
+  }
+}
+function finishRecording() {
+  const rec = S.rec; if (!rec) return;
+  if (rec.phase === 'starting' || rec.phase === 'listening') {
+    rec.cancelled = true; stopAll(); cleanupRec(rec); S.rec = null; updateButtons(); renderTrack('mine'); setStatus('녹음을 취소했어요.'); return;
+  }
+  if (rec.phase !== 'recording') return;
+  rec.phase = 'stopping'; cancelAnimationFrame(rec.raf);
+  if (rec.refPlaying) { stopAll(); rec.refPlaying = false; }
+  try { rec.mr.stop(); } catch { onRecorderStop(rec); }
+}
+function cleanupRec(rec) { if (rec.stream) rec.stream.getTracks().forEach((t) => t.stop()); try { rec.src && rec.src.disconnect(); } catch {} meter(0); }
+async function onRecorderStop(rec) {
+  cleanupRec(rec); S.rec = null; updateButtons();
+  const blob = new Blob(rec.chunks || [], { type: (rec.mr && rec.mr.mimeType) || 'audio/webm' });
+  if (blob.size < 800) { setStatus('녹음된 소리가 없어요. 마이크를 확인하고 다시 해보세요.', 'err'); renderAll(); return; }
+  setStatus('분석 중…');
+  try { await addTakeBlob(blob, undefined, rec.shadow ? { shadow: rec.shadow } : {}); setStatus(''); }
+  catch (e) { console.error(e); setStatus('녹음을 읽지 못했어요. 다시 한 번 녹음해보세요.', 'err'); renderAll(); }
+}
+
+// ---------- wiring ----------
+const sentence = $('#sentence');
+const autosize = () => { sentence.style.height = 'auto'; sentence.style.height = sentence.scrollHeight + 'px'; };
+sentence.addEventListener('input', autosize);
+sentence.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); generate(); } });
+$('#gen').addEventListener('click', generate);
+$('#fallback').addEventListener('click', speakFallback);
+$('#refFile').addEventListener('change', (e) => { loadRefFile(e.target.files[0]); e.target.value = ''; });
+$('#mineFile').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  setStatus('파일을 읽는 중…');
+  try { await addTakeBlob(f, f.name); setStatus(''); } catch (err) { setStatus('이 파일은 열 수 없어요.', 'err'); }
+});
+for (const id of ['refFileBtn', 'mineFileBtn']) $('#' + id).addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#' + id).click(); } });
+$('#playRef').addEventListener('click', () => play('ref'));
+$('#playMine').addEventListener('click', () => play('mine'));
+$('#playBoth').addEventListener('click', playBoth);
+$('#playAB').addEventListener('click', playAB);
+$('#stop').addEventListener('click', stopAll);
+$('#crop').addEventListener('click', cropRef);
+$('#rec').addEventListener('click', toggleRecord);
+$('#delTake').addEventListener('click', () => {
+  if (S.cur < 0 || S.rec) return;
+  stopAll(); disposeTrack(S.takes[S.cur]); S.takes.splice(S.cur, 1);
+  S.cur = S.takes.length ? Math.min(S.cur, S.takes.length - 1) : -1;
+  S.sel = null; renderAll();
+});
+$('#recMode').addEventListener('change', (e) => { if (e.target.value === 'shadow') setStatus('쉐도잉은 이어폰을 끼고 하세요. 스피커 소리가 같이 녹음되면 비교가 흐려져요.'); });
+$('#rate').addEventListener('change', (e) => { S.rate = Number(e.target.value); for (const p of S.playing) p.el.playbackRate = S.rate; });
+$('#view').addEventListener('change', (e) => { S.view = e.target.value; renderAll(); });
+$('#specMode').addEventListener('change', (e) => { S.spec = e.target.value; renderAll(); });
+$('#maxF').addEventListener('change', (e) => { S.maxF = Number(e.target.value); renderAll(); });
+$('#trim').addEventListener('change', (e) => { S.trim = e.target.checked; renderAll(); });
+
+document.addEventListener('keydown', (e) => {
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'TEXTAREA' || tag === 'INPUT' || (tag === 'SELECT' && e.code !== 'Escape')) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.code;
+  if (k === 'Digit1' || k === 'Numpad1') { play('ref'); }
+  else if (k === 'Digit2' || k === 'Numpad2') { play('mine'); }
+  else if (k === 'Digit3' || k === 'Numpad3') { playBoth(); }
+  else if (k === 'Digit4' || k === 'Numpad4') { playAB(); }
+  else if (k === 'KeyR') { toggleRecord(); }
+  else if (k === 'Space') { if (ST.on && !ST.clip) { if (ST.src) pickToggle(); } else if (S.rec) finishRecording(); else if (S.playing.length) stopAll(); else play('ref'); }
+  else if (k === 'Escape') { S.sel = null; drawOverlays(); updateButtons(); return; }
+  else return;
+  e.preventDefault();
+});
+
+// drag & drop audio files onto a track
+for (const kind of ['ref', 'mine']) {
+  const box = els[kind].box;
+  box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('drop'); });
+  box.addEventListener('dragleave', () => box.classList.remove('drop'));
+  box.addEventListener('drop', async (e) => {
+    e.preventDefault(); e.stopPropagation(); box.classList.remove('drop');
+    const f = e.dataTransfer.files[0]; if (!f) return;
+    if (kind === 'ref') { if (ST.on) { if (!ST.clip) setClipFile(f); } else loadRefFile(f); }
+    else { setStatus('파일을 읽는 중…'); try { await addTakeBlob(f, f.name); setStatus(''); } catch { setStatus('이 파일은 열 수 없어요.', 'err'); } }
+  });
+}
+document.addEventListener('dragover', (e) => e.preventDefault());
+document.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer && e.dataTransfer.files[0]; if (!f) return; if (ST.on) { if (!ST.clip) setClipFile(f); } else loadRefFile(f); });
+
+$('#pronBtn').addEventListener('click', () => {
+  pronOn = !pronOn;
+  try { localStorage.setItem(PRON_KEY, pronOn ? '1' : '0'); } catch {}
+  if (!pronOn) setPronStatus('');
+  renderCoach(); runPron();
+});
+$('#coachRows').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-tip], button[data-spot], button[data-word]'); if (!b) return;
+  if (b.dataset.tip !== undefined) playTip(Number(b.dataset.tip));
+  else if (b.dataset.word !== undefined) playTip(Number(b.dataset.word), 'words');
+  else playTip(Number(b.dataset.spot), 'spots');
+});
+
+// ---------- clip study mode: dictation -> memorise -> sync with the original ----------
+const SYNC_H = 130;
+const ST = { on: false, clip: null, stage: 'dict', cur: 0, mask: 0, refKey: '', file: null, src: null, busy: false, dict: null, loadP: Promise.resolve(), saveWarned: false };
+const userErr = (msg) => Object.assign(new Error(msg), { user: true });
+const WEAK_EXTRA = new Set("than been into its it's i'm you're he's she's we're they're that's there's who which when then just some any did didn't don't doesn't isn't wasn't aren't i've you've we've i'll you'll we'll about up out".split(' '));
+
+// saved clips: 'clips' holds text, sentence times and progress; 'audio' holds the file and the model output
+const sdb = {
+  p: null,
+  open() {
+    if (!this.p) {
+      this.p = new Promise((res, rej) => {
+        const r = indexedDB.open('pc-study', 1);
+        r.onupgradeneeded = () => { r.result.createObjectStore('clips', { keyPath: 'id' }); r.result.createObjectStore('audio'); };
+        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+      });
+      this.p.catch(() => { this.p = null; });
+    }
+    return this.p;
+  },
+  async run(store, mode, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => { const tx = db.transaction(store, mode), rq = fn(tx.objectStore(store)); tx.oncomplete = () => res(rq && rq.result); tx.onerror = tx.onabort = () => rej(tx.error); });
+  },
+};
+const clipMeta = (c) => { const { play, LP, ...meta } = c; return meta; };
+async function saveMeta(c) {
+  try { await sdb.run('clips', 'readwrite', (s) => s.put(clipMeta(c))); }
+  catch (e) { console.warn(e); if (!ST.saveWarned) { ST.saveWarned = true; setStatus('이 브라우저에서는 진도를 저장할 수 없어요. 창을 닫으면 처음부터 다시 해야 해요.', 'err'); } }
+}
+async function saveAudio(c, blob) {
+  try { await sdb.run('audio', 'readwrite', (s) => s.put({ blob, lp: c.LP || null }, c.id)); } catch (e) { console.warn(e); }
+}
+
+function setStudyStatus(msg, kind = '') { const el = $('#studyStatus'); el.textContent = msg || ''; el.className = kind; if (ST.clip) setStatus(msg, kind); }
+const fmtT = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+const PICK_H = 84;
+
+// any length of file: decode once, then choose the stretch to study on an overview of the whole thing
+async function setClipFile(f) {
+  if (!f || ST.busy) return;
+  pickStop(); ST.busy = true;
+  setStudyStatus('파일을 읽는 중… 긴 파일은 조금 걸려요.');
+  try {
+    let play; try { play = await decodeBlob(f); } catch (e) { console.error(e); throw userErr('이 파일을 열지 못했어요. mp3, wav, m4a, mp4, webm 파일인지 확인해주세요. 아주 긴 파일은 메모리가 모자라서 안 열릴 수 있어요.'); }
+    const dur = play.length / PLAY_SR;
+    if (dur < 3) throw userErr('파일이 너무 짧아요. 3초보다 긴 파일을 넣어주세요.');
+    const N = 2000, peaks = new Float32Array(N), per = play.length / N; let top = 0;
+    for (let i = 0; i < N; i++) {
+      let m = 0; const e = Math.min(play.length, Math.floor((i + 1) * per));
+      for (let j = Math.floor(i * per); j < e; j += 3) { const v = Math.abs(play[j]); if (v > m) m = v; }
+      peaks[i] = m; if (m > top) top = m;
+    }
+    if (ST.src) URL.revokeObjectURL(ST.src.url);
+    // played from the decoded samples (as a WAV) so that positions heard and positions cut are the same
+    const url = URL.createObjectURL(wavBlob(play, PLAY_SR)), el = new Audio(url); el.preload = 'auto';
+    const whole = dur <= 120;
+    ST.src = { name: f.name.replace(/\.[^.]+$/, ''), file: f.name, play, dur, peaks, top: top || 1, url, el, a: whole ? 0 : null, b: whole ? dur : null, until: null };
+    ST.file = f;
+    setStudyStatus('');
+  } catch (e) {
+    if (!e.user) console.error(e);
+    setStudyStatus(e.user ? e.message : `파일을 열지 못했어요. (원인: ${String((e && e.message) || e).slice(0, 100)})`, 'err');
+  } finally { ST.busy = false; renderPicker(); }
+}
+function pickStop() { const s = ST.src; if (s) { s.el.pause(); s.until = null; } }
+function pickLoop() {
+  const s = ST.src; if (!s) return;
+  if (s.until !== null && s.el.currentTime >= s.until) { s.el.pause(); s.until = null; }
+  renderPicker();
+  if (!s.el.paused && !s.el.ended) requestAnimationFrame(pickLoop);
+}
+function pickPlayFrom(t, until = null) {
+  const s = ST.src; if (!s) return;
+  stopAll(); s.el.pause();
+  s.el.currentTime = Math.max(0, Math.min(s.dur - 0.05, t)); s.until = until;
+  s.el.play().then(() => requestAnimationFrame(pickLoop)).catch(() => {});
+}
+function pickToggle() { const s = ST.src; if (!s) return; if (s.el.paused) pickPlayFrom(s.el.ended ? 0 : s.el.currentTime); else { pickStop(); renderPicker(); } }
+function pickSet(which, t) {
+  const s = ST.src; if (!s) return;
+  t = Math.max(0, Math.min(s.dur, t));
+  if (which === 'a') { s.a = t; if (s.b !== null && s.b <= t + 0.5) s.b = null; }
+  else { if (s.a === null) s.a = 0; if (t <= s.a + 0.5) { setStudyStatus('끝은 시작보다 뒤에 있어야 해요.', 'err'); return; } s.b = t; }
+  setStudyStatus(''); renderPicker();
+}
+function renderPicker() {
+  const s = ST.src, box = $('#picker'); box.hidden = !s;
+  $('#clipFileName').textContent = s ? `${s.file}, ${fmtT(s.dur)}` : '길이는 상관없어요. 오디오나 영상 파일';
+  if (!s) return;
+  const cv = $('#pickCv'), dpr = sizeCanvas(cv, PICK_H), ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const x = (t) => (t / s.dur) * W, axis = 18 * dpr, mid = (H - axis) / 2, N = s.peaks.length;
+  ctx.fillStyle = '#132238'; ctx.fillRect(0, 0, W, H);
+  const xa = s.a === null ? -1 : x(s.a), xb = s.b === null ? xa : x(s.b);
+  if (s.a !== null && s.b !== null) { ctx.fillStyle = 'rgba(92,198,224,0.16)'; ctx.fillRect(xa, 0, xb - xa, H - axis); }
+  for (let c = 0; c < W; c++) {
+    const i0 = Math.floor((c / W) * N), i1 = Math.max(i0 + 1, Math.floor(((c + 1) / W) * N)); let m = 0;
+    for (let i = i0; i < i1 && i < N; i++) if (s.peaks[i] > m) m = s.peaks[i];
+    const h = Math.max(1, (m / s.top) * (mid - 3));
+    ctx.fillStyle = s.b !== null && c >= xa && c <= xb ? COLORS.ref : '#55708F'; ctx.fillRect(c, mid - h, 1, h * 2);
+  }
+  const step = niceStep(s.dur, W, dpr * 0.8);
+  ctx.font = font(10.5, dpr); ctx.textBaseline = 'top'; ctx.textAlign = 'center';
+  for (let t = 0; t <= s.dur; t += step) { ctx.fillStyle = COLORS.grid; ctx.fillRect(Math.round(x(t)), H - axis, 1, 4 * dpr); ctx.fillStyle = COLORS.muted; ctx.fillText(fmtT(t), Math.min(W - 14 * dpr, Math.max(12 * dpr, x(t))), H - axis + 5 * dpr); }
+  ctx.fillStyle = COLORS.ref;
+  if (s.a !== null) ctx.fillRect(Math.round(xa), 0, Math.max(2, 2 * dpr), H - axis);
+  if (s.b !== null) ctx.fillRect(Math.round(xb) - Math.max(2, 2 * dpr), 0, Math.max(2, 2 * dpr), H - axis);
+  ctx.fillStyle = '#FFFFFF'; ctx.fillRect(Math.round(x(s.el.currentTime)), 0, Math.max(1.5 * dpr, 1), H - axis);
+  $('#pickPlay').textContent = s.el.paused ? '▶ 재생' : '■ 멈춤';
+  $('#pickTime').textContent = `${fmtT(s.el.currentTime)} / ${fmtT(s.dur)}`;
+  const len = s.a !== null && s.b !== null ? s.b - s.a : 0;
+  $('#pickRange').textContent = s.a === null ? '아직 구간을 고르지 않았어요' : s.b === null ? `시작 ${fmtT(s.a)}, 끝을 정해주세요`
+    : `고른 구간 ${fmtT(s.a)} ~ ${fmtT(s.b)}, ${len >= 60 ? `${Math.floor(len / 60)}분 ${Math.round(len % 60)}초` : `${Math.round(len)}초`}`;
+  $('#pickSel').disabled = !(s.a !== null && s.b !== null);
+  for (const b of document.querySelectorAll('#picker button[data-pick]')) b.disabled = (b.dataset.pick[0] === 'a' ? s.a : s.b) === null;
+}
+
+// run the phoneme model over a long clip in pieces cut at quiet moments
+async function clipLP(P, ana, onProg) {
+  const n = ana.length, maxLen = 12 * ANA_SR, cuts = [0];
+  const energy = (i0) => { let s = 0; for (let i = i0; i < Math.min(n, i0 + 1600); i++) s += ana[i] * ana[i]; return s; };
+  while (n - cuts[cuts.length - 1] > maxLen) {
+    const base = cuts[cuts.length - 1], lo = base + 6 * ANA_SR, hi = Math.min(base + maxLen, n - ANA_SR);
+    let best = hi, be = Infinity;
+    for (let i = lo; i <= hi - 1600; i += 800) { const e = energy(i); if (e < be) { be = e; best = i + 800; } }
+    cuts.push(Math.round(best / 320) * 320);
+  }
+  cuts.push(n);
+  const parts = []; let T = 0, V = 0;
+  for (let c = 0; c + 1 < cuts.length; c++) {
+    const seg = ana.slice(cuts[c], cuts[c + 1]);
+    if (seg.length < 800) continue;
+    const { logits } = await P.model(await P.proc(seg));
+    const A = PR.logProbs(logits.data, logits.dims[1], logits.dims[2]);
+    parts.push({ A, t0: cuts[c] / ANA_SR }); T += A.T; V = A.V;
+    if (onProg) onProg(cuts[c + 1] / n);
+    await sleep(0);
+  }
+  const LP = new Float32Array(T * V), times = new Float32Array(T); let o = 0;
+  for (const { A, t0 } of parts) { LP.set(A.LP, o * V); for (let f = 0; f < A.T; f++) times[o + f] = t0 + (f * 320 + 200) / 16000; o += A.T; }
+  return { LP, T, V, times };
+}
+function sliceLP(A, t0, t1) {
+  let f0 = 0; while (f0 < A.T && A.times[f0] < t0) f0++;
+  let f1 = f0; while (f1 < A.T && A.times[f1] <= t1) f1++;
+  if (f1 - f0 < 5) return null;
+  const times = new Float32Array(f1 - f0); for (let i = 0; i < times.length; i++) times[i] = A.times[f0 + i] - t0;
+  return { LP: A.LP.slice(f0 * A.V, f1 * A.V), T: f1 - f0, V: A.V, times };
+}
+function quietest(ana, t0, t1) {
+  if (t1 - t0 < 0.03) return (t0 + t1) / 2;
+  let best = (t0 + t1) / 2, be = Infinity;
+  for (let t = t0; t <= t1 - 0.02; t += 0.01) {
+    const i0 = Math.floor(t * ANA_SR); let s = 0;
+    for (let i = i0; i < Math.min(ana.length, i0 + 320); i++) s += ana[i] * ana[i];
+    if (s < be) { be = s; best = t + 0.01; }
+  }
+  return best;
+}
+
+// exact sentence and word times: forced alignment of the transcript to the audio
+async function alignClip(c, ana) {
+  setStudyStatus('발음 모델 준비 중…');
+  const P = await getPron((f) => setStudyStatus(`발음 모델 내려받는 중 ${Math.round(f * 100)}% (처음 한 번만, 약 360MB)`));
+  setStudyStatus('문장 위치를 찾는 중…');
+  const A = await clipLP(P, ana, (f) => setStudyStatus(`문장 위치를 찾는 중 ${Math.round(f * 100)}%`));
+  const wordsOf = () => c.sents.flatMap((s, si) => PR.tokens(s.text).words.map((w) => ({ ...w, sent: si })));
+  let E = PR.expected(wordsOf(), P.dict, null);
+  if (!E.seq.length) throw userErr('원문에서 영어 단어를 찾지 못했어요.');
+  // the pasted text may be the whole episode: keep only the sentences spoken in this stretch of audio
+  setStudyStatus('원문에서 이 구간에 해당하는 부분을 찾는 중…'); await sleep(0);
+  const total = c.sents.length, pick = PR.findSentences(A, E, total);
+  if (!pick) throw userErr('원문에서 이 구간에 해당하는 부분을 찾지 못했어요. 파일과 원문이 같은 내용인지, 고른 구간에 말소리가 있는지 확인해주세요.');
+  if (pick.lo > 0 || pick.hi < total - 1) { c.sents = c.sents.slice(pick.lo, pick.hi + 1); E = PR.expected(wordsOf(), P.dict, null); c.found = { n: c.sents.length, total }; }
+  if (E.seq.length * 2 > A.T) throw userErr('원문이 고른 구간에 비해 너무 길어요. 구간을 더 길게 잡아주세요.');
+  const sp = PR.align(A, E.seq, { star: true });
+  if (!Number.isFinite(sp.score)) throw new Error('alignment failed');
+  let free = 0; for (let t = 0; t < A.T; t++) { let m = -Infinity; for (let v = 0; v < A.V; v++) if (A.LP[t * A.V + v] > m) m = A.LP[t * A.V + v]; free += m; }
+  let fit = (sp.score - free) / E.seq.length;
+  const wt = E.words.map(() => [Infinity, -Infinity]);
+  E.meta.forEach((m, k) => { const w = wt[m.word]; w[0] = Math.min(w[0], A.times[sp.first[k]]); w[1] = Math.max(w[1], A.times[sp.last[k]]); });
+  const sub = sliceLP(A, A.times[sp.first[0]] - 0.3, A.times[sp.last[E.seq.length - 1]] + 0.45);
+  if (sub && sub.T >= E.seq.length * 2) {
+    const sp2 = PR.align(sub, E.seq); let f2 = 0;
+    for (let t = 0; t < sub.T; t++) { let m = -Infinity; for (let v = 0; v < sub.V; v++) if (sub.LP[t * sub.V + v] > m) m = sub.LP[t * sub.V + v]; f2 += m; }
+    if (Number.isFinite(sp2.score)) fit = (sp2.score - f2) / E.seq.length;
+  }
+  const span = c.sents.map(() => [Infinity, -Infinity]);
+  c.sents.forEach((s) => { s.words = []; });
+  E.words.forEach((w, i) => {
+    const sp2 = span[w.sent]; sp2[0] = Math.min(sp2[0], wt[i][0]); sp2[1] = Math.max(sp2[1], wt[i][1]);
+    c.sents[w.sent].words.push({ text: w.text, src: w.src, a: Math.max(0, wt[i][0] - 0.08), b: Math.min(c.dur, wt[i][1] + 0.15) });
+  });
+  for (let i = 0; i < span.length; i++) if (!Number.isFinite(span[i][0])) span[i] = i ? [span[i - 1][1], span[i - 1][1] + 0.5] : [0, 0.5];
+  c.sents.forEach((s, i) => { s.a = Math.max(0, span[i][0] - 0.3); s.b = Math.min(c.dur, span[i][1] + 0.45); });
+  for (let i = 0; i + 1 < c.sents.length; i++) {
+    const cut = quietest(ana, span[i][1] + 0.03, span[i + 1][0] - 0.03);
+    c.sents[i].b = Math.min(c.sents[i].b, cut + 0.06);
+    c.sents[i + 1].a = Math.max(c.sents[i + 1].a, cut - 0.06);
+  }
+  c.LP = A; c.aligned = 'model'; c.fit = fit;
+}
+
+// no model: spread sentences over the speech by length and snap to pauses
+function roughSplit(c, ana) {
+  const nf = Math.floor(ana.length / HOP), db = new Float32Array(nf);
+  for (let i = 0; i < nf; i++) { let s = 0; for (let j = i * HOP; j < i * HOP + HOP; j++) s += ana[j] * ana[j]; db[i] = 10 * Math.log10(s / HOP + 1e-10); }
+  const lo = quantile(db, 0.1), hi = quantile(db, 0.9), thr = lo + 0.3 * (hi - lo);
+  let f0 = 0; while (f0 < nf - 1 && db[f0] < thr) f0++;
+  let f1 = nf - 1; while (f1 > f0 && db[f1] < thr) f1--;
+  const pauses = []; let run = -1, loud = 0; const cum = new Float32Array(nf + 1);
+  for (let i = f0; i <= f1; i++) {
+    if (db[i] < thr) { if (run < 0) run = i; } else { if (run >= 0 && i - run >= 15) pauses.push((run + i) / 2 * 0.01); run = -1; loud++; }
+    cum[i + 1] = loud;
+  }
+  const wts = c.sents.map((s) => Math.max(1, s.text.replace(/[^A-Za-z0-9]/g, '').length)), total = wts.reduce((x, y) => x + y, 0);
+  const bounds = []; let acc = 0, prev = f0 * 0.01;
+  for (let i = 0; i + 1 < c.sents.length; i++) {
+    acc += wts[i];
+    const want = (acc / total) * loud; let f = f0; while (f < f1 && cum[f + 1] < want) f++;
+    let t = f * 0.01, best = null;
+    for (const p of pauses) if (p > prev + 0.5 && Math.abs(p - t) < 1.2 && (best === null || Math.abs(p - t) < Math.abs(best - t))) best = p;
+    t = Math.max(prev + 0.5, best === null ? t : best); bounds.push(t); prev = t;
+  }
+  c.sents.forEach((s, i) => {
+    s.a = Math.max(0, (i ? bounds[i - 1] : f0 * 0.01 - 0.1) - 0.05);
+    s.b = Math.min(c.dur, (i < bounds.length ? bounds[i] : f1 * 0.01 + 0.3) + 0.05);
+    s.words = null;
+  });
+  c.aligned = 'rough';
+}
+
+async function createClip(rough) {
+  if (ST.busy) return;
+  const src = ST.src, raw = $('#clipText').value;
+  if (!src) { setStudyStatus('먼저 클립 파일을 고르세요.', 'err'); return; }
+  if (src.a === null || src.b === null) { setStudyStatus('공부할 구간을 먼저 고르세요. 파형을 드래그하거나, 들으면서 "여기를 시작으로"와 "여기를 끝으로"를 누르면 돼요.', 'err'); return; }
+  if (src.b - src.a > 300) { setStudyStatus('한 번에 공부할 구간은 5분까지예요. 30초~1분 정도로 짧게 고르는 걸 추천해요.', 'err'); return; }
+  if (src.b - src.a < 3) { setStudyStatus('구간이 너무 짧아요. 3초보다 길게 골라주세요.', 'err'); return; }
+  const texts = PR.sentences(raw);
+  if (!texts.length) { setStudyStatus('고른 구간의 영어 원문을 붙여넣으세요.', 'err'); return; }
+  pickStop(); renderPicker();
+  ST.busy = true; $('#clipGo').disabled = $('#clipGoRough').disabled = true;
+  try {
+    setStudyStatus('클립을 준비하는 중…');
+    const whole = src.a < 0.5 && src.b > src.dur - 0.5;
+    const play = whole ? src.play.slice() : src.play.slice(Math.floor(src.a * PLAY_SR), Math.ceil(src.b * PLAY_SR));
+    const dur = play.length / PLAY_SR;
+    const c = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: whole ? src.name : `${src.name} ${fmtT(src.a)}`, added: Date.now(), dur, play, transcript: raw,
+      sents: texts.map((text) => ({ text, a: 0, b: 0, words: null })), aligned: 'rough', prog: { dict: {}, memo: {}, sync: [] } };
+    const ana = await resample(play, PLAY_SR, ANA_SR);
+    let note = '';
+    if (rough && texts.join(' ').split(/\s+/).length > dur * 4.5) throw userErr('"모델 없이 대략 나누기"는 고른 구간의 원문만 넣어야 해요. 원문 전체를 넣었다면 "문장으로 나누기"를 누르세요. 해당하는 부분을 알아서 찾아요.');
+    if (!rough) {
+      try { await alignClip(c, ana); }
+      catch (e) { if (e.user) throw e; console.error(e); note = `발음 모델을 쓰지 못해서 문장을 대략 나눴어요. (원인: ${String((e && e.message) || e).slice(0, 80)}) `; }
+    }
+    if (c.aligned !== 'model') { roughSplit(c, ana); note += '문장 구간이 어긋나면 받아쓰기 화면의 "구간이 어긋났나요?"에서 조정하세요.'; }
+    else if (c.fit < -3.5) note = '원문이 고른 구간의 소리와 잘 맞지 않는 것 같아요. 문장 구간이 이상하면 구간과 원문이 같은 부분인지 확인해주세요.';
+    await saveMeta(c); await saveAudio(c, wavBlob(play, PLAY_SR));
+    $('#clipText').value = ''; if (!whole) { src.a = src.b = null; }
+    setStudyStatus('');
+    await openClip(c);
+    if (note) setStatus(note, c.aligned === 'model' ? 'err' : '');
+    else if (c.found) setStatus(`원문 ${c.found.total}문장 중에서 이 구간에 나오는 ${c.found.n}문장을 찾았어요.`, 'ok');
+  } catch (e) {
+    if (!e.user) console.error(e);
+    setStudyStatus(e.user ? e.message : `클립을 준비하지 못했어요. (원인: ${String((e && e.message) || e).slice(0, 100)})`, 'err');
+  } finally { ST.busy = false; $('#clipGo').disabled = $('#clipGoRough').disabled = false; }
+}
+async function realignClip() {
+  const c = ST.clip; if (!c || ST.busy) return;
+  ST.busy = true; $('#clipRealign').disabled = true;
+  try {
+    const ana = await resample(c.play, PLAY_SR, ANA_SR);
+    await alignClip(c, ana);
+    await saveMeta(c);
+    const rec = await sdb.run('audio', 'readonly', (s) => s.get(c.id)).catch(() => null);
+    if (rec && rec.blob) await saveAudio(c, rec.blob);
+    ST.refKey = ''; setStatus('문장 구간을 정확히 다시 나눴어요.', 'ok');
+  } catch (e) { console.error(e); setStatus(`다시 나누지 못했어요. (원인: ${String((e && e.message) || e).slice(0, 100)})`, 'err'); }
+  finally { ST.busy = false; $('#clipRealign').disabled = false; $('#studyStatus').textContent = ''; renderStudy(); studyLoadRef(); }
+}
+async function openSaved(id) {
+  if (ST.busy) return; ST.busy = true;
+  try {
+    setStudyStatus('클립을 여는 중…');
+    const meta = await sdb.run('clips', 'readonly', (s) => s.get(id)), au = await sdb.run('audio', 'readonly', (s) => s.get(id));
+    if (!meta || !au || !au.blob) throw userErr('저장된 클립 파일을 찾지 못했어요. 지우고 다시 넣어주세요.');
+    const play = await decodeBlob(au.blob);
+    setStudyStatus('');
+    await openClip({ ...meta, play, LP: au.lp || null });
+  } catch (e) { if (!e.user) console.error(e); setStudyStatus(e.user ? e.message : '클립을 열지 못했어요.', 'err'); }
+  finally { ST.busy = false; }
+}
+async function openClip(c) {
+  ST.clip = c; ST.dict = null; ST.refKey = '';
+  const n = c.sents.length, P = c.prog;
+  const allDict = c.sents.every((_, i) => P.dict[i]), allMemo = c.sents.every((_, i) => (P.memo[i] || 0) >= 3);
+  ST.stage = !allDict ? 'dict' : !allMemo ? 'memo' : 'sync';
+  const next = c.sents.findIndex((_, i) => (ST.stage === 'dict' ? !P.dict[i] : (P.memo[i] || 0) < 3));
+  ST.cur = Math.min(n - 1, Math.max(0, next));
+  ST.mask = 0; $('#dictInput').value = '';
+  renderStudy();
+  await studyLoadRef();
+}
+
+// put the current sentence (or the whole clip) on the original track
+function studyLoadRef(thenPlay) {
+  ST.loadP = ST.loadP.then(async () => {
+    const c = ST.clip; if (!c || !ST.on) return;
+    const all = ST.stage === 'sync', s = c.sents[ST.cur];
+    const key = all ? `${c.id}:all` : `${c.id}:${ST.cur}:${s.a.toFixed(2)}:${s.b.toFixed(2)}`;
+    if (key !== ST.refKey || !S.ref || S.ref.clipId !== c.id) {
+      ST.refKey = key;
+      if (all) {
+        setStatus('클립 전체를 분석하는 중…');
+        await setRef(c.play, { label: `${c.name} 전체`, source: 'clip', text: c.sents.map((x) => x.text).join(' '), clipId: c.id, clipAll: true });
+        $('#recMode').value = 'shadow';
+      } else {
+        const i0 = Math.floor(s.a * PLAY_SR), i1 = Math.ceil(s.b * PLAY_SR);
+        await setRef(c.play.slice(i0, i1), { label: `${c.name} ${ST.cur + 1}번 문장`, source: 'clip', text: s.text, clipId: c.id, sent: ST.cur, clipT0: i0 / PLAY_SR });
+        if (c.LP && S.ref) S.ref._lp = sliceLP(c.LP, i0 / PLAY_SR, i1 / PLAY_SR) || undefined;
+        if ($('#recMode').value === 'shadow') $('#recMode').value = 'listen';
+      }
+      setStatus('');
+    }
+    if (thenPlay && ST.stage === 'dict') dictPlay();
+  }).catch((e) => { console.error(e); setStatus('이 구간을 불러오지 못했어요.', 'err'); });
+  return ST.loadP;
+}
+function setStage(stage) { if (!ST.clip || ST.stage === stage) return; stopAll(); ST.stage = stage; ST.dict = null; renderStudy(); studyLoadRef(); }
+function setSent(i, thenPlay) {
+  const c = ST.clip; if (!c) return;
+  stopAll(); ST.cur = (i + c.sents.length) % c.sents.length; ST.dict = null; $('#dictInput').value = '';
+  renderStudy(); studyLoadRef(thenPlay);
+  if (ST.stage === 'dict') $('#dictInput').focus();
+}
+function nudge(which, by) {
+  const c = ST.clip, s = c && c.sents[ST.cur]; if (!s) return;
+  if (which === 'a') s.a = Math.max(0, Math.min(s.b - 0.5, s.a + by)); else s.b = Math.min(c.dur, Math.max(s.a + 0.5, s.b + by));
+  saveMeta(c); studyLoadRef(true);
+}
+
+// ----- dictation -----
+async function dictPlay() {
+  if (!S.ref) return;
+  stopAll(); const seq = S.abSeq;
+  do {
+    const r = rangeFor('ref'); if (!r) return;
+    await playRange('ref', r[0], r[1]); if (seq !== S.abSeq) return;
+    if ($('#dictLoop').checked) await sleep(700);
+  } while ($('#dictLoop').checked && seq === S.abSeq && ST.on && ST.stage === 'dict');
+}
+function dictDiff(orig, typed) {
+  const T = PR.tokens(orig), U = PR.tokens(typed), ck = (w) => w.key.replace(/['.]/g, '');
+  const a = T.words.map(ck), b = U.words.map(ck), n = a.length, m = b.length, W = m + 1;
+  const L = new Uint16Array((n + 1) * W);
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i * W + j] = a[i] === b[j] ? L[(i + 1) * W + j + 1] + 1 : Math.max(L[(i + 1) * W + j], L[i * W + j + 1]);
+  const hitA = new Array(n).fill(false), hitB = new Array(m).fill(false);
+  for (let i = 0, j = 0; i < n && j < m;) { if (a[i] === b[j]) { hitA[i] = hitB[j] = true; i++; j++; } else if (L[(i + 1) * W + j] >= L[i * W + j + 1]) i++; else j++; }
+  const group = (tk, hits) => tk.raws.map((disp, r) => {
+    const idx = []; tk.words.forEach((w, i) => { if (w.src === r) idx.push(i); });
+    return { disp, words: idx, hit: idx.every((i) => hits[i]), key: idx.length ? tk.words[idx[0]].key : '' };
+  });
+  return { raws: group(T, hitA), typed: group(U, hitB), hit: hitA.filter(Boolean).length, total: n };
+}
+function missKinds(d) {
+  const endsCons = (w) => /[^aeiou]$/.test(w) || (/[^aeiou]e$/.test(w) && w.length > 3);
+  const linked = (x, y) => !!x && !!y && ((endsCons(x) && /^[aeiou]/.test(y)) || (/[^aeiou]$/.test(x) && x[x.length - 1] === y[0]) || (/[td]$/.test(x) && /^y/.test(y)));
+  const keys = d.raws.map((r) => r.key.replace(/[^a-z']/g, '')), weak = [], link = [], other = [], ending = [];
+  const wrong = d.typed.filter((t) => !t.hit && t.words.length).map((t) => t.key.replace(/[^a-z]/g, ''));
+  const near = (k) => wrong.some((t) => t !== k && t.length > 1 && ((k.startsWith(t) && k.length - t.length <= 2) || (t.startsWith(k) && t.length - k.length <= 2)));
+  d.raws.forEach((r, i) => {
+    if (r.hit || !r.words.length) return;
+    if (near(keys[i].replace(/[^a-z]/g, ''))) ending.push(i);
+    else if (PR.FUNCTION.has(keys[i]) || WEAK_EXTRA.has(keys[i])) weak.push(i);
+    else if (linked(keys[i - 1], keys[i]) || linked(keys[i], keys[i + 1])) link.push(i);
+    else other.push(i);
+  });
+  return { weak, link, other, ending };
+}
+function dictCheck(reveal) {
+  const c = ST.clip; if (!c) return;
+  const typed = reveal ? '' : $('#dictInput').value;
+  if (!reveal && !typed.trim()) { setStatus('들리는 대로 먼저 적어보세요. 도저히 안 들리면 "정답 보기"를 누르세요.'); return; }
+  setStatus('');
+  const d = dictDiff(c.sents[ST.cur].text, typed);
+  ST.dict = { i: ST.cur, d, reveal };
+  const p = c.prog.dict[ST.cur] || { best: 0, tries: 0 };
+  if (!reveal) { p.tries++; p.best = Math.max(p.best, d.total ? d.hit / d.total : 0); }
+  c.prog.dict[ST.cur] = p; saveMeta(c);
+  renderStudy();
+}
+function dictPlayWord(r) {
+  const c = ST.clip, s = c && c.sents[ST.cur]; if (!s || !S.ref) return;
+  stopAll();
+  const ws = s.words ? s.words.filter((w) => w.src >= r - 1 && w.src <= r + 1) : [];
+  if (!ws.length || S.ref.clipT0 === undefined) { play('ref'); return; }
+  const a = Math.max(0, Math.min(...ws.map((w) => w.a)) - S.ref.clipT0), b = Math.min(S.ref.dur, Math.max(...ws.map((w) => w.b)) - S.ref.clipT0);
+  S.sel = { src: 'ref', t0: a, t1: b }; drawOverlays(); updateButtons();
+  playRange('ref', a, b);
+}
+function renderDict() {
+  const box = $('#dictResult'), R = ST.dict && ST.dict.i === ST.cur ? ST.dict : null;
+  if (!R) { box.innerHTML = ''; return; }
+  const d = R.d, kinds = missKinds(d), timed = !!(ST.clip.sents[ST.cur].words);
+  const bare = (x) => x.replace(/^[^A-Za-z0-9$]+|[^A-Za-z0-9%]+$/g, '');
+  const tok = (r, i) => (R.reveal || r.hit || !r.words.length ? esc(r.disp) : `<button class="dw" data-play="${i}" title="${timed ? '앞뒤 단어와 함께 다시 듣기' : '문장 다시 듣기'}">${esc(r.disp)}</button>`);
+  const list = (idx) => idx.map((i) => `<button class="dw" data-play="${i}">${esc(bare(d.raws[i].disp))}</button>`).join(' ');
+  let html = '';
+  if (!R.reveal) html += `<div class="tip-h">${d.total}단어 중 ${d.hit}단어를 맞게 들었어요</div>`;
+  html += `<p class="script">${d.raws.map(tok).join(' ')}</p>`;
+  if (!R.reveal) {
+    if (d.typed.some((t) => !t.hit)) html += `<p class="typed">내가 쓴 것: ${d.typed.map((t) => (t.hit ? esc(t.disp) : `<s>${esc(t.disp)}</s>`)).join(' ')}</p>`;
+    if (kinds.ending.length) html += `<div class="why"><b>끝소리를 놓친 단어</b> ${list(kinds.ending)}<div class="tip-why">-s, -ed 같은 끝소리는 약하게 나거나 다음 단어에 붙어서 지나가요. 단어를 눌러 끝소리가 어떻게 들리는지 확인해보세요.</div></div>`;
+    if (kinds.weak.length) html += `<div class="why"><b>약하게 발음되는 단어</b> ${list(kinds.weak)}<div class="tip-why">the, to, of 같은 단어는 강세 없이 아주 짧게 지나가요. 단어를 눌러 앞뒤 단어와 한 덩어리로 다시 들어보세요.</div></div>`;
+    if (kinds.link.length) html += `<div class="why"><b>연음으로 이어진 곳</b> ${list(kinds.link)}<div class="tip-why">앞 단어의 끝소리가 다음 단어의 첫소리에 붙어서 한 단어처럼 들려요. 붙은 채로 들리는 소리를 그대로 기억해두세요.</div></div>`;
+    if (kinds.other.length) html += `<div class="why"><b>그 밖에 놓친 단어</b> ${list(kinds.other)}<div class="tip-why">처음 듣는 단어이거나 빠르게 지나간 곳이에요. 재생 속도를 0.75배로 낮춰서 다시 들어보세요.</div></div>`;
+    if (d.hit === d.total) html += '<div class="good">전부 맞게 들었어요.</div>';
+  }
+  box.innerHTML = html;
+}
+
+// ----- memorise / sync -----
+function maskHtml(text, level) {
+  if (!level) return esc(text);
+  return text.split(/\s+/).map((tok) => {
+    const m = tok.match(/^([^A-Za-z0-9]*)(.*?)([^A-Za-z0-9]*)$/);
+    if (!m || !m[2]) return esc(tok);
+    const core = m[2];
+    const body = level === 1 ? `${esc(core[0])}<span class="mk">${'·'.repeat(core.length - 1)}</span>` : `<span class="bar" style="width:${(Math.max(2, core.length) * 0.52).toFixed(2)}em"></span>`;
+    return esc(m[1]) + body + esc(m[3]);
+  }).join(' ');
+}
+function computeSync(r, m) {
+  const al = alignFor(m); if (!al) return null;
+  const sh = m.shadow, rel = !sh;
+  const raw = (t) => r2m(al, t) - (sh ? (t - sh.refStart) / sh.rate + sh.delay + sh.latency : t);
+  const ta = r.on + 0.1, tb = Math.max(ta + 0.5, r.off - 0.15), zero = rel ? raw(ta) : 0;
+  const pts = []; for (let t = ta; t <= tb + 1e-6; t += 0.25) pts.push([t, raw(t) - zero]);
+  const sm = pts.map((p, i) => [p[0], median(pts.slice(Math.max(0, i - 2), i + 3).map((q) => q[1]))]);
+  sm[0][1] = pts[0][1]; sm[sm.length - 1][1] = pts[pts.length - 1][1];
+  const mean = sm.reduce((s, p) => s + Math.abs(p[1]), 0) / sm.length;
+  const c = ST.clip, sents = [];
+  if (c && r.clipId === c.id) c.sents.forEach((s, i) => { const v = sm.filter((p) => p[0] >= s.a && p[0] <= s.b).map((p) => p[1]); if (v.length) sents.push({ i, lag: v.reduce((x, y) => x + y, 0) / v.length }); });
+  const worst = sents.length ? sents.reduce((x, y) => (Math.abs(y.lag) > Math.abs(x.lag) ? y : x)) : null;
+  return { rel, pts: sm, start: sm[0][1], end: sm[sm.length - 1][1], mean, sents, worst };
+}
+const lagWord = (v) => (Math.abs(v) < 0.12 ? '거의 동시에' : `${Math.abs(v).toFixed(1)}초 ${v > 0 ? '늦게' : '빠르게'}`);
+function renderSync() {
+  const box = $('#track-sync'), r = S.ref, m = mine(), sy = ST.on && r && r.clipAll && m && m.sync ? m.sync : null;
+  box.hidden = !sy; if (!sy) return;
+  const cv = box.querySelector('canvas'), dpr = sizeCanvas(cv, SYNC_H), ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
+  const maxAbs = Math.max(0.5, ...sy.pts.map((p) => Math.abs(p[1]))), R = Math.min(5, Math.ceil(maxAbs * 2) / 2 + 0.25);
+  const top = 16 * dpr, y = (v) => top + (H - top - 8 * dpr) * (1 - (Math.max(-R, Math.min(R, v)) + R) / (2 * R));
+  const x = (t) => tToX(r, t, W), step = R > 2.5 ? 1 : 0.5;
+  ctx.font = font(10.5, dpr); ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  for (let v = -Math.floor(R / step) * step; v <= R; v += step) {
+    ctx.fillStyle = Math.abs(v) < 1e-6 ? 'rgba(143,163,189,0.4)' : 'rgba(143,163,189,0.12)'; ctx.fillRect(0, Math.round(y(v)), W, 1);
+    ctx.fillStyle = COLORS.muted; ctx.fillText(Math.abs(v) < 1e-6 ? '동시' : `${Math.abs(v)}초 ${v > 0 ? '늦음' : '빠름'}`, 6 * dpr, y(v) - 7 * dpr);
+  }
+  const c = ST.clip;
+  if (c) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; c.sents.forEach((s, i) => { const xa = x(s.a); if (i) { ctx.fillStyle = 'rgba(143,163,189,0.22)'; ctx.fillRect(Math.round(xa), 0, 1, H); } ctx.fillStyle = COLORS.muted; ctx.fillText(String(i + 1), (xa + x(s.b)) / 2, 3 * dpr); }); }
+  ctx.beginPath(); sy.pts.forEach((p, i) => (i ? ctx.lineTo(x(p[0]), y(p[1])) : ctx.moveTo(x(p[0]), y(p[1]))));
+  ctx.lineTo(x(sy.pts[sy.pts.length - 1][0]), y(0)); ctx.lineTo(x(sy.pts[0][0]), y(0)); ctx.closePath(); ctx.fillStyle = 'rgba(243,182,72,0.14)'; ctx.fill();
+  ctx.beginPath(); sy.pts.forEach((p, i) => (i ? ctx.lineTo(x(p[0]), y(p[1])) : ctx.moveTo(x(p[0]), y(p[1]))));
+  ctx.strokeStyle = COLORS.mine; ctx.lineWidth = 2.2 * dpr; ctx.lineJoin = 'round'; ctx.stroke();
+  const lines = [`시작은 ${lagWord(sy.start)}, 끝은 ${lagWord(sy.end)} 말했어요. 평균 ${sy.mean.toFixed(2)}초 어긋났어요.`];
+  if (sy.worst && Math.abs(sy.worst.lag) >= 0.3) lines.push(`${sy.worst.i + 1}번 문장이 가장 어긋났어요(${Math.abs(sy.worst.lag).toFixed(1)}초 ${sy.worst.lag > 0 ? '늦음' : '빠름'}). 그 문장만 통암기 단계에서 다시 연습해보세요.`);
+  lines.push(sy.rel ? '원본과 동시에 녹음한 게 아니라서, 첫 마디를 맞춘 것으로 보고 계산했어요.' : '블루투스 이어폰은 지연이 있어서 0.1~0.2초 늦게 나올 수 있어요.');
+  $('#syncMeta').innerHTML = lines.map((l) => `<div>${l}</div>`).join('');
+}
+function studyOnTake(t) {
+  const c = ST.clip, r = S.ref; if (!ST.on || !c || !r || r.clipId !== c.id) return;
+  if (ST.stage === 'memo' && r.sent === ST.cur) { c.prog.memo[ST.cur] = Math.max(c.prog.memo[ST.cur] || 0, ST.mask + 1); saveMeta(c); renderStudy(); }
+  else if (ST.stage === 'sync' && r.clipAll) {
+    const sy = computeSync(r, t);
+    if (sy) { t.sync = sy; c.prog.sync = [...c.prog.sync, { at: Date.now(), start: sy.start, end: sy.end, mean: sy.mean, rel: sy.rel, mask: ST.mask }].slice(-30); saveMeta(c); }
+    renderSync(); renderStudy();
+  }
+}
+
+// ----- rendering -----
+async function renderLibrary() {
+  const box = $('#library');
+  let list = []; try { list = await sdb.run('clips', 'readonly', (s) => s.getAll()); } catch { list = []; }
+  if (!list.length) { box.innerHTML = ''; return; }
+  list.sort((x, y) => y.added - x.added);
+  box.innerHTML = `<h2>저장된 클립</h2><ul class="lib">${list.map((c) => {
+    const n = c.sents.length, P = c.prog || { dict: {}, memo: {}, sync: [] };
+    const nd = c.sents.filter((_, i) => P.dict[i]).length, nm = c.sents.filter((_, i) => (P.memo[i] || 0) >= 3).length;
+    const best = P.sync.length ? `, 싱크 최고 평균 ${Math.min(...P.sync.map((x) => x.mean)).toFixed(2)}초` : '';
+    return `<li><div><div class="lib-name">${esc(c.name)}</div><div class="tmeta">${Math.round(c.dur)}초, 문장 ${n}개. 받아쓰기 ${nd}/${n}, 통암기 ${nm}/${n}${best}</div></div>
+      <div class="lib-btns"><button data-open="${c.id}">이어서 하기</button><button data-del="${c.id}">지우기</button></div></li>`;
+  }).join('')}</ul>`;
+}
+function renderStudy() {
+  $('#modeSingle').setAttribute('aria-pressed', String(!ST.on)); $('#modeClip').setAttribute('aria-pressed', String(ST.on));
+  $('#single').hidden = ST.on; $('#study').hidden = !ST.on;
+  renderSync();
+  if (!ST.on) return;
+  const c = ST.clip;
+  $('#studySetup').hidden = !!c; $('#studyClip').hidden = !c;
+  if (!c) { renderPicker(); renderLibrary(); return; }
+  const n = c.sents.length, P = c.prog;
+  const nd = c.sents.filter((_, i) => P.dict[i]).length, nm = c.sents.filter((_, i) => (P.memo[i] || 0) >= 3).length;
+  $('#clipName').textContent = c.name;
+  $('#clipRough').hidden = c.aligned === 'model';
+  $('#stDict').textContent = `${nd}/${n}`; $('#stMemo').textContent = `${nm}/${n}`;
+  $('#stSync').textContent = P.sync.length ? `최고 ${Math.min(...P.sync.map((x) => x.mean)).toFixed(2)}초` : '';
+  for (const b of document.querySelectorAll('#steps button')) b.setAttribute('aria-pressed', String(b.dataset.stage === ST.stage));
+  const chips = $('#sentChips'); chips.hidden = ST.stage === 'sync';
+  chips.innerHTML = c.sents.map((_, i) => {
+    const st = ST.stage === 'dict' ? (P.dict[i] ? (P.dict[i].best >= 0.9 ? 'good' : 'part') : '') : ((P.memo[i] || 0) >= 3 ? 'good' : P.memo[i] ? 'part' : '');
+    return `<button class="chip ${st}" data-sent="${i}" aria-pressed="${i === ST.cur}" aria-label="${i + 1}번 문장">${i + 1}</button>`;
+  }).join('');
+  $('#stageDict').hidden = ST.stage !== 'dict'; $('#stageMemo').hidden = ST.stage !== 'memo'; $('#stageSync').hidden = ST.stage !== 'sync';
+  $('#maskBar').hidden = ST.stage === 'dict';
+  for (const b of document.querySelectorAll('#maskBar button[data-mask]')) b.setAttribute('aria-pressed', String(Number(b.dataset.mask) === ST.mask));
+  if (ST.stage === 'dict') renderDict();
+  else if (ST.stage === 'memo') $('#memoText').innerHTML = maskHtml(c.sents[ST.cur].text, ST.mask);
+  else {
+    $('#syncText').innerHTML = c.sents.map((s, i) => `<span class="sn">${i + 1}</span>${maskHtml(s.text, ST.mask)}`).join(' ');
+    const hist = P.sync.slice(-5).reverse();
+    $('#syncHistory').innerHTML = hist.length ? `<div class="tmeta">지난 기록</div>${hist.map((h) => { const dt = new Date(h.at); return `<div class="hist">${dt.getMonth() + 1}/${dt.getDate()} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')} 평균 ${h.mean.toFixed(2)}초 어긋남, 끝은 ${lagWord(h.end)}</div>`; }).join('')}` : '';
+  }
+}
+
+// ----- wiring -----
+function setMode(on) { ST.on = on; stopAll(); pickStop(); renderStudy(); if (on && ST.clip) studyLoadRef(); }
+$('#modeSingle').addEventListener('click', () => setMode(false));
+$('#modeClip').addEventListener('click', () => setMode(true));
+$('#clipFile').addEventListener('change', (e) => { setClipFile(e.target.files[0]); e.target.value = ''; });
+$('#clipFileBtn').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#clipFileBtn').click(); } });
+$('#pickPlay').addEventListener('click', pickToggle);
+$('#pickIn').addEventListener('click', () => ST.src && pickSet('a', ST.src.el.currentTime));
+$('#pickOut').addEventListener('click', () => ST.src && pickSet('b', ST.src.el.currentTime));
+$('#pickSel').addEventListener('click', () => { const s = ST.src; if (s && s.a !== null && s.b !== null) pickPlayFrom(s.a, s.b); });
+$('#picker').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-pick]'), s = ST.src; if (!b || !s) return;
+  const [w, by] = b.dataset.pick.split(':'); if (s[w] === null) return;
+  pickSet(w, s[w] + Number(by));
+  if (w === 'a') pickPlayFrom(s.a, Math.min(s.dur, s.a + 2.5)); else if (s.b !== null) pickPlayFrom(Math.max(0, s.b - 2.5), s.b);
+});
+{
+  const cv = $('#pickCv'); let down = null;
+  const tAt = (ev) => { const s = ST.src; return Math.max(0, Math.min(s.dur, (ev.offsetX / cv.clientWidth) * s.dur)); };
+  cv.addEventListener('pointerdown', (ev) => { if (!ST.src || ev.button !== 0) return; cv.setPointerCapture(ev.pointerId); down = { x: ev.offsetX, t: tAt(ev), drag: false }; });
+  cv.addEventListener('pointermove', (ev) => {
+    if (!down || !ST.src) return;
+    if (Math.abs(ev.offsetX - down.x) > 4) down.drag = true;
+    if (!down.drag) return;
+    const t = tAt(ev); ST.src.a = Math.min(down.t, t); ST.src.b = Math.max(down.t, t); renderPicker();
+  });
+  cv.addEventListener('pointerup', (ev) => {
+    if (!down || !ST.src) return; const d = down; down = null;
+    if (d.drag) { const s = ST.src; if (s.b - s.a < 1) { s.a = s.b = null; } setStudyStatus(''); renderPicker(); }
+    else pickPlayFrom(tAt(ev));
+  });
+}
+$('#clipGo').addEventListener('click', () => createClip(false));
+$('#clipGoRough').addEventListener('click', () => createClip(true));
+$('#clipRealign').addEventListener('click', realignClip);
+$('#clipClose').addEventListener('click', () => { stopAll(); ST.clip = null; ST.refKey = ''; $('#studyStatus').textContent = ''; renderStudy(); });
+$('#library').addEventListener('click', async (e) => {
+  const o = e.target.closest('button[data-open]'), d = e.target.closest('button[data-del]');
+  if (o) openSaved(o.dataset.open);
+  else if (d) {
+    if (d.dataset.sure) { try { await sdb.run('clips', 'readwrite', (s) => s.delete(d.dataset.del)); await sdb.run('audio', 'readwrite', (s) => s.delete(d.dataset.del)); } catch (err) { console.warn(err); } renderLibrary(); }
+    else { d.dataset.sure = '1'; d.textContent = '한 번 더 누르면 지워져요'; setTimeout(() => { if (d.isConnected) { delete d.dataset.sure; d.textContent = '지우기'; } }, 4000); }
+  }
+});
+$('#steps').addEventListener('click', (e) => { const b = e.target.closest('button[data-stage]'); if (b) setStage(b.dataset.stage); });
+$('#sentChips').addEventListener('click', (e) => { const b = e.target.closest('button[data-sent]'); if (b) setSent(Number(b.dataset.sent), true); });
+$('#maskBar').addEventListener('click', (e) => { const b = e.target.closest('button[data-mask]'); if (b) { ST.mask = Number(b.dataset.mask); renderStudy(); } });
+$('#dictPlay').addEventListener('click', dictPlay);
+$('#dictCheck').addEventListener('click', () => dictCheck(false));
+$('#dictReveal').addEventListener('click', () => dictCheck(true));
+$('#dictNext').addEventListener('click', () => setSent(ST.cur + 1, true));
+$('#memoPlay').addEventListener('click', () => play('ref'));
+$('#memoNext').addEventListener('click', () => setSent(ST.cur + 1, false));
+$('#dictInput').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.isComposing) return;
+  e.preventDefault(); if (e.shiftKey) dictPlay(); else dictCheck(false);
+});
+$('#dictResult').addEventListener('click', (e) => { const b = e.target.closest('button[data-play]'); if (b) dictPlayWord(Number(b.dataset.play)); });
+$('#nudge').addEventListener('click', (e) => { const b = e.target.closest('button[data-nudge]'); if (b) { const [w, by] = b.dataset.nudge.split(':'); nudge(w, Number(by)); } });
+renderStudy();
+
+let rq = 0;
+new ResizeObserver(() => { cancelAnimationFrame(rq); rq = requestAnimationFrame(() => { if (S.rec && S.rec.phase === 'recording') { renderTrack('ref'); renderIntonation(); } else renderAll(); }); }).observe($('#tracks'));
+autosize();
+renderAll();
+if (EMBEDDED) setStatus('지금은 미리보기 화면 안이라 AI 음성과 마이크가 막힐 수 있어요. 파일을 내려받아 Chrome이나 Edge에서 직접 여세요.', 'err');
+else if (!window.isSecureContext) setStatus('이 주소에서는 마이크가 막혀 있어요. 파일을 내려받아 Chrome에서 직접 열어주세요.', 'err');
+
+</script>
+</body>
+</html>
