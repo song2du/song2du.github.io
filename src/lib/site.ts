@@ -35,6 +35,11 @@ export const site = {
       text: "Won 2nd place in the research track at the joint Computer Science × AI academic festival, Gachon University.",
     },
     {
+      date: "2026-06",
+      text: "Completed a ten-month term as president of A.ing, an AI academic club at Gachon University.",
+      href: "/blog/club-president-retrospective/",
+    },
+    {
       date: "2025-12",
       text: "Received the Encouragement Award at the AI Agent Competition (Kakao × KSC 2025).",
       href: "/blog/first-ai-agent-competition/",
