@@ -20,7 +20,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: { default: site.name, template: `%s · ${site.name}` },
   description: site.description,
-  icons: { icon: "/favicon.png" },
   openGraph: { siteName: site.name, type: "website" },
   alternates: { types: { "application/rss+xml": "/feed.xml" } },
 };
